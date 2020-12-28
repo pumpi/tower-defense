@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Tower Defense</title>
+    <link rel="stylesheet" type="text/css" href="/assets/css/style.css">
+    <script type="text/javascript" src="/assets/js/game.js"></script>
+</head>
+<body>
+<div id="gui">
+    <h1>Tower Defense</h1>
+    <div class="stats">
+        Leben: <span id="life">-</span>&nbsp;&nbsp;
+        Coins: <span id="coins">0</span>&nbsp;&nbsp;
+        Welle: <span id="wave">0</span>
+    </div>
+    <div class="buttons">
+        <button onclick="game.nextWave();">Nächste Welle<br>----------</button>
+        <button onclick="game.buyTower();">Turm kaufen<br>(<span id="towerCosts">?</span> Coins)</button>
+        <button onclick="game.buyTowerUpgrade('fireRange');">Reichweite erhöhen<br>(<span id="fireRangeCosts">?</span> Coins)</button>
+        <button onclick="game.buyTowerUpgrade('cooldownTime');">Feuerrate erhöhen<br>(<span id="cooldownTimeCosts">?</span> Coins)</button>
+        <button onclick="game.buyTowerUpgrade('damage');">Schaden erhöhen<br>(<span id="damageCosts">?</span> Coins)</button>
+    </div>
+</div>
+<canvas id="canvas" width="800" height="600"></canvas>
+<script type="text/javascript">game.init();</script>
+</body>
+</html>
