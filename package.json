@@ -1,0 +1,30 @@
+{
+  "name": "js-tower-defense",
+  "version": "1.0.0",
+  "description": "https://freesound.org/people/nsstudios/sounds/344276/ - Laser Sound",
+  "main": "index.js",
+  "scripts": {
+    "dev": "parcel src/index.html --out-dir dev",
+    "build": "parcel build src/index.html"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pumpi/tower-defense.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pumpi/tower-defense/issues"
+  },
+  "homepage": "https://github.com/pumpi/tower-defense#readme",
+  "devDependencies": {
+    "parcel-bundler": "^1.12.5",
+    "sass": "^1.32.8"
+  },
+  "dependencies": {
+    "button.css": "^1.0.1",
+    "game": "^1.0.3",
+    "global.css": "^1.1.0"
+  }
+}
