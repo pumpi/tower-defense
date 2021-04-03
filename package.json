@@ -2,7 +2,7 @@
   "name": "js-tower-defense",
   "version": "1.0.0",
   "description": "https://freesound.org/people/nsstudios/sounds/344276/ - Laser Sound",
-  "main": "index.js",
+  "main": "index.html",
   "scripts": {
     "dev": "parcel src/index.html --out-dir dev",
     "build": "parcel build src/index.html"
