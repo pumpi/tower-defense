@@ -126,7 +126,11 @@ export default {
             if ( this.closestEnemy !== false && entity.cooldownCounter <= 0) {
                 this.shoot(this.closestEnemy);
                 this.closestEnemy.shoot = true;
-                entity.audio.play();
+
+                // Audio mit Error Handling (Browser Autoplay-Policies)
+                entity.audio.play().catch(() => {
+                    // Audio playback wurde blockiert - ignorieren wir stillschweigend
+                });
             }
 
             // Wenn man den Turm Hoverst soll sich der zIndex erhöhen
