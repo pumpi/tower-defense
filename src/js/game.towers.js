@@ -32,7 +32,7 @@ export default {
             let gridPosition = me.gridPosition();
 
             // TODO We can buy some types of towers in future
-            let bullet = 'laser'
+            let bullet = 'laser';
 
             if (map.isValidTowerPlace(gridPosition.x, gridPosition.y)) {
                 // Wirkungsradius/Reichweite zeichnen
@@ -49,7 +49,7 @@ export default {
     },
     create: function (x, y) {
         // TODO We can buy some types of towers in future
-        let bullet = 'laser'
+        let bullet = 'laser';
 
         let me = this,
             tower = settings.towers[bullet],

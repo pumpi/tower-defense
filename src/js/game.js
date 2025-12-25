@@ -55,7 +55,7 @@ export default {
     buyTower: function () {
         // TODO We can buy some types of towers in future
         let me = this,
-            bullet = 'laser'
+            bullet = 'laser';
 
         if (me.stat('mode') !== 'dropTower') {
             let coins = me.stat('coins');
