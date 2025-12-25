@@ -96,10 +96,14 @@ export default {
 
         entity.update = function () {
             entity.cooldownCounter--;
-            let newEnemyDistance = game.distance(this.x, this.y, this.closestEnemy.x, this.closestEnemy.y);
 
-            if ( newEnemyDistance >= (this.fireRange + this.closestEnemy.r) || this.closestEnemy.health <= 0 ) {
-                this.closestEnemy = false;
+            // Prüfen ob der aktuelle Gegner noch im Reichweite ist oder tot ist
+            if ( this.closestEnemy !== false ) {
+                let newEnemyDistance = game.distance(this.x, this.y, this.closestEnemy.x, this.closestEnemy.y);
+
+                if ( newEnemyDistance >= (this.fireRange + this.closestEnemy.r) || this.closestEnemy.health <= 0 ) {
+                    this.closestEnemy = false;
+                }
             }
 
             if ( this.closestEnemy === false ) {
@@ -177,7 +181,7 @@ export default {
             game.ctx.save();
 
             // Schuss darstellen
-            if ( this.closestEnemy.shoot ) {
+            if ( this.closestEnemy?.shoot ) {
                 game.ctx.beginPath();
                 game.ctx.strokeStyle = entity.color;
                 game.ctx.lineWidth = 2;
