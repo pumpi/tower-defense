@@ -1,6 +1,5 @@
 import helpers from './helpers';
 import game from './game';
-import enemies from './game.enemies';
 import mapEntities from './game.mapEntities';
 import settings from './game.settings';
 import map from './game.map';
@@ -140,7 +139,7 @@ export default {
 
             // Animation
             this.frame += 0.2;
-            if ( this.frame >= enemies.images[this.enemyType].sprites[this.direction].frames.length ) {
+            if ( this.frame >= me.images[this.enemyType].sprites[this.direction].frames.length ) {
                 this.frame = 0;
             }
 
@@ -174,12 +173,12 @@ export default {
             this.health = 0;
             this.deleted = true;
 
-            game.stat('coins', game.stat('coins') + enemies.calculateReward(entity.level), true);
+            game.stat('coins', game.stat('coins') + me.calculateReward(entity.level), true);
 
             // Wir überprüfen ob dies der letzte Gegner der Welle ist und vergeben Bonus Coins
             let waveLastBonus = true;
-            for ( let id in enemies.enemiesList ) {
-                let enemy = enemies.enemiesList[id];
+            for ( let id in me.enemiesList ) {
+                let enemy = me.enemiesList[id];
                 if ( enemy.wave === entity.wave && !enemy.deleted ) {
                     waveLastBonus = false;
                 }
