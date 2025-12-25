@@ -148,14 +148,15 @@ export default {
         let delay = 0,
             levelInc = Math.floor(this.waveCounter / settings.enemyLevelIncAt),
             maxTemplate = settings.waves.length - 1,
-            template = settings.waves[Math.min(levelInc, maxTemplate)].template;
+            template = settings.waves[Math.min(levelInc, maxTemplate)].template,
+            currentWave = this.waveCounter;
 
         for (let spawn of template) {
-            let ec = Math.round(spawn.count + (this.waveCounter * spawn.waveFactor)); // Die Anzahl der Gegner multiplitziert mit dem Wellen Faktor
-            setTimeout(function () {
+            let ec = Math.round(spawn.count + (currentWave * spawn.waveFactor)); // Die Anzahl der Gegner multiplitziert mit dem Wellen Faktor
+            setTimeout(() => {
                 for (let i = 0; i < ec; i++) {
-                    setTimeout(function () {
-                        enemies.create(spawn.level + levelInc, this.waveCounter);
+                    setTimeout(() => {
+                        enemies.create(spawn.level + levelInc, currentWave);
                     }, i * spawn.coolDown);
                 }
             }, delay);
