@@ -1,7 +1,8 @@
 import helpers from './helpers';
 import game from './game';
 import settings from './game.settings';
-import mapEntities from './game.mapEntities'
+import mapEntities from './game.mapEntities';
+import backgroundImage from '../img/background.png';
 
 export default {
     waypoints: [
@@ -20,7 +21,7 @@ export default {
         {x: 1200, y: 200},
     ],
     images: {
-        background: helpers.createImage(require('/img/background.png'))
+        background: helpers.createImage(backgroundImage)
     },
     init: function () {
         var self = this;

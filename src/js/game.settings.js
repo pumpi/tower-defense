@@ -1,5 +1,7 @@
 import helpers from './helpers';
-import game from './game'
+import game from './game';
+import laserTowerImage from '../img/tower/laser.png';
+import laserAudio from '../audio/laser.mp3';
 
 export default {
     playerLifes: 10,		// Lebenspunkte des Spielers
@@ -12,7 +14,7 @@ export default {
             fireRange: 110,		        // Anfängliche Reichweite eines Turms (kann per Upgrade für alle Türme erhöht werden)
             damage: {from: 3, to: 4},   // Anfänglicher Schaden den ein Turm bewirkt (kann per Upgrade für alle Türme erhöht werden)
             coolDownTime: 16,	        // Anfängliche Schussverzögerung eines Turms (kann per Upgrade für alle Türme erhöht werden)
-            images: helpers.createImage(require('/img/tower/laser.png'), [
+            images: helpers.createImage(laserTowerImage, [
                 {x: 0, y: 0, w: 80, h: 80},
                 {x: 0, y: 160, w: 80, h: 80},
                 {x: 0, y: 320, w: 80, h: 80},
@@ -20,7 +22,7 @@ export default {
                 {x: 0, y: 640, w: 80, h: 80},
                 {x: 0, y: 800, w: 80, h: 80}
             ]),
-            audio: require('/audio/laser.mp3'),
+            audio: laserAudio,
             upgrades: [
                 {cost: 120, fireRange: 120, damage: {from: 7, to: 11}, color: '#2CE85B'},
                 {cost: 190, fireRange: 130, damage: {from: 14, to: 21}, color: '#2CE8B9'},

@@ -4,16 +4,18 @@ import enemies from './game.enemies';
 import mapEntities from './game.mapEntities';
 import settings from './game.settings';
 import map from './game.map';
+import irlichtImage from '../img/enemy/irlicht.png';
+import bugImage from '../img/enemy/bug.png';
 
 export default {
     images: {
-        irlicht:  helpers.createImage(require('/img/enemy/irlicht.png'), [
+        irlicht:  helpers.createImage(irlichtImage, [
             { x: 0, y: 0, w: 20, h: 20, frames: [0,40,80,120,160,200]},
             { x: 0, y: 40, w: 20, h: 20, frames: [0,40,80,120,160,200] },
             { x: 0, y: 80, w: 20, h: 20, frames: [0,40,80,120,160,200] },
             { x: 0, y: 120, w: 20, h: 20, frames: [0,40,80,120,160,200] }
         ]),
-        bug:  helpers.createImage(require('/img/enemy/bug.png'), [
+        bug:  helpers.createImage(bugImage, [
             { x: 0, y: 0, w: 20, h: 20 },
             { x: 40, y: 0, w: 20, h: 20 },
             { x: 80, y: 0, w: 20, h: 20 },
