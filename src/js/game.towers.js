@@ -252,5 +252,8 @@ export default {
 
         optionsModal.classList.add('is--open');
 
+    },
+    closeOptions: function() {
+        document.querySelector('.modal-options').classList.remove('is--open');
     }
 };
