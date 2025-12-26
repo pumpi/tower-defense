@@ -1,5 +1,4 @@
 import helpers from './helpers';
-import game from './game';
 import laserTowerImage from '../img/tower/laser.png';
 import laserAudio from '../audio/laser.mp3';
 

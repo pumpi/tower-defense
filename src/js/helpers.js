@@ -1,11 +1,14 @@
-import game from './game';
+let game = null;
 
 export default {
+    init: (gameInstance) => {
+        game = gameInstance;
+    },
     sortEntity: (list) => {
         // Die Liste wird rückwärts durchlaufen, daher umgekehrt sortieren
         // Objekte mit höherem zIndex kommen zuerst in die Liste,
         // werden aber zuletzt gezeichnet (weil rückwärts iteriert) → landen vorne
-        return [...list].sort((a, b) => (b.zIndex - a.zIndex) || (b.y - a.y));
+        return [...list].sort((a, b) => (a.zIndex - b.zIndex) || (a.y - b.y));
     },
 
     createImage : (src, spr = []) => {
