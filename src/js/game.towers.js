@@ -210,7 +210,6 @@ export default {
                 this.barell.y = this.y + dRatio * (this.closestEnemy.y - this.y);
             }
 
-
             game.ctx.save();
 
             // Schuss darstellen
@@ -242,12 +241,6 @@ export default {
             y = ((Math.floor(game.mouse.y / settings.mapGrid)) * settings.mapGrid) + (settings.mapGrid / 2);
 
         return {x: x, y: y};
-    },
-
-    drawTower: function(bullet, x, y, level) {
-        let image = this.images[bullet];
-        //console.log('before onload');
-        game.ctx.drawImage(image, 0, level * 160, image.width, image.width, x - 40, y - 60, 80, 80);
     },
 
     openOptions: function(tower) {
