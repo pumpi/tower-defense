@@ -24,13 +24,8 @@ export default {
         background: helpers.createImage(backgroundImage)
     },
     init: function () {
-        const self = this;
-        game.on('update', function () {
-            self.update();
-        });
-        game.on('beforeDraw', function () {
-            self.draw();
-        });
+        game.on('update', () => this.update());
+        game.on('beforeDraw', () => this.draw());
     },
     update: function () {
     },
@@ -53,35 +48,33 @@ export default {
         // game.ctx.restore();
     },
     isValidTowerPlace: function (x, y, bulletType) {
-        let me = this;
-
-        let r = {
+        const r = {
             left: x - settings.towers[bulletType].size,
             top: y - settings.towers[bulletType].size,
             right: x + settings.towers[bulletType].size,
             bottom: y + settings.towers[bulletType].size,
         };
 
-        for (let i = 0; i < me.waypoints.length - 1; i++) {
-            let x1 = Math.min(me.waypoints[i + 1].x, me.waypoints[i].x);
-            let y1 = Math.min(me.waypoints[i + 1].y, me.waypoints[i].y);
-
-            let x2 = Math.max(me.waypoints[i + 1].x, me.waypoints[i].x);
-            let y2 = Math.max(me.waypoints[i + 1].y, me.waypoints[i].y);
-
-            let width = (x2 - x1) + 80;
-            let height = (y2 - y1) + 80;
+        for (let i = 0; i < this.waypoints.length - 1; i++) {
+            let x1 = Math.min(this.waypoints[i + 1].x, this.waypoints[i].x),
+                y1 = Math.min(this.waypoints[i + 1].y, this.waypoints[i].y),
+                x2 = Math.max(this.waypoints[i + 1].x, this.waypoints[i].x),
+                y2 = Math.max(this.waypoints[i + 1].y, this.waypoints[i].y),
+                width = (x2 - x1) + 80,
+                height = (y2 - y1) + 80;
 
             x1 -= 40;
             y1 -= 40;
             x2 = x1 + width;
             y2 = y1 + height;
+
             let r2 = {
                 left: x1,
                 top: y1,
                 right: x2,
                 bottom: y2
             };
+
             if (game.intersectRect(r, r2)) return false;
         }
 

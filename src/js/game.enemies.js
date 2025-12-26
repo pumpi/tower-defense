@@ -21,24 +21,26 @@ export default {
             { x: 120, y: 0, w: 20, h: 20 }
         ])
     },
+
     enemiesList: [],
+
     init: function () {
-        let self = this;
-        game.on('update', function () {
-            self.update();
-        });
+        game.on('update', () => this.update());
     },
+
     update: function () {
         for (let i = this.enemiesList.length - 1; i >= 0; i--)
             if (this.enemiesList[i].deleted === true) this.remove(i);
     },
+
     remove: function (index) {
         mapEntities.remove(this.enemiesList[index].id);
         this.enemiesList.splice(index, 1);
     },
+
     create: function (level, wave) {
-        let shift = Math.round(Math.random() * 40) - 10,
-            me = this,
+        const shift = Math.round(Math.random() * 40) - 10,
+            self = this,
             entity = mapEntities.create(0, 0, 10, 'red');
 
         entity.waypointIndex = 0;
@@ -49,7 +51,7 @@ export default {
 
         if (!settings.enemyLevels[level]) level = game.settings.enemyLevels.length - 1;
 
-        let enemySettings = settings.enemyLevels[level];
+        const enemySettings = settings.enemyLevels[level];
         entity.level = level;
         entity.wave = wave;
         entity.speed = enemySettings.speed;
@@ -139,7 +141,7 @@ export default {
 
             // Animation
             this.frame += 0.2;
-            if ( this.frame >= me.images[this.enemyType].sprites[this.direction].frames.length ) {
+            if ( this.frame >= self.images[this.enemyType].sprites[this.direction].frames.length ) {
                 this.frame = 0;
             }
 
@@ -147,7 +149,7 @@ export default {
 
         entity.draw = function () {
             // Den Gegner zeichnen
-            helpers.drawAnimatedSprite(me.images.irlicht, this.direction, this.frame, Math.round(this.x), Math.round(this.y), 40, 40);
+            helpers.drawAnimatedSprite(self.images.irlicht, this.direction, this.frame, Math.round(this.x), Math.round(this.y), 40, 40);
 
             // Zeichne den Lebensbalken
             let  healthPercent = this.health / this.maxHealth;
@@ -173,12 +175,12 @@ export default {
             this.health = 0;
             this.deleted = true;
 
-            game.stat('coins', game.stat('coins') + me.calculateReward(entity.level), true);
+            game.stat('coins', game.stat('coins') + self.calculateReward(entity.level), true);
 
             // Wir überprüfen ob dies der letzte Gegner der Welle ist und vergeben Bonus Coins
             let waveLastBonus = true;
-            for ( let id in me.enemiesList ) {
-                let enemy = me.enemiesList[id];
+            for ( let id in self.enemiesList ) {
+                const enemy = self.enemiesList[id];
                 if ( enemy.wave === entity.wave && !enemy.deleted ) {
                     waveLastBonus = false;
                 }
@@ -217,8 +219,9 @@ export default {
 
         return entity;
     },
+
     calculateReward: function(level) {
-        let base = settings.enemyLevels[0],
+        const base = settings.enemyLevels[0],
             enemy = settings.enemyLevels[level];
 
         return Math.round((enemy.health / base.health) * (enemy.speed / base.speed)) + 4;

@@ -14,8 +14,6 @@ export default {
 
     // Hier werden das Spiel und alle Spielelemente initialisiert.
     init: function () {
-        let me = this;
-
         // Das Canvas-Element brauchen wir noch öfter
         this.canvas = document.getElementById('canvas');
 
@@ -33,10 +31,10 @@ export default {
         this.output('#towerCosts', settings.towers.laser.costs);
 
         // Alle Werte zurück setzen
-        me.resetGame();
+        this.resetGame();
 
         // 30 mal in der Sekunde aktualisieren wir alle Objekte
-        setInterval(me.update.bind(this), 1000 / 30);
+        setInterval(() => this.update(), 1000 / 30);
 
         // Die "draw"-Schleife anstoßen
         this.draw();
@@ -55,15 +53,12 @@ export default {
     },
 
     buyTower: function (bulletType) {
-        let me = this,
-            bullet = bulletType;
-
-        if (me.stat('mode') !== 'dropTower') {
-            let coins = me.stat('coins');
-            if (coins >= settings.towers[bullet].costs) {
-                me.stat('mode', 'dropTower');
-                me.stat('selectedTowerType', bullet);
-                me.stat('coins', coins - settings.towers[bullet].costs, true);
+        if (this.stat('mode') !== 'dropTower') {
+            const coins = this.stat('coins');
+            if (coins >= settings.towers[bulletType].costs) {
+                this.stat('mode', 'dropTower');
+                this.stat('selectedTowerType', bulletType);
+                this.stat('coins', coins - settings.towers[bulletType].costs, true);
             }
         }
     },
@@ -73,32 +68,30 @@ export default {
     },
 
     draw: function () {
-        let me = this;
-
         // Animation Frame anfordern
-        window.requestAnimationFrame(me.draw.bind(this));
+        window.requestAnimationFrame(() => this.draw());
         // Canvas leeren
-        me.ctx.clearRect(0, 0, me.canvas.width, me.canvas.height);
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         // Event triggern so das alle zu zeichnenden Objekte zur Liste "drawList"
         // hinzugefügt werden können.
         // Jedes Objekt, das dieser Liste hinzugefügt wird, benötigt die Eigenschaft "y", "zIndex"
         // und die Methode "draw()" damit es sortiert wird und zum richtigen Zeitpunkt gezeichnet werden kann.
-        me.trigger('beforeDraw');
+        this.trigger('beforeDraw');
 
         // Die Liste mit den zu zeichnenden Objekten vorsortieren
         // damit die weiter oben angesetzten Objekte hinter den Vorderen liegen.
-        helpers._sortEntity.apply(me, ['drawList']);
+        helpers._sortEntity.apply(this, ['drawList']);
 
         // Für jedes Element der Liste rufen wir die Methode "draw()" auf.
         // Diese Methode regelt die Darstellung des Objekts.
-        for (let i = me.drawList.length - 1; i >= 0; i--) {
-            me.drawList.splice(i, 1)[0].draw();
+        for (let i = this.drawList.length - 1; i >= 0; i--) {
+            this.drawList.splice(i, 1)[0].draw();
         }
 
         // Es gibt elemente die noch über den fest platzierten Elementen gezeichnet werden sollen
         // Diese elemente werden im after Draw aufgerufen
-        me.trigger('afterDraw');
+        this.trigger('afterDraw');
     },
 
     // Spielstati

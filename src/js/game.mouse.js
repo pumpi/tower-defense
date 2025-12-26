@@ -7,15 +7,12 @@ export default {
 
     // Initialisiert die Maus
     init: function () {
-        let me = this;
         // Update Event registrieren
-        game.on('update', function () {
-            me.update();
-        });
+        game.on('update', () => this.update());
 
         // Mausbewegung
-        game.canvas.addEventListener('mousemove', me.onMove);
-        game.canvas.addEventListener("click", me.onClick);
+        game.canvas.addEventListener('mousemove', this.onMove);
+        game.canvas.addEventListener("click", this.onClick);
     },
     update: function () {
         game.mouse.clicked = false;
@@ -29,8 +26,6 @@ export default {
         game.mouse.clicked = true;
     },
     isMouseOver: function (x, y, radius) {
-        let me = this;
-
-        return Math.round(Math.sqrt(Math.pow(me.x - x, 2) + Math.pow(me.y - y, 2))) <= radius;
+        return Math.round(Math.sqrt(Math.pow(this.x - x, 2) + Math.pow(this.y - y, 2))) <= radius;
     }
 };

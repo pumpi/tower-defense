@@ -5,13 +5,8 @@ export default {
     list: {},
     idCounter: 0,
     init: function () {
-        const self = this;
-        game.on('update', function () {
-            self.update();
-        });
-        game.on('beforeDraw', function () {
-            self.draw();
-        });
+        game.on('update', () => this.update());
+        game.on('beforeDraw', () => this.draw());
     },
     create: function (x, y, r, color) {
         const self = this,

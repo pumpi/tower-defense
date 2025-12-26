@@ -9,22 +9,15 @@ import helpers from './helpers';
 export default {
     optionsModal: null,
     init: function () {
-        let me = this;
-
         // DOM Element cachen
         this.optionsModal = document.querySelector('.modal-options');
 
-        game.on('update', function () {
-            me.update();
-        });
-        game.on('afterDraw', function () {
-            me.draw();
-        });
+        game.on('update', () => this.update());
+        game.on('afterDraw', () => this.draw());
     },
 
     update: function () {
-        let me = this,
-            gridPosition = me.gridPosition(),
+        const gridPosition = this.gridPosition(),
             bulletType = game.stat('selectedTowerType');
 
         if (game.stat('mode') === 'dropTower' && map.isValidTowerPlace(gridPosition.x, gridPosition.y, bulletType) && game.mouse.clicked) {
@@ -34,10 +27,8 @@ export default {
     },
 
     draw: function () {
-        let me = this;
-
         if (game.stat('mode') === 'dropTower') {
-            let gridPosition = me.gridPosition(),
+            const gridPosition = this.gridPosition(),
                 bulletType = game.stat('selectedTowerType');
 
             if (map.isValidTowerPlace(gridPosition.x, gridPosition.y, bulletType)) {
@@ -55,13 +46,12 @@ export default {
     },
 
     create: function (x, y, bulletType) {
-        const me = this;
         const entity = this._createEntity(x, y, bulletType);
 
-        entity.upgrade = this._entityUpgrade(entity, me);
-        entity.update = this._entityUpdate(entity, me);
-        entity.findClosestEnemy = this._entityFindClosestEnemy(entity);
-        entity.shoot = this._entityShoot(entity);
+        entity.upgrade = this._entityUpgrade(entity, this);
+        entity.update = this._entityUpdate(entity, this);
+        entity.findClosestEnemy = this._entityFindClosestEnemy();
+        entity.shoot = this._entityShoot();
         entity.draw = this._entityDraw(entity);
 
         return entity;
@@ -90,9 +80,9 @@ export default {
         return entity;
     },
 
-    _entityUpgrade: function(entity, me) {
+    _entityUpgrade: function(entity, self) {
         return function() {
-            let coins = game.stat('coins'),
+            const coins = game.stat('coins'),
                 upgrade = settings.towers[entity.bullet].upgrades[entity.level];
 
             if ( upgrade && coins >= upgrade.cost ) {
@@ -106,18 +96,18 @@ export default {
                 entity.level ++;
                 entity.color = upgrade.color;
 
-                me.closeOptions();
+                self.closeOptions();
             }
         };
     },
 
-    _entityUpdate: function(entity, me) {
+    _entityUpdate: function(entity, self) {
         return function () {
             entity.cooldownCounter--;
 
             // Prüfen ob der aktuelle Gegner noch gültig ist (in Reichweite und am Leben)
             if ( this.closestEnemy !== false ) {
-                let enemyDistance = game.distance(this.x, this.y, this.closestEnemy.x, this.closestEnemy.y);
+                const enemyDistance = game.distance(this.x, this.y, this.closestEnemy.x, this.closestEnemy.y);
                 if ( enemyDistance >= (this.fireRange + this.closestEnemy.r) || this.closestEnemy.health <= 0 ) {
                     this.closestEnemy = false;
                 }
@@ -151,12 +141,12 @@ export default {
 
             // Turm-Optionen öffnen bei Klick
             if ( game.stat('mode') !== 'dropTower' && mouse.clicked && mouse.isMouseOver(this.x, this.y, this.r ) ) {
-                me.openOptions(this);
+                self.openOptions(this);
             }
         };
     },
 
-    _entityFindClosestEnemy: function(entity) {
+    _entityFindClosestEnemy: function() {
         return function() {
             // Wähle den am weitesten fortgeschrittenen Gegner (höchster waypointIndex)
             // der in Reichweite ist
@@ -165,8 +155,8 @@ export default {
             let shortestDistanceToWaypoint = Number.MAX_SAFE_INTEGER;
 
             for (let i in enemies.enemiesList) {
-                let enemy = enemies.enemiesList[i];
-                let distance = game.distance(this.x, this.y, enemy.x, enemy.y);
+                const enemy = enemies.enemiesList[i];
+                const distance = game.distance(this.x, this.y, enemy.x, enemy.y);
 
                 // Nur Gegner in Reichweite berücksichtigen
                 if (distance <= (this.fireRange + enemy.r)) {
@@ -180,7 +170,7 @@ export default {
                     }
                     // Bei gleichem waypointIndex: wähle den, der näher am nächsten Waypoint ist
                     else if (enemy.waypointIndex === highestWaypointIndex && enemy.waypoint) {
-                        let distanceToWaypoint = game.distance(enemy.x, enemy.y, enemy.waypoint.x, enemy.waypoint.y);
+                        const distanceToWaypoint = game.distance(enemy.x, enemy.y, enemy.waypoint.x, enemy.waypoint.y);
                         if (distanceToWaypoint < shortestDistanceToWaypoint) {
                             mostAdvancedEnemy = enemy;
                             shortestDistanceToWaypoint = distanceToWaypoint;
@@ -193,10 +183,10 @@ export default {
         };
     },
 
-    _entityShoot: function(entity) {
+    _entityShoot: function() {
         return function (enemy) {
             // DMG Range berechnen
-            let damage = Math.floor(Math.random() * (this.damage.to - this.damage.from + 1) + this.damage.from) ;
+            const damage = Math.floor(Math.random() * (this.damage.to - this.damage.from + 1) + this.damage.from);
 
             // Zählt die abgegebenen Shüsse
             this.stats.shoots += 1;
@@ -225,10 +215,10 @@ export default {
             helpers.drawSprite(settings.towers[entity.bullet].images, entity.level, entity.x, entity.y - 20, 160, 160);
 
             if ( this.closestEnemy ) {
-                let eDistance = game.distance(this.x, this.y, this.closestEnemy.x, this.closestEnemy.y);
+                const eDistance = game.distance(this.x, this.y, this.closestEnemy.x, this.closestEnemy.y);
 
                 // Neue Turm Ausrichtung berechnen
-                let dRatio = (5 + this.r) / eDistance;
+                const dRatio = (5 + this.r) / eDistance;
                 this.barell.x = this.x + dRatio * (this.closestEnemy.x - this.x);
                 this.barell.y = this.y + dRatio * (this.closestEnemy.y - this.y);
             }
