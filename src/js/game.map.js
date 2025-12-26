@@ -52,17 +52,14 @@ export default {
         //
         // game.ctx.restore();
     },
-    isValidTowerPlace: function (x, y) {
+    isValidTowerPlace: function (x, y, bulletType) {
         let me = this;
 
-        // TODO We can buy some types of towers in future
-        let bullet = 'laser'
-
         let r = {
-            left: x - settings.towers[bullet].size,
-            top: y - settings.towers[bullet].size,
-            right: x + settings.towers[bullet].size,
-            bottom: y + settings.towers[bullet].size,
+            left: x - settings.towers[bulletType].size,
+            top: y - settings.towers[bulletType].size,
+            right: x + settings.towers[bulletType].size,
+            bottom: y + settings.towers[bulletType].size,
         };
 
         for (let i = 0; i < me.waypoints.length - 1; i++) {
@@ -90,7 +87,7 @@ export default {
 
         for ( let id in mapEntities.list ) {
             let entity = mapEntities.list[id];
-            if ( entity.type === 'tower' && game.distance(entity.x, entity.y, x, y) <= settings.towers[bullet].size * 2) {
+            if ( entity.type === 'tower' && game.distance(entity.x, entity.y, x, y) <= settings.towers[bulletType].size * 2) {
                 return false;
             }
         }

@@ -52,15 +52,15 @@ export default {
         this.stat('coins', 180, true);	                // Genügend Coins für die ersten beiden Türme
         this.stat('wave', 0, true);						// Wir setzen initial die Welle auf 0. Mit Aufruf von "nextWave()" wird der Wert erhöht.
     },
-    buyTower: function () {
-        // TODO We can buy some types of towers in future
+    buyTower: function (bulletType) {
         let me = this,
-            bullet = 'laser';
+            bullet = bulletType;
 
         if (me.stat('mode') !== 'dropTower') {
             let coins = me.stat('coins');
             if (coins >= settings.towers[bullet].costs) {
                 me.stat('mode', 'dropTower');
+                me.stat('selectedTowerType', bullet);
                 me.stat('coins', coins - settings.towers[bullet].costs, true);
             }
         }

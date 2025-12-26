@@ -23,45 +23,41 @@ export default {
     },
     update: function () {
         let me = this,
-            gridPosition = me.gridPosition();
+            gridPosition = me.gridPosition(),
+            bulletType = game.stat('selectedTowerType');
 
-        if (game.stat('mode') === 'dropTower' && map.isValidTowerPlace(gridPosition.x, gridPosition.y) && game.mouse.clicked) {
+        if (game.stat('mode') === 'dropTower' && map.isValidTowerPlace(gridPosition.x, gridPosition.y, bulletType) && game.mouse.clicked) {
             game.stat('mode', '');
-            this.create(gridPosition.x, gridPosition.y);
+            this.create(gridPosition.x, gridPosition.y, bulletType);
         }
     },
     draw: function () {
         let me = this;
 
         if (game.stat('mode') === 'dropTower') {
-            let gridPosition = me.gridPosition();
+            let gridPosition = me.gridPosition(),
+                bulletType = game.stat('selectedTowerType');
 
-            // TODO We can buy some types of towers in future
-            let bullet = 'laser';
-
-            if (map.isValidTowerPlace(gridPosition.x, gridPosition.y)) {
+            if (map.isValidTowerPlace(gridPosition.x, gridPosition.y, bulletType)) {
                 // Wirkungsradius/Reichweite zeichnen
-                game.drawCircle(gridPosition.x, gridPosition.y, settings.towers[bullet].fireRange, 'rgba(0,0,255,0.2)', true);
+                game.drawCircle(gridPosition.x, gridPosition.y, settings.towers[bulletType].fireRange, 'rgba(0,0,255,0.2)', true);
 
                 //game.drawCircle(gridPosition.x, gridPosition.y, game.settings.tower.size, game.settings.tower.color, true);
-                helpers.drawSprite(settings.towers[bullet].images, 0, gridPosition.x, gridPosition.y - 20, 160, 160);
+                helpers.drawSprite(settings.towers[bulletType].images, 0, gridPosition.x, gridPosition.y - 20, 160, 160);
             }
             else {
-                game.drawCircle(gridPosition.x, gridPosition.y, settings.towers[bullet].size, 'gray', true);
+                game.drawCircle(gridPosition.x, gridPosition.y, settings.towers[bulletType].size, 'gray', true);
             }
         }
 
     },
-    create: function (x, y) {
-        // TODO We can buy some types of towers in future
-        let bullet = 'laser';
-
+    create: function (x, y, bulletType) {
         let me = this,
-            tower = settings.towers[bullet],
+            tower = settings.towers[bulletType],
             entity = mapEntities.create(x, y, tower.size, tower.color);
 
         entity.type = 'tower';
-        entity.bullet = bullet;
+        entity.bullet = bulletType;
 
         entity.fireRange = tower.fireRange;
         entity.damage = tower.damage;

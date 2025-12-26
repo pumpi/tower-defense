@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", function() {
     document.addEventListener('click', function (event) {
         if (!event.target.matches('#buy-tower')) return;
         event.preventDefault();
-        game.buyTower();
+        game.buyTower('laser');
 
     }, false);
 
