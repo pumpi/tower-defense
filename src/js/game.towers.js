@@ -21,6 +21,7 @@ export default {
             me.draw();
         });
     },
+
     update: function () {
         let me = this,
             gridPosition = me.gridPosition(),
@@ -31,6 +32,7 @@ export default {
             this.create(gridPosition.x, gridPosition.y, bulletType);
         }
     },
+
     draw: function () {
         let me = this;
 
@@ -51,32 +53,45 @@ export default {
         }
 
     },
+
     create: function (x, y, bulletType) {
-        let me = this,
-            tower = settings.towers[bulletType],
-            entity = mapEntities.create(x, y, tower.size, tower.color);
+        const me = this;
+        const entity = this._createEntity(x, y, bulletType);
+
+        entity.upgrade = this._entityUpgrade(entity, me);
+        entity.update = this._entityUpdate(entity, me);
+        entity.findClosestEnemy = this._entityFindClosestEnemy(entity);
+        entity.shoot = this._entityShoot(entity);
+        entity.draw = this._entityDraw(entity);
+
+        return entity;
+    },
+
+    _createEntity: function(x, y, bulletType) {
+        const tower = settings.towers[bulletType];
+        const entity = mapEntities.create(x, y, tower.size, tower.color);
 
         entity.type = 'tower';
         entity.bullet = bulletType;
-
         entity.fireRange = tower.fireRange;
         entity.damage = tower.damage;
         entity.cooldownTime = tower.coolDownTime;
-        entity.barell = {x: x, y: y - (5 + entity.r)}
+        entity.barell = {x: x, y: y - (5 + entity.r)};
         entity.audio = new Audio(tower.audio);
         entity.audio.volume = 0.3;
-
-        // Turm Statistik Daten
         entity.stats = {
             shoots: 0,
             dmg: 0,
             kills: 0,
-        }
-
+        };
         entity.cooldownCounter = 0;
         entity.closestEnemy = false;
 
-        entity.upgrade = function() {
+        return entity;
+    },
+
+    _entityUpgrade: function(entity, me) {
+        return function() {
             let coins = game.stat('coins'),
                 upgrade = settings.towers[entity.bullet].upgrades[entity.level];
 
@@ -93,9 +108,11 @@ export default {
 
                 me.closeOptions();
             }
-        }
+        };
+    },
 
-        entity.update = function () {
+    _entityUpdate: function(entity, me) {
+        return function () {
             entity.cooldownCounter--;
 
             // Prüfen ob der aktuelle Gegner noch gültig ist (in Reichweite und am Leben)
@@ -137,8 +154,10 @@ export default {
                 me.openOptions(this);
             }
         };
+    },
 
-        entity.findClosestEnemy = function() {
+    _entityFindClosestEnemy: function(entity) {
+        return function() {
             // Wähle den am weitesten fortgeschrittenen Gegner (höchster waypointIndex)
             // der in Reichweite ist
             let mostAdvancedEnemy = false;
@@ -172,8 +191,10 @@ export default {
 
             return mostAdvancedEnemy;
         };
+    },
 
-        entity.shoot = function (enemy) {
+    _entityShoot: function(entity) {
+        return function (enemy) {
             // DMG Range berechnen
             let damage = Math.floor(Math.random() * (this.damage.to - this.damage.from + 1) + this.damage.from) ;
 
@@ -191,8 +212,10 @@ export default {
 
             this.cooldownCounter = this.cooldownTime;
         };
+    },
 
-        entity.draw = function () {
+    _entityDraw: function(entity) {
+        return function () {
             // Wirkungsradius/Reichweite zeichnen
             if (game.stat('mode') !== 'dropTower' && mouse.isMouseOver(this.x, this.y, this.r )) {
                 game.drawCircle(this.x, this.y, this.fireRange, 'rgba(0,0,255,0.2)', true);
@@ -233,7 +256,6 @@ export default {
             game.ctx.restore();
 
         };
-        return entity;
     },
 
     gridPosition: function() {
