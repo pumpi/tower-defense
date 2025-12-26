@@ -172,6 +172,22 @@ export default {
         this.eventsList[event].push(fn);
         return this;
     },
+    off: function (event, fn) {
+        if (!this.eventsList[event]) return this;
+
+        if (fn) {
+            // Entferne spezifische Funktion
+            const index = this.eventsList[event].indexOf(fn);
+            if (index !== -1) {
+                this.eventsList[event].splice(index, 1);
+            }
+        } else {
+            // Entferne alle Listener für dieses Event
+            delete this.eventsList[event];
+        }
+
+        return this;
+    },
     trigger: function (event) {
         if (!this.eventsList[event]) return this;
         for (let i = 0; i < this.eventsList[event].length; i++) {
