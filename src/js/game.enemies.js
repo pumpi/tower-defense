@@ -157,7 +157,7 @@ export default {
     _entityDraw: function(self) {
         return function () {
             // Den Gegner zeichnen
-            helpers.drawAnimatedSprite(self.images.irlicht, this.direction, this.frame, Math.round(this.x), Math.round(this.y), 40, 40);
+            helpers.drawAnimatedSprite(self.images[this.enemyType], this.direction, this.frame, Math.round(this.x), Math.round(this.y), 40, 40);
 
             // Zeichne den Lebensbalken
             let  healthPercent = this.health / this.maxHealth;
