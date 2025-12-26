@@ -38,14 +38,12 @@ export default {
         this.enemiesList.splice(index, 1);
     },
 
-    create: function (level, wave) {
-        const shift = Math.round(Math.random() * 40) - 10,
-            self = this,
-            entity = mapEntities.create(0, 0, 10, 'red');
+    _createEntity: function(level, wave) {
+        const shift = Math.round(Math.random() * 40) - 10;
+        const entity = mapEntities.create(0, 0, 10, 'red');
 
         entity.waypointIndex = 0;
         entity.waypoint = {};
-
         entity.shift = shift;
         entity.velocity = {x: 0, y: 0};
 
@@ -61,10 +59,14 @@ export default {
         entity.direction = 0;
         entity.frame = 0;
         entity.enemyType = 'irlicht';
-
         entity.deleted = false;
+        entity.zIndex = 5;
 
-        entity.nextWaypoint = function () {
+        return entity;
+    },
+
+    _entityNextWaypoint: function(entity) {
+        return function () {
             if (!this.waypoint.x) {
                 // Waypoint Objekt kopieren
                 this.waypoint = Object.assign({}, map.waypoints[this.waypointIndex]);
@@ -115,8 +117,10 @@ export default {
 
             return true;
         };
+    },
 
-        entity.waypointReached = function () {
+    _entityWaypointReached: function() {
+        return function () {
             return (
                 (this.velocity.x > 0 && this.x >= this.waypoint.x)
                 || (this.velocity.x < 0 && this.x <= this.waypoint.x)
@@ -124,8 +128,10 @@ export default {
                 || (this.velocity.y < 0 && this.y <= this.waypoint.y)
             );
         };
+    },
 
-        entity.update = function () {
+    _entityUpdate: function(self) {
+        return function () {
             if (this.deleted === true) return;
             if (this.health <= 0) {
                 return this.die();
@@ -146,8 +152,10 @@ export default {
             }
 
         };
+    },
 
-        entity.draw = function () {
+    _entityDraw: function(self) {
+        return function () {
             // Den Gegner zeichnen
             helpers.drawAnimatedSprite(self.images.irlicht, this.direction, this.frame, Math.round(this.x), Math.round(this.y), 40, 40);
 
@@ -170,8 +178,10 @@ export default {
 
 
         };
+    },
 
-        entity.die = function () {
+    _entityDie: function(entity, self) {
+        return function () {
             this.health = 0;
             this.deleted = true;
 
@@ -190,8 +200,10 @@ export default {
 
             return this;
         };
+    },
 
-        entity.done = function () {
+    _entityDone: function() {
+        return function () {
             this.deleted = true;
             let life = game.stat('life');
             life -= 1;
@@ -204,14 +216,26 @@ export default {
 
             return this;
         };
+    },
 
-        entity.damage = function (damage) {
+    _entityDamage: function() {
+        return function (damage) {
             this.health -= damage;
             if (this.health <= 0 && !this.deleted) this.die();
         };
+    },
 
-        // Enemies sollen unter Towers gezeichnet werden
-        entity.zIndex = 5;
+    create: function (level, wave) {
+        const self = this;
+        const entity = this._createEntity(level, wave);
+
+        entity.nextWaypoint = this._entityNextWaypoint(entity);
+        entity.waypointReached = this._entityWaypointReached();
+        entity.update = this._entityUpdate(self);
+        entity.draw = this._entityDraw(self);
+        entity.die = this._entityDie(entity, self);
+        entity.done = this._entityDone();
+        entity.damage = this._entityDamage();
 
         // Zum nächsten Waypoint laufen
         entity.nextWaypoint();
