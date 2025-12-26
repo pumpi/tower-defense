@@ -208,6 +208,9 @@ export default {
             if (this.health <= 0 && !this.deleted) this.die();
         };
 
+        // Enemies sollen unter Towers gezeichnet werden
+        entity.zIndex = 5;
+
         // Zum nächsten Waypoint laufen
         entity.nextWaypoint();
         this.enemiesList.push(entity);

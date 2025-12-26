@@ -3,10 +3,11 @@ import game from './game';
 export default {
 
     _sortEntity: function (listIndex) {
-        // Die Liste mit den zu zeichnenden Objekten vorsortieren
-        // damit die weiter oben angesetzten Objekte hinter den Vorderen liegen.
+        // Die Liste wird rückwärts durchlaufen, daher umgekehrt sortieren
+        // Objekte mit höherem zIndex kommen zuerst in die Liste,
+        // werden aber zuletzt gezeichnet (weil rückwärts iteriert) → landen vorne
         this[listIndex].sort(function (a, b) {
-            return a.y > b.y || b.zIndex - a.zIndex;
+            return (b.zIndex - a.zIndex) || (b.y - a.y);
         });
     },
     createImage : function(src, spr = []) {

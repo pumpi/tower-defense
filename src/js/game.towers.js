@@ -136,7 +136,7 @@ export default {
             // Wenn man den Turm Hoverst soll sich der zIndex erhöhen
             entity.zIndex = 10;
             if (mouse.isMouseOver(this.x, this.y, this.r )) {
-                entity.zIndex = 100;
+                entity.zIndex = 20;
             }
 
             if ( game.stat('mode') !== 'dropTower' && mouse.clicked && mouse.isMouseOver(this.x, this.y, this.r ) ) {
