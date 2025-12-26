@@ -97,51 +97,79 @@ export default {
         entity.update = function () {
             entity.cooldownCounter--;
 
-            // Prüfen ob der aktuelle Gegner noch im Reichweite ist oder tot ist
+            // Prüfen ob der aktuelle Gegner noch gültig ist (in Reichweite und am Leben)
             if ( this.closestEnemy !== false ) {
-                let newEnemyDistance = game.distance(this.x, this.y, this.closestEnemy.x, this.closestEnemy.y);
-
-                if ( newEnemyDistance >= (this.fireRange + this.closestEnemy.r) || this.closestEnemy.health <= 0 ) {
+                let enemyDistance = game.distance(this.x, this.y, this.closestEnemy.x, this.closestEnemy.y);
+                if ( enemyDistance >= (this.fireRange + this.closestEnemy.r) || this.closestEnemy.health <= 0 ) {
                     this.closestEnemy = false;
                 }
             }
 
+            // Neuen Gegner suchen, falls kein gültiger Gegner vorhanden
             if ( this.closestEnemy === false ) {
+                this.closestEnemy = this.findClosestEnemy();
+            }
 
-                let closestDistance = Number.MAX_SAFE_INTEGER;
-                for (let i in enemies.enemiesList) {
-                    let enemy = enemies.enemiesList[i];
-                    let distance = game.distance(this.x, this.y, enemy.x, enemy.y);
-                    if (distance < closestDistance && distance <= (this.fireRange + enemy.r)) {
-                        closestDistance = distance;
-                        this.closestEnemy = enemy;
-                    }
+            // Gegner angreifen wenn vorhanden und Cooldown abgelaufen
+            if ( this.closestEnemy !== false ) {
+                this.closestEnemy.shoot = false;
+
+                if ( entity.cooldownCounter <= 0 ) {
+                    this.shoot(this.closestEnemy);
+                    this.closestEnemy.shoot = true;
+
+                    // Audio mit Error Handling (Browser Autoplay-Policies)
+                    entity.audio.play().catch(() => {
+                        // Audio playback wurde blockiert - ignorieren wir stillschweigend
+                    });
                 }
             }
 
-            if ( this.closestEnemy !== false ) {
-                this.closestEnemy.shoot = false;
-            }
-
-            if ( this.closestEnemy !== false && entity.cooldownCounter <= 0) {
-                this.shoot(this.closestEnemy);
-                this.closestEnemy.shoot = true;
-
-                // Audio mit Error Handling (Browser Autoplay-Policies)
-                entity.audio.play().catch(() => {
-                    // Audio playback wurde blockiert - ignorieren wir stillschweigend
-                });
-            }
-
-            // Wenn man den Turm Hoverst soll sich der zIndex erhöhen
+            // zIndex für Rendering-Reihenfolge setzen
             entity.zIndex = 10;
             if (mouse.isMouseOver(this.x, this.y, this.r )) {
                 entity.zIndex = 20;
             }
 
+            // Turm-Optionen öffnen bei Klick
             if ( game.stat('mode') !== 'dropTower' && mouse.clicked && mouse.isMouseOver(this.x, this.y, this.r ) ) {
                 me.openOptions(this);
             }
+        };
+
+        entity.findClosestEnemy = function() {
+            // Wähle den am weitesten fortgeschrittenen Gegner (höchster waypointIndex)
+            // der in Reichweite ist
+            let mostAdvancedEnemy = false;
+            let highestWaypointIndex = -1;
+            let shortestDistanceToWaypoint = Number.MAX_SAFE_INTEGER;
+
+            for (let i in enemies.enemiesList) {
+                let enemy = enemies.enemiesList[i];
+                let distance = game.distance(this.x, this.y, enemy.x, enemy.y);
+
+                // Nur Gegner in Reichweite berücksichtigen
+                if (distance <= (this.fireRange + enemy.r)) {
+                    // Wähle Gegner mit höherem waypointIndex
+                    if (enemy.waypointIndex > highestWaypointIndex) {
+                        highestWaypointIndex = enemy.waypointIndex;
+                        mostAdvancedEnemy = enemy;
+                        shortestDistanceToWaypoint = enemy.waypoint ?
+                            game.distance(enemy.x, enemy.y, enemy.waypoint.x, enemy.waypoint.y) :
+                            Number.MAX_SAFE_INTEGER;
+                    }
+                    // Bei gleichem waypointIndex: wähle den, der näher am nächsten Waypoint ist
+                    else if (enemy.waypointIndex === highestWaypointIndex && enemy.waypoint) {
+                        let distanceToWaypoint = game.distance(enemy.x, enemy.y, enemy.waypoint.x, enemy.waypoint.y);
+                        if (distanceToWaypoint < shortestDistanceToWaypoint) {
+                            mostAdvancedEnemy = enemy;
+                            shortestDistanceToWaypoint = distanceToWaypoint;
+                        }
+                    }
+                }
+            }
+
+            return mostAdvancedEnemy;
         };
 
         entity.shoot = function (enemy) {
@@ -207,17 +235,20 @@ export default {
         };
         return entity;
     },
+
     gridPosition: function() {
         let x = ((Math.floor(game.mouse.x / settings.mapGrid)) * settings.mapGrid) + (settings.mapGrid / 2),
             y = ((Math.floor(game.mouse.y / settings.mapGrid)) * settings.mapGrid) + (settings.mapGrid / 2);
 
         return {x: x, y: y};
     },
+
     drawTower: function(bullet, x, y, level) {
         let image = this.images[bullet];
         //console.log('before onload');
         game.ctx.drawImage(image, 0, level * 160, image.width, image.width, x - 40, y - 60, 80, 80);
     },
+
     openOptions: function(tower) {
         let optionsModal = document.querySelector('.modal-options');
 
@@ -253,6 +284,7 @@ export default {
         optionsModal.classList.add('is--open');
 
     },
+
     closeOptions: function() {
         document.querySelector('.modal-options').classList.remove('is--open');
     }
