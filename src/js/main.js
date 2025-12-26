@@ -1,4 +1,5 @@
 import game from './game';
+import towers from './game.towers';
 
 document.addEventListener("DOMContentLoaded", function() {
     game.init();
@@ -20,7 +21,7 @@ document.addEventListener("DOMContentLoaded", function() {
     document.addEventListener('click', function (event) {
         if (!event.target.matches('.modal-close')) return;
         event.preventDefault();
-        document.querySelector('.modal-options').classList.remove('is--open');
+        towers.closeOptions();
 
     }, false);
 });
