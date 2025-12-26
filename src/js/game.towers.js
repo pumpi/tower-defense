@@ -7,8 +7,13 @@ import enemies from './game.enemies';
 import helpers from './helpers';
 
 export default {
+    optionsModal: null,
     init: function () {
         let me = this;
+
+        // DOM Element cachen
+        this.optionsModal = document.querySelector('.modal-options');
+
         game.on('update', function () {
             me.update();
         });
@@ -250,8 +255,6 @@ export default {
     },
 
     openOptions: function(tower) {
-        let optionsModal = document.querySelector('.modal-options');
-
         game.output('#tower-position-x', tower.x);
         game.output('#tower-position-y', tower.y);
         game.output('#tower-level', tower.level +1);
@@ -265,7 +268,7 @@ export default {
 
         let upgrade = settings.towers[tower.bullet].upgrades[tower.level];
         if ( upgrade ) {
-            optionsModal.querySelector('.tower-upgrade').classList.remove('is--hidden');
+            this.optionsModal.querySelector('.tower-upgrade').classList.remove('is--hidden');
 
             game.output('#tower-upgrade-level', tower.level + 2);
             game.output('#tower-upgrade-cost', upgrade.cost);
@@ -274,18 +277,18 @@ export default {
             game.output('#tower-upgrade-damage-to', upgrade.damage.to);
             game.output('.modal-options .tower-upgrade-level', tower.level + 2);
 
-            optionsModal.querySelector('.tower-buy-upgrade').onclick = function() {
+            this.optionsModal.querySelector('.tower-buy-upgrade').onclick = function() {
                 tower.upgrade();
             }
         } else {
-            optionsModal.querySelector('.tower-upgrade').classList.add('is--hidden');
+            this.optionsModal.querySelector('.tower-upgrade').classList.add('is--hidden');
         }
 
-        optionsModal.classList.add('is--open');
+        this.optionsModal.classList.add('is--open');
 
     },
 
     closeOptions: function() {
-        document.querySelector('.modal-options').classList.remove('is--open');
+        this.optionsModal.classList.remove('is--open');
     }
 };
