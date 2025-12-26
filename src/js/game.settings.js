@@ -4,7 +4,8 @@ import laserTowerImage from '../img/tower/laser.png';
 import laserAudio from '../audio/laser.mp3';
 
 export default {
-    playerLifes: 10,		// Lebenspunkte des Spielers
+    playerLifes: 10,	// Lebenspunkte des Spielers
+    coins: 180,         // Initiale anzahl an coins
 
     towers: {
         laser: {

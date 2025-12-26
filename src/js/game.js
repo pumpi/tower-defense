@@ -48,7 +48,7 @@ export default {
         mapEntities.list = {};
         // Anfangswerte setzen
         this.stat('life', settings.playerLifes, true);	// Leben des Spielers
-        this.stat('coins', 180, true);	                // Genügend Coins für die ersten beiden Türme
+        this.stat('coins', settings.coins, true);	                // Genügend Coins für die ersten beiden Türme
         this.stat('wave', 0, true);						// Wir setzen initial die Welle auf 0. Mit Aufruf von "nextWave()" wird der Wert erhöht.
     },
 
