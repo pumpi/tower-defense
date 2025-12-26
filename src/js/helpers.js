@@ -1,23 +1,21 @@
 import game from './game';
 
 export default {
-    _sortEntity: function (listIndex) {
+    sortEntity: (list) => {
         // Die Liste wird rückwärts durchlaufen, daher umgekehrt sortieren
         // Objekte mit höherem zIndex kommen zuerst in die Liste,
         // werden aber zuletzt gezeichnet (weil rückwärts iteriert) → landen vorne
-        this[listIndex].sort(function (a, b) {
-            return (b.zIndex - a.zIndex) || (b.y - a.y);
-        });
+        return [...list].sort((a, b) => (b.zIndex - a.zIndex) || (b.y - a.y));
     },
 
-    createImage : function(src, spr = []) {
+    createImage : (src, spr = []) => {
         const img = new Image();
         img.src = src;
         img.sprites = spr;
         return img;
     },
 
-    drawSprite: function(image, spriteInd, x, y, w, h){
+    drawSprite: (image, spriteInd, x, y, w, h) => {
         // image is the image. Must have an array of sprites
         // image.sprites = [{x:0,y:0,w:10,h:10},{x:20,y:0,w:30,h:40},....]
         // where the position and size of each sprite is kept
@@ -29,7 +27,7 @@ export default {
         game.ctx.drawImage(image,spr.x,spr.y,w,h,x - spr.w / 2,y - spr.h / 2,spr.w,spr.h); // render the subimage
     },
 
-    drawAnimatedSprite: function(image, spriteInd, frameInd, x, y, w, h){
+    drawAnimatedSprite: (image, spriteInd, frameInd, x, y, w, h) => {
         // image is the image. Must have an array of sprites
         // image.sprites = [{x:0,y:0,w:10,h:10},{x:20,y:0,w:30,h:40},....]
         // where the position and size of each sprite is kept

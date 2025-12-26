@@ -81,7 +81,7 @@ export default {
 
         // Die Liste mit den zu zeichnenden Objekten vorsortieren
         // damit die weiter oben angesetzten Objekte hinter den Vorderen liegen.
-        helpers._sortEntity.apply(this, ['drawList']);
+        this.drawList = helpers.sortEntity(this.drawList);
 
         // Für jedes Element der Liste rufen wir die Methode "draw()" auf.
         // Diese Methode regelt die Darstellung des Objekts.

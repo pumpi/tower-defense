@@ -278,7 +278,7 @@ export default {
             game.output('#tower-upgrade-damage-to', upgrade.damage.to);
             game.output('.modal-options .tower-upgrade-level', tower.level + 2);
 
-            this.optionsModal.querySelector('.tower-buy-upgrade').onclick = function() {
+            this.optionsModal.querySelector('.tower-buy-upgrade').onclick = () => {
                 tower.upgrade();
             }
         } else {
