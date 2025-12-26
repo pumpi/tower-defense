@@ -41,6 +41,7 @@ export default {
         // Die "draw"-Schleife anstoßen
         this.draw();
     },
+
     // Setzt alle Werte zurück. Diese Methode kann zur Initialisierung und zum Resetten verwendet werden.
     resetGame: function () {
         // Wir fangen wieder mit der ersten Welle an
@@ -52,6 +53,7 @@ export default {
         this.stat('coins', 180, true);	                // Genügend Coins für die ersten beiden Türme
         this.stat('wave', 0, true);						// Wir setzen initial die Welle auf 0. Mit Aufruf von "nextWave()" wird der Wert erhöht.
     },
+
     buyTower: function (bulletType) {
         let me = this,
             bullet = bulletType;
@@ -65,9 +67,11 @@ export default {
             }
         }
     },
+
     update: function () {
         this.trigger('update');
     },
+
     draw: function () {
         let me = this;
 
@@ -96,6 +100,7 @@ export default {
         // Diese elemente werden im after Draw aufgerufen
         me.trigger('afterDraw');
     },
+
     // Spielstati
     stats: {},
     stat: function (name, value, output) {
@@ -104,22 +109,30 @@ export default {
         if (output !== undefined) this.output(`#${name}`, value);
         return this;
     },
-    // Ausgabe
+
+    // Ausgabe mit Query-Cache
+    _outputCache: {},
     output: function (query, value) {
-        document.querySelector(query).innerHTML = value;
+        if (!this._outputCache[query]) {
+            this._outputCache[query] = document.querySelector(query);
+        }
+        this._outputCache[query].innerHTML = value;
     },
+
     // Die Distanz zwischen zwei Punkten
     distance: function (x1, y1, x2, y2) {
         let a = x1 - x2,
             b = y1 - y2;
         return Math.sqrt(a * a + b * b);
     },
+
     intersectRect: function (r1, r2) {
         return !(r2.left > r1.right ||
             r2.right < r1.left ||
             r2.top > r1.bottom ||
             r2.bottom < r1.top);
     },
+
     drawCircle: function (x, y, r, color, fill = true) {
         // Zunächst öffnen wir einen Pfad..
         this.ctx.beginPath();
@@ -135,11 +148,12 @@ export default {
             this.ctx.stroke();
         }
     },
+
     // Waves
     waveCounter: 0,
     nextWave: function () {
         // Es muss mindestens ein Turm existieren
-        if (Object.keys(mapEntities.list).length == 0) return this;
+        if (Object.keys(mapEntities.list).length === 0) return this;
         //if (this.stat('mode')!='nextWave') return this;
 
         this.waveCounter++;
@@ -165,6 +179,7 @@ export default {
 
         return this;
     },
+
     // Events
     eventsList: {},
     on: function (event, fn) {
@@ -172,6 +187,7 @@ export default {
         this.eventsList[event].push(fn);
         return this;
     },
+
     off: function (event, fn) {
         if (!this.eventsList[event]) return this;
 
@@ -188,6 +204,7 @@ export default {
 
         return this;
     },
+
     trigger: function (event) {
         if (!this.eventsList[event]) return this;
         for (let i = 0; i < this.eventsList[event].length; i++) {
