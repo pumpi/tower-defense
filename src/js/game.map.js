@@ -24,7 +24,7 @@ export default {
         background: helpers.createImage(backgroundImage)
     },
     init: function () {
-        var self = this;
+        const self = this;
         game.on('update', function () {
             self.update();
         });

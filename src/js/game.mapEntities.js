@@ -5,7 +5,7 @@ export default {
     list: {},
     idCounter: 0,
     init: function () {
-        var self = this;
+        const self = this;
         game.on('update', function () {
             self.update();
         });
@@ -14,7 +14,7 @@ export default {
         });
     },
     create: function (x, y, r, color) {
-        let self = this,
+        const self = this,
             id = ++this.idCounter,
             entity = {
                 id: id,
