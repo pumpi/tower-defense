@@ -1,161 +1,189 @@
-import map from './game.map';
-import mapEntities from './game.mapEntities';
-import enemies from './game.enemies';
-import towers from './game.towers';
-import mouse from './game.mouse';
-import settings from './game.settings';
-import helpers from "./helpers";
+import MapController from './controllers/MapController.js';
+import MapEntityManager from './controllers/MapEntityManager.js';
+import MouseController from './controllers/MouseController.js';
+import Enemies from './entities/Enemies.js';
+import Towers from './entities/Towers.js';
+import settings from './game.settings.js';
+import helpers from "./helpers.js";
 
-export default {
-    canvas: false,	// Das Canvas Element. Hierüber erhalten wir die aktuelle Breite und Höhe des Canvas.
-    ctx: false,		// Der Kontext über den wir auf dem Canvas zeichnen können.
-    drawList: [],	// In dieser Liste werden alle zu zeichnenden Objekte gesammelt. Nach jedem "draw()"-Durchlauf ist die Liste leer und muss neu befüllt werden.
-    mouse: mouse,
-
-    // Hier werden das Spiel und alle Spielelemente initialisiert.
-    init: function () {
-        let me = this;
-
-        // Das Canvas-Element brauchen wir noch öfter
+class Game {
+    constructor() {
+        helpers.init(this);
+        
+        // Core properties
         this.canvas = document.getElementById('canvas');
-
-        // Den 2D-Kontext merken wir uns in der game.ctx Variable.
         this.ctx = this.canvas.getContext("2d");
+        this.drawList = [];
+        this.stats = {};
+        this._outputCache = {};
+        this.waveCounter = 0;
+        this.gameOver = false;
+        this.eventsList = {};
+        this.lastFrameTime = 0;
 
-        // Alle Erweiterungen initialisieren
-        map.init();
-        mapEntities.init();
-        enemies.init();
-        towers.init();
-        this.mouse.init();
+        // Create instances of all controllers, injecting dependencies
+        this.mapEntities = new MapEntityManager(this);
+        this.map = new MapController(this, this.mapEntities);
+        this.mouse = new MouseController(this);
+        this.enemies = new Enemies(this, this.map, this.mapEntities);
+        this.towers = new Towers(this, this.map, this.mouse, this.mapEntities, this.enemies);
 
-        // Einmalig schreiben wir in die Buttons die Kosten
+        // UI Listeners
+        document.addEventListener('click', (event) => {
+            if (this.gameOver) {
+                this.resetGame();
+                return;
+            }
+            if (event.target.matches('#buy-tower')) {
+                event.preventDefault();
+                this.buyTower('laser');
+            }
+            if (event.target.matches('#next-wave')) {
+                event.preventDefault();
+                this.nextWave();
+            }
+            if (event.target.matches('.modal-close')) {
+                event.preventDefault();
+                this.towers.closeOptions();
+            }
+        }, false);
+        
+        // Initial static setup
         this.output('#towerCosts', settings.towers.laser.costs);
 
-        // Alle Werte zurück setzen
-        me.resetGame();
+        // Start the game
+        this.resetGame();
 
-        // 30 mal in der Sekunde aktualisieren wir alle Objekte
-        setInterval(me.update.bind(this), 1000 / 30);
+        window.requestAnimationFrame(this.draw.bind(this));
+    }
 
-        // Die "draw"-Schleife anstoßen
-        this.draw();
-    },
-    // Setzt alle Werte zurück. Diese Methode kann zur Initialisierung und zum Resetten verwendet werden.
-    resetGame: function () {
-        // Wir fangen wieder mit der ersten Welle an
+    resetGame() {
+        this.gameOver = false;
         this.waveCounter = 0;
-        // Alle bestehenden Entitäten entfernen
-        mapEntities.list = {};
-        // Anfangswerte setzen
-        this.stat('life', settings.playerLifes, true);	// Leben des Spielers
-        this.stat('coins', 180, true);	                // Genügend Coins für die ersten beiden Türme
-        this.stat('wave', 0, true);						// Wir setzen initial die Welle auf 0. Mit Aufruf von "nextWave()" wird der Wert erhöht.
-    },
-    buyTower: function () {
-        // TODO We can buy some types of towers in future
-        let me = this,
-            bullet = 'laser'
+        this.mapEntities.list = {}; // Reset entities
+        this.stat('life', settings.playerLifes, true);
+        this.stat('coins', settings.coins, true);
+        this.stat('wave', 0, true);
+        this.stat('mode', ''); // Reset game mode
+    }
 
-        if (me.stat('mode') !== 'dropTower') {
-            let coins = me.stat('coins');
-            if (coins >= settings.towers[bullet].costs) {
-                me.stat('mode', 'dropTower');
-                me.stat('coins', coins - settings.towers[bullet].costs, true);
+    buyTower(bulletType) {
+        if (this.stat('mode') !== 'dropTower') {
+            const coins = this.stat('coins');
+            if (coins >= settings.towers[bulletType].costs) {
+                this.stat('mode', 'dropTower');
+                this.stat('selectedTowerType', bulletType);
+                this.stat('coins', coins - settings.towers[bulletType].costs, true);
             }
         }
-    },
-    update: function () {
-        this.trigger('update');
-    },
-    draw: function () {
-        let me = this;
+    }
 
-        // Animation Frame anfordern
-        window.requestAnimationFrame(me.draw.bind(this));
-        // Canvas leeren
-        me.ctx.clearRect(0, 0, me.canvas.width, me.canvas.height);
+    update(deltaTime) {
+        if (this.gameOver) return;
+        this.trigger('update', deltaTime);
+        this.mouse.update();
+    }
 
-        // Event triggern so das alle zu zeichnenden Objekte zur Liste "drawList"
-        // hinzugefügt werden können.
-        // Jedes Objekt, das dieser Liste hinzugefügt wird, benötigt die Eigenschaft "y", "zIndex"
-        // und die Methode "draw()" damit es sortiert wird und zum richtigen Zeitpunkt gezeichnet werden kann.
-        me.trigger('beforeDraw');
+    draw(timestamp) {
+        if (!timestamp) timestamp = 0;
+        const deltaTime = (timestamp - this.lastFrameTime) / 1000;
+        this.lastFrameTime = timestamp;
 
-        // Die Liste mit den zu zeichnenden Objekten vorsortieren
-        // damit die weiter oben angesetzten Objekte hinter den Vorderen liegen.
-        helpers._sortEntity.apply(me, ['drawList']);
-
-        // Für jedes Element der Liste rufen wir die Methode "draw()" auf.
-        // Diese Methode regelt die Darstellung des Objekts.
-        for (let i = me.drawList.length - 1; i >= 0; i--) {
-            me.drawList.splice(i, 1)[0].draw();
+        if (this.gameOver) {
+            window.requestAnimationFrame(this.draw.bind(this));
+            return;
         }
 
-        // Es gibt elemente die noch über den fest platzierten Elementen gezeichnet werden sollen
-        // Diese elemente werden im after Draw aufgerufen
-        me.trigger('afterDraw');
-    },
-    // Spielstati
-    stats: {},
-    stat: function (name, value, output) {
+        window.requestAnimationFrame(this.draw.bind(this));
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        this.update(deltaTime);
+
+        this.trigger('beforeDraw');
+
+        this.drawList = helpers.sortEntity(this.drawList);
+
+        for (const entity of this.drawList) {
+            entity.draw();
+        }
+        this.drawList = [];
+
+        this.trigger('afterDraw');
+    }
+
+    setGameOver() {
+        this.gameOver = true;
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.fillStyle = 'white';
+        this.ctx.font = '48px sans-serif';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText('Game Over', this.canvas.width / 2, this.canvas.height / 2 - 40);
+        this.ctx.font = '24px sans-serif';
+        this.ctx.fillText('Klicken zum Neustarten', this.canvas.width / 2, this.canvas.height / 2 + 20);
+    }
+
+    stat(name, value, output) {
         if (value === undefined) return this.stats[name] || false;
         this.stats[name] = value;
         if (output !== undefined) this.output(`#${name}`, value);
         return this;
-    },
-    // Ausgabe
-    output: function (query, value) {
-        document.querySelector(query).innerHTML = value;
-    },
-    // Die Distanz zwischen zwei Punkten
-    distance: function (x1, y1, x2, y2) {
-        let a = x1 - x2,
-            b = y1 - y2;
+    }
+
+    output(query, value) {
+        if (!this._outputCache[query]) {
+            this._outputCache[query] = document.querySelectorAll(query);
+        }
+        if (this._outputCache[query]) {
+            this._outputCache[query].forEach((element) => {
+                element.innerHTML = value;
+            })
+        }
+    }
+
+    distance(x1, y1, x2, y2) {
+        let a = x1 - x2;
+        let b = y1 - y2;
         return Math.sqrt(a * a + b * b);
-    },
-    intersectRect: function (r1, r2) {
+    }
+
+    intersectRect(r1, r2) {
         return !(r2.left > r1.right ||
             r2.right < r1.left ||
             r2.top > r1.bottom ||
             r2.bottom < r1.top);
-    },
-    drawCircle: function (x, y, r, color, fill = true) {
-        // Zunächst öffnen wir einen Pfad..
+    }
+
+    drawCircle(x, y, r, color, fill = true) {
         this.ctx.beginPath();
-        // .. zeichnen einen Bogen der mit 2*PI Umfang zu einem ganzen Kreis wird..
         this.ctx.arc(x, y, r, 0, 2 * Math.PI);
         if (fill === true) {
-            // ..setzen eine Füllfarbe..
             this.ctx.fillStyle = color;
-            // .. und füllen diesen Bereich mit der vorher festgelegten Farbe
             this.ctx.fill();
         } else {
             this.ctx.strokeStyle = color;
             this.ctx.stroke();
         }
-    },
-    // Waves
-    waveCounter: 0,
-    nextWave: function () {
-        // Es muss mindestens ein Turm existieren
-        if (Object.keys(mapEntities.list).length == 0) return this;
-        //if (this.stat('mode')!='nextWave') return this;
+    }
+
+    nextWave() {
+        if (Object.keys(this.mapEntities.list).length === 0) return this;
 
         this.waveCounter++;
         this.stat('wave', this.waveCounter, true);
 
-        let delay = 0,
-            levelInc = Math.floor(this.waveCounter / settings.enemyLevelIncAt),
-            maxTemplate = settings.waves.length - 1,
-            template = settings.waves[Math.min(levelInc, maxTemplate)].template;
+        let delay = 0;
+        let levelInc = Math.floor(this.waveCounter / settings.enemyLevelIncAt);
+        let maxTemplate = settings.waves.length - 1;
+        let template = settings.waves[Math.min(levelInc, maxTemplate)].template;
+        let currentWave = this.waveCounter;
 
         for (let spawn of template) {
-            let ec = Math.round(spawn.count + (this.waveCounter * spawn.waveFactor)); // Die Anzahl der Gegner multiplitziert mit dem Wellen Faktor
-            setTimeout(function () {
+            let ec = Math.round(spawn.count + (currentWave * spawn.waveFactor));
+            setTimeout(() => {
                 for (let i = 0; i < ec; i++) {
-                    setTimeout(function () {
-                        enemies.create(spawn.level + levelInc, this.waveCounter);
+                    setTimeout(() => {
+                        this.enemies.create(spawn.level + levelInc, currentWave);
                     }, i * spawn.coolDown);
                 }
             }, delay);
@@ -163,20 +191,36 @@ export default {
         }
 
         return this;
-    },
-    // Events
-    eventsList: {},
-    on: function (event, fn) {
+    }
+
+    on(event, fn) {
         if (!this.eventsList[event]) this.eventsList[event] = [];
         this.eventsList[event].push(fn);
         return this;
-    },
-    trigger: function (event) {
+    }
+
+    off(event, fn) {
         if (!this.eventsList[event]) return this;
-        for (let i = 0; i < this.eventsList[event].length; i++) {
-            this.eventsList[event][i]();
+
+        if (fn) {
+            const index = this.eventsList[event].indexOf(fn);
+            if (index !== -1) {
+                this.eventsList[event].splice(index, 1);
+            }
+        } else {
+            delete this.eventsList[event];
         }
 
         return this;
     }
+
+    trigger(event, deltaTime) {
+        if (!this.eventsList[event]) return this;
+        for (let i = 0; i < this.eventsList[event].length; i++) {
+            this.eventsList[event][i](deltaTime);
+        }
+        return this;
+    }
 }
+
+export default Game;

@@ -1,25 +1,29 @@
 name: Build and Deploy for Github Pages
 
-on: [push]
+on:
+  push:
+    branches:
+      - main
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          persist-credentials: false
+          node-version: '20'
 
       - name: Install and Build
         run: |
           npm install
           npm run build
 
-      - name: Deploy 🚀
-        uses: JamesIves/github-pages-deploy-action@3.7.1
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: gh-pages
-          FOLDER: dist
-          CLEAN: true
+          folder: dist
+          clean: true

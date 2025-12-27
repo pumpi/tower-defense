@@ -1,21 +1,24 @@
-import game from './game';
+let game = null;
 
 export default {
-
-    _sortEntity: function (listIndex) {
-        // Die Liste mit den zu zeichnenden Objekten vorsortieren
-        // damit die weiter oben angesetzten Objekte hinter den Vorderen liegen.
-        this[listIndex].sort(function (a, b) {
-            return a.y > b.y || b.zIndex - a.zIndex;
-        });
+    init: (gameInstance) => {
+        game = gameInstance;
     },
-    createImage : function(src, spr = []) {
-        let img = new Image();
+    sortEntity: (list) => {
+        // Die Liste wird rückwärts durchlaufen, daher umgekehrt sortieren
+        // Objekte mit höherem zIndex kommen zuerst in die Liste,
+        // werden aber zuletzt gezeichnet (weil rückwärts iteriert) → landen vorne
+        return [...list].sort((a, b) => (a.zIndex - b.zIndex) || (a.y - b.y));
+    },
+
+    createImage : (src, spr = []) => {
+        const img = new Image();
         img.src = src;
         img.sprites = spr;
         return img;
     },
-    drawSprite: function(image, spriteInd, x, y, w, h){
+
+    drawSprite: (image, spriteInd, x, y, w, h) => {
         // image is the image. Must have an array of sprites
         // image.sprites = [{x:0,y:0,w:10,h:10},{x:20,y:0,w:30,h:40},....]
         // where the position and size of each sprite is kept
@@ -26,7 +29,8 @@ export default {
         //game.ctx.setTransform(1,0,0,1,x,y); // set scale and position
         game.ctx.drawImage(image,spr.x,spr.y,w,h,x - spr.w / 2,y - spr.h / 2,spr.w,spr.h); // render the subimage
     },
-    drawAnimatedSprite: function(image, spriteInd, frameInd, x, y, w, h){
+
+    drawAnimatedSprite: (image, spriteInd, frameInd, x, y, w, h) => {
         // image is the image. Must have an array of sprites
         // image.sprites = [{x:0,y:0,w:10,h:10},{x:20,y:0,w:30,h:40},....]
         // where the position and size of each sprite is kept

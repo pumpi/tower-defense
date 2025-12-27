@@ -1,8 +1,10 @@
 import helpers from './helpers';
-import game from './game'
+import laserTowerImage from '../img/tower/laser.png';
+import laserAudio from '../audio/laser.mp3';
 
 export default {
-    playerLifes: 10,		// Lebenspunkte des Spielers
+    playerLifes: 10,	// Lebenspunkte des Spielers
+    coins: 180,         // Initiale anzahl an coins
 
     towers: {
         laser: {
@@ -11,8 +13,8 @@ export default {
             size: 20,		            // Größe der Türme (fixer Radius)
             fireRange: 110,		        // Anfängliche Reichweite eines Turms (kann per Upgrade für alle Türme erhöht werden)
             damage: {from: 3, to: 4},   // Anfänglicher Schaden den ein Turm bewirkt (kann per Upgrade für alle Türme erhöht werden)
-            coolDownTime: 16,	        // Anfängliche Schussverzögerung eines Turms (kann per Upgrade für alle Türme erhöht werden)
-            images: helpers.createImage(require('/img/tower/laser.png'), [
+            coolDownTime: 0.6,	        // Anfängliche Schussverzögerung eines Turms (kann per Upgrade für alle Türme erhöht werden)
+            images: helpers.createImage(laserTowerImage, [
                 {x: 0, y: 0, w: 80, h: 80},
                 {x: 0, y: 160, w: 80, h: 80},
                 {x: 0, y: 320, w: 80, h: 80},
@@ -20,7 +22,7 @@ export default {
                 {x: 0, y: 640, w: 80, h: 80},
                 {x: 0, y: 800, w: 80, h: 80}
             ]),
-            audio: require('/audio/laser.mp3'),
+            audio: laserAudio,
             upgrades: [
                 {cost: 120, fireRange: 120, damage: {from: 7, to: 11}, color: '#2CE85B'},
                 {cost: 190, fireRange: 130, damage: {from: 14, to: 21}, color: '#2CE8B9'},
@@ -35,14 +37,14 @@ export default {
     enemyMinSize: 3,
     enemyLevelIncAt: 15,
     enemyLevels: [
-        {speed: 1.5, health: 20, color: 'rgb(250,0,0)'},
-        {speed: 2, health: 35, color: 'rgb(200,0,0)'},
-        {speed: 3, health: 50, color: 'rgb(150,0,0)'},
-        {speed: 4, health: 80, color: 'rgb(100,0,0)'},
-        {speed: 3, health: 100, color: 'rgb(50,0,0)'},
-        {speed: 2, health: 150, color: 'rgb(30,30,30)'},
-        {speed: 2, health: 120, color: 'rgb(15,15,15)'},
-        {speed: 5, health: 160, color: 'rgb(0,0,0)'}, // <== Endgegner
+        {speed: 45, health: 20, color: 'rgb(250,0,0)'},
+        {speed: 60, health: 35, color: 'rgb(200,0,0)'},
+        {speed: 90, health: 50, color: 'rgb(150,0,0)'},
+        {speed: 120, health: 80, color: 'rgb(100,0,0)'},
+        {speed: 90, health: 100, color: 'rgb(50,0,0)'},
+        {speed: 60, health: 150, color: 'rgb(30,30,30)'},
+        {speed: 60, health: 120, color: 'rgb(15,15,15)'},
+        {speed: 150, health: 160, color: 'rgb(0,0,0)'}, // <== Endgegner
     ],
 
     /**

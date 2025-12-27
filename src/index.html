@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>Tower Defense</title>
-    <link rel="stylesheet" type="text/css" href="/scss/main.scss">
+    <link rel="stylesheet" type="text/css" href="./scss/main.scss">
 
-    <script src="js/main.js"></script>
+    <script type="module" src="./js/main.js"></script>
 
 
-    <link rel="icon" type="image/png" href="/img/favicon.png">
+    <link rel="icon" type="image/png" href="./img/favicon.png">
 </head>
 <body>
     <div id="gui">
@@ -22,15 +22,15 @@
         <div class="stats">
             <ul>
                 <li>
-                    <img src="/img/life.svg" title="Leben">
+                    <img src="./img/life.svg" title="Leben">
                     <span id="life">-</span>
                 </li>
                 <li>
-                    <img src="/img/coin.svg" title="Coins">
+                    <img src="./img/coin.svg" title="Coins">
                     <span id="coins">0</span>
                 </li>
                 <li>
-                    <img src="/img/wave.svg" title="Welle">
+                    <img src="./img/wave.svg" title="Welle">
                     <span id="wave">0</span>
                 </li>
             </ul>
@@ -72,7 +72,7 @@
         </table>
 
         <div class="tower-upgrade">
-            <strong>Upgrade auf Level <span id="tower-upgrade-level"></span></strong>
+            <strong>Upgrade auf Level <span class="tower-upgrade-level"></span></strong>
             <table class="tower-stats">
                 <tr class="tower-upgrade-cost">
                     <td>Kosten:</td><td><span id="tower-upgrade-cost">0</span></td>

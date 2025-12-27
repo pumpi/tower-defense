@@ -22,3 +22,18 @@ table {
 #canvas {
     margin-bottom: 6%;
 }
+
+#gui,
+canvas {
+    display: block;
+    position: relative;
+    margin-left: auto;
+    margin-right: auto;
+    width: 1200px;
+    text-align: center;
+    vertical-align: top;
+}
+
+h1 {
+    font-family: Impact, Charcoal, sans-serif;
+}
