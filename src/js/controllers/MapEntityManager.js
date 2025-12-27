@@ -5,7 +5,7 @@ class MapEntityManager {
         this.idCounter = 0;
 
         // Init logic
-        this.game.on('update', () => this.update());
+        this.game.on('update', (deltaTime) => this.update(deltaTime));
         this.game.on('beforeDraw', () => this.draw());
     }
 
@@ -23,12 +23,12 @@ class MapEntityManager {
         }
     }
 
-    update() {
+    update(deltaTime) {
         const ids = Object.keys(this.list);
         for (const id of ids) {
             const entity = this.list[id];
             if (entity) {
-                entity.update();
+                entity.update(deltaTime);
             }
         }
     }

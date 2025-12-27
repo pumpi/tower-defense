@@ -41,9 +41,9 @@ class Tower extends Entity {
         }
     }
 
-    update() {
+    update(deltaTime) {
         const { game, mouse } = this.towersController;
-        this.cooldownCounter--;
+        this.cooldownCounter += deltaTime;
 
         if (this.closestEnemy) {
             const enemyDistance = game.distance(this.x, this.y, this.closestEnemy.x, this.closestEnemy.y);
@@ -57,9 +57,10 @@ class Tower extends Entity {
         }
 
         if (this.closestEnemy) {
-            if (this.cooldownCounter <= 0) {
+            if (this.cooldownCounter >= this.cooldownTime) {
                 this.shoot(this.closestEnemy);
                 this.audio.play().catch(() => {});
+                this.cooldownCounter = 0; // Reset cooldown
             }
         }
 

@@ -80,17 +80,17 @@ class Enemy extends Entity {
         );
     }
 
-    update() {
+    update(deltaTime) {
         if (this.deleted) return;
 
         if (this.waypointReached()) {
             this.nextWaypoint();
         } else {
-            this.x += this.velocity.x;
-            this.y += this.velocity.y;
+            this.x += this.velocity.x * deltaTime;
+            this.y += this.velocity.y * deltaTime;
         }
 
-        this.frame = (this.frame + 0.2) % this.enemiesController.images[this.enemyType].sprites[this.direction].frames.length;
+        this.frame = (this.frame + 6 * deltaTime) % this.enemiesController.images[this.enemyType].sprites[this.direction].frames.length;
     }
 
     draw() {

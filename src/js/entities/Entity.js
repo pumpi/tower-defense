@@ -9,7 +9,7 @@ export default class Entity {
         this.zIndex = 0;
     }
 
-    update() {
+    update(deltaTime) {
         // Default update does nothing
     }
 

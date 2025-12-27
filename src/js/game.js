@@ -19,6 +19,7 @@ class Game {
         this.waveCounter = 0;
         this.gameOver = false;
         this.eventsList = {};
+        this.lastFrameTime = 0;
 
         // Create instances of all controllers, injecting dependencies
         this.mapEntities = new MapEntityManager(this);
@@ -27,7 +28,7 @@ class Game {
         this.enemies = new Enemies(this, this.map, this.mapEntities);
         this.towers = new Towers(this, this.map, this.mouse, this.mapEntities, this.enemies);
 
-        // UI Listeners (from main.js)
+        // UI Listeners
         document.addEventListener('click', (event) => {
             if (this.gameOver) {
                 this.resetGame();
@@ -52,8 +53,8 @@ class Game {
 
         // Start the game
         this.resetGame();
-        setInterval(() => this.update(), 1000 / 30);
-        this.draw();
+
+        window.requestAnimationFrame(this.draw.bind(this));
     }
 
     resetGame() {
@@ -77,21 +78,27 @@ class Game {
         }
     }
 
-    update() {
+    update(deltaTime) {
         if (this.gameOver) return;
-        this.trigger('update');
+        this.trigger('update', deltaTime);
         this.mouse.update();
     }
 
-    draw() {
+    draw(timestamp) {
+        if (!timestamp) timestamp = 0;
+        const deltaTime = (timestamp - this.lastFrameTime) / 1000;
+        this.lastFrameTime = timestamp;
+
         if (this.gameOver) {
-            // Only request the next frame, but don't draw the game itself
-            window.requestAnimationFrame(() => this.draw());
+            window.requestAnimationFrame(this.draw.bind(this));
             return;
         }
 
-        window.requestAnimationFrame(() => this.draw());
+        window.requestAnimationFrame(this.draw.bind(this));
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        this.update(deltaTime);
+
         this.trigger('beforeDraw');
 
         this.drawList = helpers.sortEntity(this.drawList);
@@ -207,10 +214,10 @@ class Game {
         return this;
     }
 
-    trigger(event) {
+    trigger(event, deltaTime) {
         if (!this.eventsList[event]) return this;
         for (let i = 0; i < this.eventsList[event].length; i++) {
-            this.eventsList[event][i]();
+            this.eventsList[event][i](deltaTime);
         }
         return this;
     }
