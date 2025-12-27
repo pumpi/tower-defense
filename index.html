@@ -1,1 +1,96 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Tower Defense</title><link rel="stylesheet" type="text/css" href="/tower-defense/main.9773c955.css"><script src="/tower-defense/main.e4d086b2.js"></script><link rel="icon" type="image/png" href="/tower-defense/favicon.4b786649.png"></head><body> <div id="gui"> <h1>Tower Defense</h1> <div class="buttons"> <button id="next-wave">Nächste Welle<br>----------</button> <button id="buy-tower">Turm kaufen<br>(<span id="towerCosts">?</span> Coins)</button> </div> <div class="stats"> <ul> <li> <img src="/tower-defense/life.c281d54b.svg" title="Leben"> <span id="life">-</span> </li> <li> <img src="/tower-defense/coin.744fb71a.svg" title="Coins"> <span id="coins">0</span> </li> <li> <img src="/tower-defense/wave.45d0edd0.svg" title="Welle"> <span id="wave">0</span> </li> </ul> </div> </div> <canvas id="canvas" width="1200" height="640"></canvas> <div class="modal modal-options"> <div class="modal-close">X</div> <div class="modal-title">Tower Options</div> <table class="tower-stats"> <tr class="tower-position"> <td>Position:</td><td>x:<span id="tower-position-x">0</span> y:<span id="tower-position-y">0</span></td> </tr> <tr class="tower-level"> <td>Level:</td><td><span id="tower-level">0</span></td> </tr> <tr class="tower-fire-range"> <td>Reichweite:</td><td><span id="tower-fire-range">0</span></td> </tr> <tr class="tower-fire-range"> <td>Feuerrate:</td><td><span id="tower-cooldown-time">0</span></td> </tr> <tr class="tower-fire-range"> <td>Schaden:</td><td><span id="tower-damage-from">0</span> - <span id="tower-damage-to">0</span></td> </tr> <tr class="tower-stats-shoots"> <td>Gesamte Schüsse:</td><td><span id="tower-stats-shoots">0</span></td> </tr> <tr class="tower-stats-damage"> <td>Gesamter Schaden:</td><td><span id="tower-stats-damage">0</span></td> </tr> <tr class="tower-stats-kills"> <td>Gesamte Kills:</td><td><span id="tower-stats-kills">0</span></td> </tr> </table> <div class="tower-upgrade"> <strong>Upgrade auf Level <span id="tower-upgrade-level"></span></strong> <table class="tower-stats"> <tr class="tower-upgrade-cost"> <td>Kosten:</td><td><span id="tower-upgrade-cost">0</span></td> </tr> <tr class="tower-upgrade-cost"> <td>Reichweite:</td><td><span id="tower-upgrade-fire-range">0</span></td> </tr> <tr class="tower-upgrade-cost"> <td>Schaden:</td><td><span id="tower-upgrade-damage-from">0</span> - <span id="tower-upgrade-damage-to">0</span></td> </tr> </table> <button class="btn tower-buy-upgrade">Upgrade auf Level <span class="tower-upgrade-level">0</span> kaufen</button> </div> </div> <script>!function(){var t=document.createElement("script");t.onload=function(){var t=new Stats;document.body.appendChild(t.dom),requestAnimationFrame(function n(){t.update(),requestAnimationFrame(n)})},t.src="//mrdoob.github.io/stats.js/build/stats.min.js",document.head.appendChild(t)}();</script> </body></html>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Tower Defense</title>
+
+
+
+    <link rel="icon" type="image/png" href="/tower-defense/assets/favicon-CjpK23vW.png">
+  <script type="module" crossorigin src="/tower-defense/assets/index-BpRbE9TP.js"></script>
+  <link rel="stylesheet" crossorigin href="/tower-defense/assets/index-DgN2aNN4.css">
+</head>
+<body>
+    <div id="gui">
+        <h1>Tower Defense</h1>
+
+        <div class="buttons">
+            <button id="next-wave">Nächste Welle<br>----------</button>
+            <button id="buy-tower">Turm kaufen<br>(<span id="towerCosts">?</span> Coins)</button>
+        </div>
+
+        <div class="stats">
+            <ul>
+                <li>
+                    <img src="data:image/svg+xml,%3csvg%20id='Ebene_3'%20data-name='Ebene%203'%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2040%2040'%3e%3cpath%20d='M20,36.93l0,0A61,61,0,0,1,8.24,27.73a30.77,30.77,0,0,1-4.87-5.94,15.32,15.32,0,0,1-2.32-7.25A11.5,11.5,0,0,1,4.19,6.23,10.37,10.37,0,0,1,12.44,3.1a8.69,8.69,0,0,1,7.19,5A10.78,10.78,0,0,1,31.17,3.6a10.78,10.78,0,0,1,7.77,9.65c.19,4.11-2,8-4.58,11.19A50.43,50.43,0,0,1,20,36.93Z'%20style='fill:%23db2a91'/%3e%3cpath%20d='M20,37,20,36.93A61.33,61.33,0,0,1,8.2,27.77a30.62,30.62,0,0,1-4.87-5.95,17.77,17.77,0,0,1-1.63-3.5A13.49,13.49,0,0,1,1,14.54a11.71,11.71,0,0,1,.74-4.49A11.06,11.06,0,0,1,4.16,6.19,10.59,10.59,0,0,1,8,3.7a10.11,10.11,0,0,1,4.49-.65,9.16,9.16,0,0,1,4.27,1.52A8.33,8.33,0,0,1,19.64,8,10.57,10.57,0,0,1,39,13.25a11.76,11.76,0,0,1-.28,3,15.31,15.31,0,0,1-1,2.9,26.3,26.3,0,0,1-3.32,5.28,51.5,51.5,0,0,1-6.59,6.94A51.15,51.15,0,0,1,20.05,37ZM11.57,3.11A10.31,10.31,0,0,0,4.23,6.26,11.54,11.54,0,0,0,1.1,14.54a15.25,15.25,0,0,0,2.31,7.23A30.11,30.11,0,0,0,8.27,27.7,60.52,60.52,0,0,0,20,36.85h0A50.81,50.81,0,0,0,34.32,24.41c3.28-4.18,4.73-7.72,4.57-11.16a10.65,10.65,0,0,0-7.73-9.6A10.67,10.67,0,0,0,19.67,8.12l0,.08,0-.08a8.59,8.59,0,0,0-7.15-5A8.44,8.44,0,0,0,11.57,3.11Z'/%3e%3cpath%20d='M20.44,8.33a9.35,9.35,0,0,1,16.42,2.42c1.51,4.36-.41,9.24-3.33,12.81s-6.78,6.25-10,9.52a48.65,48.65,0,0,0,6.37-7.24,16.32,16.32,0,0,0,3-9,9.85,9.85,0,0,0-4.24-8.24A8.29,8.29,0,0,0,20.44,8.33Z'%20style='fill:%23ba1174'/%3e%3cpath%20d='M19.42,8.83A8.66,8.66,0,0,0,10,3.94,10,10,0,0,0,2.4,11.58,13.86,13.86,0,0,0,4.11,21.1a32.76,32.76,0,0,0,6.23,7.62,40.08,40.08,0,0,0,10,7.57c-2.12-4.39-4.22-8.88-4.86-13.71S15.88,12.46,19.42,8.83Z'%20style='fill:%23ba1174'/%3e%3cpath%20d='M35.26,8.46a7.55,7.55,0,0,1,0,9.32,8.53,8.53,0,0,0,0-2.2,2.87,2.87,0,0,0-1.08-1.86,3.57,3.57,0,0,0-3-.17,10.85,10.85,0,0,1-3,.78c-.55,0-1.24-.31-1.16-.85s.85-.64,1.42-.65a6.05,6.05,0,0,0,5.71-4.74C35,8,35.9,8.62,35.26,8.46Z'%20style='fill:%23f09ece'/%3e%3cpath%20d='M18.68,13.16a8.55,8.55,0,0,0,6.69-.38A2.64,2.64,0,0,1,24,15.62a3.51,3.51,0,0,1-3.26-.08A4.44,4.44,0,0,1,18.68,13.16Z'%20style='fill:%23f09ece'/%3e%3cpath%20d='M10,25.85A12.69,12.69,0,0,0,29.19,22a4.08,4.08,0,0,0,4.53.76,33.2,33.2,0,0,1-13.6,11.46A32.63,32.63,0,0,1,8,24.87C8.8,25.52,9.74,26,10,25.85Z'%20style='fill:%23f09ece'/%3e%3cpath%20d='M30.75,4.27a6.28,6.28,0,0,0-3.64-.21c-.34.08-.75.33-.64.66s.3.29.51.35a8.6,8.6,0,0,0,4.82-.18C31.11,4.31,30.11,4.12,30.75,4.27Z'%20style='fill:%23f09ece'/%3e%3cpath%20d='M12,5.82a3.84,3.84,0,0,1,5.41,4.39,5,5,0,0,0-2.79-2.75c-.6-.23-1.23-.35-1.81-.62S11.7,6,12,5.82Z'%20style='fill:%23f09ece'/%3e%3cpath%20d='M3.11,9.78a11,11,0,0,0-1.55,4.54,1.91,1.91,0,0,0,.06.95c.11.31.38.57.61.47A7.32,7.32,0,0,1,6,13.64a16.07,16.07,0,0,1,4.38-.3A8.55,8.55,0,0,0,3.11,9.78Z'%20style='fill:%23f09ece'/%3e%3c/svg%3e" title="Leben">
+                    <span id="life">-</span>
+                </li>
+                <li>
+                    <img src="/tower-defense/assets/coin-DvQxkcR6.svg" title="Coins">
+                    <span id="coins">0</span>
+                </li>
+                <li>
+                    <img src="/tower-defense/assets/wave-BZR_LxQx.svg" title="Welle">
+                    <span id="wave">0</span>
+                </li>
+            </ul>
+
+        </div>
+
+    </div>
+
+    <canvas id="canvas" width="1200" height="640"></canvas>
+
+    <div class="modal modal-options">
+        <div class="modal-close">X</div>
+        <div class="modal-title">Tower Options</div>
+        <table class="tower-stats">
+            <tr class="tower-position">
+                <td>Position:</td><td>x:<span id="tower-position-x">0</span> y:<span id="tower-position-y">0</span></td>
+            </tr>
+            <tr class="tower-level">
+                <td>Level:</td><td><span id="tower-level">0</span></td>
+            </tr>
+            <tr class="tower-fire-range">
+                <td>Reichweite:</td><td><span id="tower-fire-range">0</span></td>
+            </tr>
+            <tr class="tower-fire-range">
+                <td>Feuerrate:</td><td><span id="tower-cooldown-time">0</span></td>
+            </tr>
+            <tr class="tower-fire-range">
+                <td>Schaden:</td><td><span id="tower-damage-from">0</span> - <span id="tower-damage-to">0</span></td>
+            </tr>
+            <tr class="tower-stats-shoots">
+                <td>Gesamte Schüsse:</td><td><span id="tower-stats-shoots">0</span></td>
+            </tr>
+            <tr class="tower-stats-damage">
+                <td>Gesamter Schaden:</td><td><span id="tower-stats-damage">0</span></td>
+            </tr>
+            <tr class="tower-stats-kills">
+                <td>Gesamte Kills:</td><td><span id="tower-stats-kills">0</span></td>
+            </tr>
+        </table>
+
+        <div class="tower-upgrade">
+            <strong>Upgrade auf Level <span class="tower-upgrade-level"></span></strong>
+            <table class="tower-stats">
+                <tr class="tower-upgrade-cost">
+                    <td>Kosten:</td><td><span id="tower-upgrade-cost">0</span></td>
+                </tr>
+                <tr class="tower-upgrade-cost">
+                    <td>Reichweite:</td><td><span id="tower-upgrade-fire-range">0</span></td>
+                </tr>
+                <tr class="tower-upgrade-cost">
+                    <td>Schaden:</td><td><span id="tower-upgrade-damage-from">0</span> - <span id="tower-upgrade-damage-to">0</span></td>
+                </tr>
+            </table>
+            <button class="btn tower-buy-upgrade">Upgrade auf Level <span class="tower-upgrade-level">0</span> kaufen</button>
+        </div>
+
+    </div>
+
+    <script>
+        (function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='//mrdoob.github.io/stats.js/build/stats.min.js';document.head.appendChild(script);})();
+    </script>
+</body>
+</html>
