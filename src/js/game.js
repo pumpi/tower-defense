@@ -66,6 +66,7 @@ class Game {
         this.gameOver = false;
         this.waveCounter = 0;
         this.mapEntities.list = {}; // Reset entities
+        this.enemies.enemiesList = []; // Clear the specific enemies list
         this.stat('life', settings.playerLifes, true);
         this.stat('coins', settings.coins, true);
         this.stat('wave', 0, true);
@@ -82,7 +83,11 @@ class Game {
     }
 
     update(deltaTime) {
-        if (this.gameOver) return;
+        if (this.gameOver) {
+            // Only mouse updates are needed for the restart click
+            this.mouse.update();
+            return;
+        }
         this.trigger('update', deltaTime);
         this.mouse.update();
     }
@@ -92,15 +97,11 @@ class Game {
         const deltaTime = (timestamp - this.lastFrameTime) / 1000;
         this.lastFrameTime = timestamp;
 
-        if (this.gameOver) {
-            window.requestAnimationFrame(this.draw.bind(this));
-            return;
-        }
-
         window.requestAnimationFrame(this.draw.bind(this));
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        
+
         this.update(deltaTime);
+        
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         this.trigger('beforeDraw');
 
@@ -112,18 +113,22 @@ class Game {
         this.drawList = [];
 
         this.trigger('afterDraw');
+
+        // If the game is over, draw the overlay on top of the last game state
+        if (this.gameOver) {
+            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            this.ctx.fillStyle = 'white';
+            this.ctx.font = '48px sans-serif';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText('Game Over', this.canvas.width / 2, this.canvas.height / 2 - 40);
+            this.ctx.font = '24px sans-serif';
+            this.ctx.fillText('Klicken zum Neustarten', this.canvas.width / 2, this.canvas.height / 2 + 20);
+        }
     }
 
     setGameOver() {
         this.gameOver = true;
-        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        this.ctx.fillStyle = 'white';
-        this.ctx.font = '48px sans-serif';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText('Game Over', this.canvas.width / 2, this.canvas.height / 2 - 40);
-        this.ctx.font = '24px sans-serif';
-        this.ctx.fillText('Klicken zum Neustarten', this.canvas.width / 2, this.canvas.height / 2 + 20);
     }
 
     stat(name, value, output) {
