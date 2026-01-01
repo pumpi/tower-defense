@@ -196,10 +196,17 @@ class Game {
         } else {
             // --- Normal Wave ---
             const waveInLevel = (this.waveCounter -1) % settings.leveling.wavesPerLevel;
-            const levelProgress = waveInLevel / (settings.leveling.wavesPerLevel -1);
+            // Use an exponential curve for progress to make early waves easier and later waves harder
+            const levelProgress = Math.pow(waveInLevel / (settings.leveling.wavesPerLevel - 1), 1.3);
 
-            const { minThreat, maxThreat } = settings.leveling.waveGeneration;
-            const maxThreatForThisWave = minThreat + ((maxThreat - minThreat) * levelProgress);
+            const { minThreat, maxThreat, threatFactor } = settings.leveling.waveGeneration;
+
+            // Scale the whole threat budget based on the game level
+            const budgetMultiplier = Math.pow(threatFactor, gameLevel - 1);
+            const scaledMinThreat = minThreat * budgetMultiplier;
+            const scaledMaxThreat = maxThreat * budgetMultiplier;
+            
+            const maxThreatForThisWave = scaledMinThreat + ((scaledMaxThreat - scaledMinThreat) * levelProgress);
             
             let currentThreat = 0;
             let attempts = 0;
@@ -246,7 +253,7 @@ class Game {
                     }, i * (spawn.coolDown || 500));
                 }
             }, delay);
-            delay += spawn.delay || 0;
+            delay += spawn.delay || 500;
         });
 
         return this;

@@ -25,8 +25,8 @@ export default {
             audio: laserAudio,
             upgrades: [
                 {cost: 70, fireRange: 120, damage: {from: 6, to: 8}, color: '#2CE85B'},
-                {cost: 120, fireRange: 130, damage: {from: 10, to: 14}, color: '#2CE8B9'},
-                {cost: 180, fireRange: 140, damage: {from: 18, to: 25}, color: '#2A62DB'}
+                {cost: 180, fireRange: 130, damage: {from: 10, to: 14}, color: '#2CE8B9'},
+                {cost: 250, fireRange: 140, damage: {from: 18, to: 25}, color: '#2A62DB'}
             ]
         }
     },
@@ -42,17 +42,18 @@ export default {
         waveGeneration: {
             minThreat: 15, // Threat level for the first wave in a cycle (e.g., wave 1, 11, etc.)
             maxThreat: 100, // Threat level for the last wave before a boss (e.g., wave 9, 19, etc.)
+            threatFactor: 1.2, // The budget scales by this factor each game level
         }
     },
 
     // Defines the core archetypes of enemies
     enemyTypes: {
-        'irlicht': {
-            graphic: 'irlicht',
-            baseHealth: 30,
+        'wisp': {
+            graphic: 'wisp',
+            baseHealth: 24,
             baseSpeed: 50,
             baseReward: 5,
-            levelFactors: { // Per-type overrides for leveling
+            levelFactors: {
                 health: 1.6,
                 speed: 1.1,
             }
@@ -68,48 +69,48 @@ export default {
             }
         },
         'slime': {
-            color: '#8A2BE2', // Placeholder graphic: a purple circle
+            color: '#8A2BE2',
             baseHealth: 100,
             baseSpeed: 30,
             baseReward: 10,
             levelFactors: {
-                health: 1.8, // Slimes get very tough
-                speed: 1.0,  // But not faster
+                health: 1.8,
+                speed: 1.0,
             }
         },
         'scout': {
-            color: '#FFD700', // Placeholder graphic: a gold circle
+            color: '#FFD700',
             baseHealth: 10,
             baseSpeed: 160,
             baseReward: 8,
             levelFactors: {
                 health: 1.3,
-                speed: 1.15,
+                speed: 1.05,
             }
         },
         'boss': {
-            graphic: 'irlicht', // Can re-use graphics
+            graphic: 'wisp',
             color: 'black',
             baseHealth: 400,
             baseSpeed: 40,
             baseReward: 100,
             levelFactors: {
                 health: 2.5,
-                speed: 1.5,
+                speed: 1.3,
             }
         }
     },
 
     // A pool of small, reusable patterns for the dynamic wave generator
     waveFragments: {
-        line_of_irlichts: { threat: 10, details: { enemyType: 'irlicht', count: 6, coolDown: 1000, countFactor: 1 } },
-        lone_slime: { threat: 15, details: { enemyType: 'slime', count: 1, coolDown: 400, countFactor: 1 } },
-        rush_of_bugs: { threat: 20, details: { enemyType: 'bug', count: 4, coolDown: 300, countFactor: 1.2 } },
-        pair_of_slimes: { threat: 25, details: { enemyType: 'slime', count: 2, coolDown: 800, countFactor: 1.5 } },
-        scout_rush: { threat: 30, details: { enemyType: 'scout', count: 5, coolDown: 200, countFactor: 2 } },
+        line_of_wisps: { threat: 15, details: { enemyType: 'wisp', count: 5, coolDown: 800, countFactor: 1, delay: 600 } },
+        lone_slime: { threat: 15, details: { enemyType: 'slime', count: 1, coolDown: 400, countFactor: 1, delay: 1500 } },
+        rush_of_bugs: { threat: 25, details: { enemyType: 'bug', count: 4, coolDown: 300, countFactor: 1.2, delay: 400 } },
+        pair_of_slimes: { threat: 20, details: { enemyType: 'slime', count: 2, coolDown: 2200, countFactor: 1.2, delay: 1500 } },
+        scout_rush: { threat: 30, details: { enemyType: 'scout', count: 5, coolDown: 200, countFactor: 2, delay: 400 } },
         mixed_pair: { threat: 40, details: [
-            { enemyType: 'irlicht', count: 5, coolDown: 800, countFactor: 1.5 },
-            { enemyType: 'bug', count: 4, coolDown: 500, delay: 500, countFactor: 1.5 }
+            { enemyType: 'wisp', count: 5, coolDown: 800, countFactor: 1.5, delay: 500 },
+            { enemyType: 'bug', count: 4, coolDown: 500, countFactor: 1.5, delay: 500 }
         ]}
     },
     

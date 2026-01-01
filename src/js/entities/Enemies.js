@@ -1,7 +1,7 @@
 import helpers from '../helpers.js';
 import settings from '../game.settings.js';
 import Entity from './Entity.js';
-import irlichtImage from '../../img/enemy/irlicht.png';
+import wispImage from '../../img/enemy/wisp.png';
 import bugImage from '../../img/enemy/bug.png';
 
 class Enemy extends Entity {
@@ -31,7 +31,7 @@ class Enemy extends Entity {
         this.speed = definition.baseSpeed * Math.pow(speedFactor, level0);
         this.reward = Math.round(definition.baseReward * Math.pow(rewardFactor, level0));
         
-        this.graphicType = definition.graphic; // 'irlicht', 'bug', or undefined
+        this.graphicType = definition.graphic; // 'wisp', 'bug', or undefined
         this.level = level;
         this.wave = wave;
         
@@ -173,7 +173,7 @@ class Enemies {
         this.map = map;
         this.mapEntities = mapEntities;
         this.images = {
-            irlicht: helpers.createImage(irlichtImage, [
+            wisp: helpers.createImage(wispImage, [
                 { x: 0, y: 0, w: 20, h: 20, frames: [0,40,80,120,160,200]},
                 { x: 0, y: 40, w: 20, h: 20, frames: [0,40,80,120,160,200] },
                 { x: 0, y: 80, w: 20, h: 20, frames: [0,40,80,120,160,200] },
