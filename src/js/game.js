@@ -58,6 +58,7 @@ class Game {
         
         // Initial static setup
         this.output('#towerCosts', settings.towers.laser.costs);
+        this.output('#app-version', `v${import.meta.env.VITE_APP_VERSION}`);
 
         // Start the game
         this.resetGame();
