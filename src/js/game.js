@@ -47,6 +47,11 @@ class Game {
                 this.towers.closeOptions();
             }
         }, false);
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && this.stat('mode') === 'dropTower') {
+                this.stat('mode', '');
+            }
+        });
         
         // Initial static setup
         this.output('#towerCosts', settings.towers.laser.costs);
@@ -69,11 +74,9 @@ class Game {
 
     buyTower(bulletType) {
         if (this.stat('mode') !== 'dropTower') {
-            const coins = this.stat('coins');
-            if (coins >= settings.towers[bulletType].costs) {
+            if (this.stat('coins') >= settings.towers[bulletType].costs) {
                 this.stat('mode', 'dropTower');
                 this.stat('selectedTowerType', bulletType);
-                this.stat('coins', coins - settings.towers[bulletType].costs, true);
             }
         }
     }

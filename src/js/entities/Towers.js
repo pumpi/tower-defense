@@ -153,6 +153,7 @@ class Towers {
 
         if (this.game.stat('mode') === 'dropTower' && this.map.isValidTowerPlace(gridPosition.x, gridPosition.y, bulletType) && this.mouse.clicked) {
             this.game.stat('mode', '');
+            this.game.stat('coins', this.game.stat('coins') - settings.towers[bulletType].costs, true);
             this.create(gridPosition.x, gridPosition.y, bulletType);
         }
     }
