@@ -3,17 +3,17 @@ import laserTowerImage from '../img/tower/laser.png';
 import laserAudio from '../audio/laser.mp3';
 
 export default {
-    playerLifes: 10,	// Lebenspunkte des Spielers
-    coins: 180,         // Initiale anzahl an coins
+    playerLifes: 10,
+    coins: 180,
 
     towers: {
         laser: {
-            costs: 80,		            // Kosten für einen Tower (in Coins)
-            color: '#ffff03',           // Farbe der Türme (ist fix)
-            size: 20,		            // Größe der Türme (fixer Radius)
-            fireRange: 110,		        // Anfängliche Reichweite eines Turms (kann per Upgrade für alle Türme erhöht werden)
-            damage: {from: 3, to: 4},   // Anfänglicher Schaden den ein Turm bewirkt (kann per Upgrade für alle Türme erhöht werden)
-            coolDownTime: 0.6,	        // Anfängliche Schussverzögerung eines Turms (kann per Upgrade für alle Türme erhöht werden)
+            costs: 80,
+            color: '#ffff03',
+            size: 20,
+            fireRange: 110,
+            damage: {from: 3, to: 4},
+            coolDownTime: 0.6,
             images: helpers.createImage(laserTowerImage, [
                 {x: 0, y: 0, w: 80, h: 80},
                 {x: 0, y: 160, w: 80, h: 80},
@@ -24,47 +24,98 @@ export default {
             ]),
             audio: laserAudio,
             upgrades: [
-                {cost: 120, fireRange: 120, damage: {from: 7, to: 11}, color: '#2CE85B'},
-                {cost: 190, fireRange: 130, damage: {from: 14, to: 21}, color: '#2CE8B9'},
-                {cost: 280, fireRange: 140, damage: {from: 23, to: 34}, color: '#2A62DB'}
+                {cost: 70, fireRange: 120, damage: {from: 6, to: 8}, color: '#2CE85B'},
+                {cost: 180, fireRange: 130, damage: {from: 10, to: 14}, color: '#2CE8B9'},
+                {cost: 250, fireRange: 140, damage: {from: 18, to: 25}, color: '#2A62DB'}
             ]
         }
-
     },
 
     mapGrid: 80,
 
-    enemyMinSize: 3,
-    enemyLevelIncAt: 15,
-    enemyLevels: [
-        {speed: 45, health: 20, color: 'rgb(250,0,0)'},
-        {speed: 60, health: 35, color: 'rgb(200,0,0)'},
-        {speed: 90, health: 50, color: 'rgb(150,0,0)'},
-        {speed: 120, health: 80, color: 'rgb(100,0,0)'},
-        {speed: 90, health: 100, color: 'rgb(50,0,0)'},
-        {speed: 60, health: 150, color: 'rgb(30,30,30)'},
-        {speed: 60, health: 120, color: 'rgb(15,15,15)'},
-        {speed: 150, health: 160, color: 'rgb(0,0,0)'}, // <== Endgegner
-    ],
-
-    /**
-     * jedes tamplate enhält ein objekt pro spawn welle
-     * jedes objekt beinhaltet folgende Variablen für die konfiguration
-     * @param int count         - Anzahl der zu spawnenden Gegner
-     * @param int waveFactor    - Multiplikator für die zusätzlichen gegner je welle
-     * @param int coolDown      - Abstand der gegner in millisekunden
-     * @param int level         - Level des gegners
-     * @param int delay         - Verzögerung zum nächsten Template nach Vollendung des aktuellen
-     * @param int delayFactor   - Dieser factor bestimmt wieviel des delays in den Abstand für den Spawn der nächsten Welle mit einfließt
-     *                            Beispeil ein Faktor von 0.5 setzt den nächsten Teil der Welle in der Hälfte aller vorherigen Spawns ein
-     */
-    waves: [
-        {
-            name: 'A lot small enemies',
-            template: [
-                {count: 4, waveFactor: 1, coolDown: 800, level: 0, delay: 0, delayFactor: 0.5},
-                {count: 0, waveFactor: 0.4, coolDown: 500, level: 1, delay: 0, delayFactor: 0}
-            ]
+    // Defines how the game's difficulty scales over time
+    leveling: {
+        wavesPerLevel: 10, // A new "game level" every 10 waves (after each boss)
+        healthFactor: 1.4, // Default health multiplier per level
+        speedFactor: 1.05, // Default speed multiplier per level
+        rewardFactor: 1.2,  // Default reward multiplier per level
+        waveGeneration: {
+            minThreat: 15, // Threat level for the first wave in a cycle (e.g., wave 1, 11, etc.)
+            maxThreat: 100, // Threat level for the last wave before a boss (e.g., wave 9, 19, etc.)
+            threatFactor: 1.2, // The budget scales by this factor each game level
         }
+    },
+
+    // Defines the core archetypes of enemies
+    enemyTypes: {
+        'wisp': {
+            graphic: 'wisp',
+            baseHealth: 24,
+            baseSpeed: 50,
+            baseReward: 5,
+            levelFactors: {
+                health: 1.6,
+                speed: 1.1,
+            }
+        },
+        'bug': {
+            graphic: 'bug',
+            baseHealth: 18,
+            baseSpeed: 90,
+            baseReward: 5,
+            levelFactors: {
+                health: 1.5,
+                speed: 1.2,
+            }
+        },
+        'slime': {
+            color: '#8A2BE2',
+            baseHealth: 100,
+            baseSpeed: 30,
+            baseReward: 10,
+            levelFactors: {
+                health: 1.8,
+                speed: 1.0,
+            }
+        },
+        'scout': {
+            color: '#FFD700',
+            baseHealth: 10,
+            baseSpeed: 160,
+            baseReward: 8,
+            levelFactors: {
+                health: 1.3,
+                speed: 1.05,
+            }
+        },
+        'boss': {
+            graphic: 'wisp',
+            color: 'black',
+            baseHealth: 400,
+            baseSpeed: 40,
+            baseReward: 100,
+            levelFactors: {
+                health: 2.5,
+                speed: 1.3,
+            }
+        }
+    },
+
+    // A pool of small, reusable patterns for the dynamic wave generator
+    waveFragments: {
+        line_of_wisps: { threat: 15, details: { enemyType: 'wisp', count: 5, coolDown: 800, countFactor: 1, delay: 600 } },
+        lone_slime: { threat: 15, details: { enemyType: 'slime', count: 1, coolDown: 400, countFactor: 1, delay: 1500 } },
+        rush_of_bugs: { threat: 25, details: { enemyType: 'bug', count: 4, coolDown: 300, countFactor: 1.2, delay: 400 } },
+        pair_of_slimes: { threat: 20, details: { enemyType: 'slime', count: 2, coolDown: 2200, countFactor: 1.2, delay: 1500 } },
+        scout_rush: { threat: 30, details: { enemyType: 'scout', count: 5, coolDown: 200, countFactor: 2, delay: 400 } },
+        mixed_pair: { threat: 40, details: [
+            { enemyType: 'wisp', count: 5, coolDown: 800, countFactor: 1.5, delay: 500 },
+            { enemyType: 'bug', count: 4, coolDown: 500, countFactor: 1.5, delay: 500 }
+        ]}
+    },
+    
+    // Defines the boss wave
+    bossWaveTemplate: [
+      { enemyType: 'boss', count: 1, coolDown: 0 }
     ]
 };

@@ -153,6 +153,7 @@ class Towers {
 
         if (this.game.stat('mode') === 'dropTower' && this.map.isValidTowerPlace(gridPosition.x, gridPosition.y, bulletType) && this.mouse.clicked) {
             this.game.stat('mode', '');
+            this.game.stat('coins', this.game.stat('coins') - settings.towers[bulletType].costs, true);
             this.create(gridPosition.x, gridPosition.y, bulletType);
         }
     }
@@ -202,12 +203,16 @@ class Towers {
 
         if (upgrade) {
             upgradeEl.classList.remove('is--hidden');
+
             this.game.output('.tower-upgrade-level', tower.level + 2);
             this.game.output('#tower-upgrade-cost', upgrade.cost);
             this.game.output('#tower-upgrade-fire-range', upgrade.fireRange);
             this.game.output('#tower-upgrade-damage-from', upgrade.damage.from);
             this.game.output('#tower-upgrade-damage-to', upgrade.damage.to);
-            this.optionsModal.querySelector('.tower-buy-upgrade').onclick = () => tower.upgrade();
+
+            const upgradeButton = this.optionsModal.querySelector('.tower-buy-upgrade');
+            upgradeButton.onclick = () => tower.upgrade();
+            upgradeButton.disabled = upgrade.cost > this.game.stat('coins');
         } else {
             upgradeEl.classList.add('is--hidden');
         }

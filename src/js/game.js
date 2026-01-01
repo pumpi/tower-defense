@@ -1,3 +1,4 @@
+import Debug from './debug.js';
 import MapController from './controllers/MapController.js';
 import MapEntityManager from './controllers/MapEntityManager.js';
 import MouseController from './controllers/MouseController.js';
@@ -20,6 +21,7 @@ class Game {
         this.gameOver = false;
         this.eventsList = {};
         this.lastFrameTime = 0;
+        this.lastWaveTemplate = [];
 
         // Create instances of all controllers, injecting dependencies
         this.mapEntities = new MapEntityManager(this);
@@ -27,6 +29,7 @@ class Game {
         this.mouse = new MouseController(this);
         this.enemies = new Enemies(this, this.map, this.mapEntities);
         this.towers = new Towers(this, this.map, this.mouse, this.mapEntities, this.enemies);
+        this.debug = new Debug(this);
 
         // UI Listeners
         document.addEventListener('click', (event) => {
@@ -47,9 +50,15 @@ class Game {
                 this.towers.closeOptions();
             }
         }, false);
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && this.stat('mode') === 'dropTower') {
+                this.stat('mode', '');
+            }
+        });
         
         // Initial static setup
         this.output('#towerCosts', settings.towers.laser.costs);
+        this.output('#app-version', `v${import.meta.env.VITE_APP_VERSION}`);
 
         // Start the game
         this.resetGame();
@@ -61,6 +70,7 @@ class Game {
         this.gameOver = false;
         this.waveCounter = 0;
         this.mapEntities.list = {}; // Reset entities
+        this.enemies.enemiesList = []; // Clear the specific enemies list
         this.stat('life', settings.playerLifes, true);
         this.stat('coins', settings.coins, true);
         this.stat('wave', 0, true);
@@ -69,17 +79,19 @@ class Game {
 
     buyTower(bulletType) {
         if (this.stat('mode') !== 'dropTower') {
-            const coins = this.stat('coins');
-            if (coins >= settings.towers[bulletType].costs) {
+            if (this.stat('coins') >= settings.towers[bulletType].costs) {
                 this.stat('mode', 'dropTower');
                 this.stat('selectedTowerType', bulletType);
-                this.stat('coins', coins - settings.towers[bulletType].costs, true);
             }
         }
     }
 
     update(deltaTime) {
-        if (this.gameOver) return;
+        if (this.gameOver) {
+            // Only mouse updates are needed for the restart click
+            this.mouse.update();
+            return;
+        }
         this.trigger('update', deltaTime);
         this.mouse.update();
     }
@@ -89,15 +101,11 @@ class Game {
         const deltaTime = (timestamp - this.lastFrameTime) / 1000;
         this.lastFrameTime = timestamp;
 
-        if (this.gameOver) {
-            window.requestAnimationFrame(this.draw.bind(this));
-            return;
-        }
-
         window.requestAnimationFrame(this.draw.bind(this));
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        
+
         this.update(deltaTime);
+        
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         this.trigger('beforeDraw');
 
@@ -109,18 +117,22 @@ class Game {
         this.drawList = [];
 
         this.trigger('afterDraw');
+
+        // If the game is over, draw the overlay on top of the last game state
+        if (this.gameOver) {
+            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            this.ctx.fillStyle = 'white';
+            this.ctx.font = '48px sans-serif';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText('Game Over', this.canvas.width / 2, this.canvas.height / 2 - 40);
+            this.ctx.font = '24px sans-serif';
+            this.ctx.fillText('Klicken zum Neustarten', this.canvas.width / 2, this.canvas.height / 2 + 20);
+        }
     }
 
     setGameOver() {
         this.gameOver = true;
-        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        this.ctx.fillStyle = 'white';
-        this.ctx.font = '48px sans-serif';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText('Game Over', this.canvas.width / 2, this.canvas.height / 2 - 40);
-        this.ctx.font = '24px sans-serif';
-        this.ctx.fillText('Klicken zum Neustarten', this.canvas.width / 2, this.canvas.height / 2 + 20);
     }
 
     stat(name, value, output) {
@@ -167,28 +179,83 @@ class Game {
     }
 
     nextWave() {
-        if (Object.keys(this.mapEntities.list).length === 0) return this;
+        // This check is sufficient because before wave 1, any entity must be a tower.
+        if (Object.keys(this.mapEntities.list).length === 0) {
+            return this;
+        }
 
         this.waveCounter++;
         this.stat('wave', this.waveCounter, true);
 
-        let delay = 0;
-        let levelInc = Math.floor(this.waveCounter / settings.enemyLevelIncAt);
-        let maxTemplate = settings.waves.length - 1;
-        let template = settings.waves[Math.min(levelInc, maxTemplate)].template;
-        let currentWave = this.waveCounter;
+        const gameLevel = Math.floor((this.waveCounter -1) / settings.leveling.wavesPerLevel) + 1;
+        let waveTemplate = [];
 
-        for (let spawn of template) {
-            let ec = Math.round(spawn.count + (currentWave * spawn.waveFactor));
+        // Generate wave
+        if (this.waveCounter > 0 && this.waveCounter % settings.leveling.wavesPerLevel === 0) {
+            // --- Boss Wave ---
+            waveTemplate = settings.bossWaveTemplate.map(spawn => ({...spawn, level: gameLevel}));
+        } else {
+            // --- Normal Wave ---
+            const waveInLevel = (this.waveCounter -1) % settings.leveling.wavesPerLevel;
+            // Use an exponential curve for progress to make early waves easier and later waves harder
+            const levelProgress = Math.pow(waveInLevel / (settings.leveling.wavesPerLevel - 1), 1.3);
+
+            const { minThreat, maxThreat, threatFactor } = settings.leveling.waveGeneration;
+
+            // Scale the whole threat budget based on the game level
+            const budgetMultiplier = Math.pow(threatFactor, gameLevel - 1);
+            const scaledMinThreat = minThreat * budgetMultiplier;
+            const scaledMaxThreat = maxThreat * budgetMultiplier;
+            
+            const maxThreatForThisWave = scaledMinThreat + ((scaledMaxThreat - scaledMinThreat) * levelProgress);
+            
+            let currentThreat = 0;
+            let attempts = 0;
+            const fragmentKeys = Object.keys(settings.waveFragments);
+
+            while (attempts < 100) {
+                const suitableFragments = fragmentKeys.filter(key => {
+                    return settings.waveFragments[key].threat <= (maxThreatForThisWave - currentThreat);
+                });
+
+                if (suitableFragments.length === 0) break;
+
+                const randomFragmentKey = suitableFragments[Math.floor(Math.random() * suitableFragments.length)];
+                const fragment = settings.waveFragments[randomFragmentKey];
+                
+                let fragmentDetails = fragment.details;
+                fragmentDetails.threat = fragment.threat;
+
+                if (!Array.isArray(fragmentDetails)) {
+                    fragmentDetails = [fragmentDetails];
+                }
+
+                fragmentDetails.forEach(spawnDef => {
+                    waveTemplate.push({ ...spawnDef, level: gameLevel });
+                });
+
+                currentThreat += fragment.threat;
+                attempts++;
+            }
+            this.lastWaveMaxThreat = maxThreatForThisWave;
+            this.lastWaveCurrentThreat = currentThreat;
+        }
+        
+        this.lastWaveTemplate = waveTemplate;
+
+        // Spawn enemies from the generated template
+        let delay = 0;
+        waveTemplate.forEach(spawn => {
+            const enemyCount = spawn.count + ((gameLevel - 1) * (spawn.countFactor || 0));
             setTimeout(() => {
-                for (let i = 0; i < ec; i++) {
+                for (let i = 0; i < enemyCount; i++) {
                     setTimeout(() => {
-                        this.enemies.create(spawn.level + levelInc, currentWave);
-                    }, i * spawn.coolDown);
+                        this.enemies.create(spawn.enemyType, spawn.level, this.waveCounter);
+                    }, i * (spawn.coolDown || 500));
                 }
             }, delay);
-            delay += (spawn.delay + (ec * spawn.coolDown)) * spawn.delayFactor;
-        }
+            delay += spawn.delay || 500;
+        });
 
         return this;
     }
