@@ -16,7 +16,12 @@
     background: #2c47a9;
     color: #FFF;
     cursor: pointer;
-}
-.btn:hover {
-    background: #273c8c;
+
+    &:hover {
+        background: #273c8c;
+    }
+
+    &[disabled] {
+        background: #aaa;
+    }
 }
