@@ -167,28 +167,70 @@ class Game {
     }
 
     nextWave() {
-        if (Object.keys(this.mapEntities.list).length === 0) return this;
+        // This check is sufficient because before wave 1, any entity must be a tower.
+        if (Object.keys(this.mapEntities.list).length === 0) {
+            return this;
+        }
 
         this.waveCounter++;
         this.stat('wave', this.waveCounter, true);
 
-        let delay = 0;
-        let levelInc = Math.floor(this.waveCounter / settings.enemyLevelIncAt);
-        let maxTemplate = settings.waves.length - 1;
-        let template = settings.waves[Math.min(levelInc, maxTemplate)].template;
-        let currentWave = this.waveCounter;
+        const gameLevel = Math.floor((this.waveCounter -1) / settings.leveling.wavesPerLevel) + 1;
+        let waveTemplate = [];
 
-        for (let spawn of template) {
-            let ec = Math.round(spawn.count + (currentWave * spawn.waveFactor));
+        // Generate wave
+        if (this.waveCounter > 0 && this.waveCounter % settings.leveling.wavesPerLevel === 0) {
+            // --- Boss Wave ---
+            waveTemplate = settings.bossWaveTemplate.map(spawn => ({...spawn, level: gameLevel}));
+        } else {
+            // --- Normal Wave ---
+            const waveInLevel = (this.waveCounter -1) % settings.leveling.wavesPerLevel;
+            const levelProgress = waveInLevel / (settings.leveling.wavesPerLevel -1);
+
+            const { minThreat, maxThreat } = settings.leveling.waveGeneration;
+            const maxThreatForThisWave = minThreat + ((maxThreat - minThreat) * levelProgress);
+            
+            let currentThreat = 0;
+            let attempts = 0;
+            const fragmentKeys = Object.keys(settings.waveFragments);
+
+            while (attempts < 100) {
+                const suitableFragments = fragmentKeys.filter(key => {
+                    return settings.waveFragments[key].threat <= (maxThreatForThisWave - currentThreat);
+                });
+
+                if (suitableFragments.length === 0) break;
+
+                const randomFragmentKey = suitableFragments[Math.floor(Math.random() * suitableFragments.length)];
+                const fragment = settings.waveFragments[randomFragmentKey];
+                
+                let fragmentDetails = fragment.details;
+                if (!Array.isArray(fragmentDetails)) {
+                    fragmentDetails = [fragmentDetails];
+                }
+
+                fragmentDetails.forEach(spawnDef => {
+                    waveTemplate.push({ ...spawnDef, level: gameLevel });
+                });
+
+                currentThreat += fragment.threat;
+                attempts++;
+            }
+        }
+        
+        // Spawn enemies from the generated template
+        let delay = 0;
+        waveTemplate.forEach(spawn => {
+            const enemyCount = spawn.count + ((gameLevel - 1) * (spawn.countFactor || 0));
             setTimeout(() => {
-                for (let i = 0; i < ec; i++) {
+                for (let i = 0; i < enemyCount; i++) {
                     setTimeout(() => {
-                        this.enemies.create(spawn.level + levelInc, currentWave);
-                    }, i * spawn.coolDown);
+                        this.enemies.create(spawn.enemyType, spawn.level, this.waveCounter);
+                    }, i * (spawn.coolDown || 500));
                 }
             }, delay);
-            delay += (spawn.delay + (ec * spawn.coolDown)) * spawn.delayFactor;
-        }
+            delay += spawn.delay || 0;
+        });
 
         return this;
     }

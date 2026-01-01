@@ -5,27 +5,44 @@ import irlichtImage from '../../img/enemy/irlicht.png';
 import bugImage from '../../img/enemy/bug.png';
 
 class Enemy extends Entity {
-    constructor(level, wave, enemiesController) {
-        const enemySettings = settings.enemyLevels[level] || settings.enemyLevels[settings.enemyLevels.length - 1];
-        // Call the parent constructor
-        super(enemiesController.game, 0, 0, 10, enemySettings.color);
+    constructor(enemyType, level, wave, enemiesController) {
+        const definition = settings.enemyTypes[enemyType];
+        if (!definition) {
+            console.error(`Enemy type "${enemyType}" not found in settings.enemyTypes`);
+            return;
+        }
+
+        // Must calculate color before calling super()
+        const color = definition.color || 'red';
+        super(enemiesController.game, 0, 0, 10, color);
 
         this.enemiesController = enemiesController;
         this.type = 'enemy';
+        this.enemyType = enemyType;
+
+        // Calculate stats based on type, level, and factors
+        const level0 = level > 0 ? level -1 : 0;
+        const healthFactor = definition.levelFactors?.health ?? settings.leveling.healthFactor;
+        const speedFactor = definition.levelFactors?.speed ?? settings.leveling.speedFactor;
+        const rewardFactor = definition.levelFactors?.reward ?? settings.leveling.rewardFactor;
+
+        this.health = definition.baseHealth * Math.pow(healthFactor, level0);
+        this.maxHealth = this.health;
+        this.speed = definition.baseSpeed * Math.pow(speedFactor, level0);
+        this.reward = Math.round(definition.baseReward * Math.pow(rewardFactor, level0));
         
+        this.graphicType = definition.graphic; // 'irlicht', 'bug', or undefined
+        this.level = level;
+        this.wave = wave;
+        
+        // Standard properties
         const shift = Math.round(Math.random() * 40) - 10;
         this.waypointIndex = 0;
         this.waypoint = {};
         this.shift = shift;
         this.velocity = {x: 0, y: 0};
-        this.level = level;
-        this.wave = wave;
-        this.speed = enemySettings.speed;
-        this.health = enemySettings.health;
-        this.maxHealth = enemySettings.health;
         this.direction = 0;
         this.frame = 0;
-        this.enemyType = 'irlicht';
         this.deleted = false;
         this.zIndex = 5;
 
@@ -89,12 +106,22 @@ class Enemy extends Entity {
             this.x += this.velocity.x * deltaTime;
             this.y += this.velocity.y * deltaTime;
         }
-
-        this.frame = (this.frame + 6 * deltaTime) % this.enemiesController.images[this.enemyType].sprites[this.direction].frames.length;
+        
+        if (this.graphicType) {
+            const enemySprite = this.enemiesController.images[this.graphicType].sprites[this.direction];
+            if (enemySprite.frames) {
+                this.frame = (this.frame + 6 * deltaTime) % enemySprite.frames.length;
+            }
+        }
     }
 
     draw() {
-        helpers.drawAnimatedSprite(this.enemiesController.images[this.enemyType], this.direction, this.frame, Math.round(this.x), Math.round(this.y), 40, 40);
+        if (this.graphicType) {
+            helpers.drawAnimatedSprite(this.enemiesController.images[this.graphicType], this.direction, this.frame, Math.round(this.x), Math.round(this.y), 40, 40);
+        } else {
+            // Draw a placeholder circle if no graphic is defined
+            this.game.drawCircle(this.x, this.y, this.r, this.color, true);
+        }
 
         const healthPercent = this.health / this.maxHealth;
         if (healthPercent < 1) {
@@ -123,7 +150,7 @@ class Enemy extends Entity {
         if (this.deleted) return;
         this.health = 0;
         this.deleted = true;
-        this.game.stat('coins', this.game.stat('coins') + this.enemiesController.calculateReward(this.level), true);
+        this.game.stat('coins', this.game.stat('coins') + this.reward, true);
         this.enemiesController.remove(this);
     }
 
@@ -153,17 +180,17 @@ class Enemies {
                 { x: 0, y: 120, w: 20, h: 20, frames: [0,40,80,120,160,200] }
             ]),
             bug: helpers.createImage(bugImage, [
-                { x: 0, y: 0, w: 20, h: 20 },
-                { x: 40, y: 0, w: 20, h: 20 },
-                { x: 80, y: 0, w: 20, h: 20 },
-                { x: 120, y: 0, w: 20, h: 20 }
+                { x: 0, y: 0, w: 20, h: 20, frames: [0] },
+                { x: 40, y: 0, w: 20, h: 20, frames: [0] },
+                { x: 80, y: 0, w: 20, h: 20, frames: [0] },
+                { x: 120, y: 0, w: 20, h: 20, frames: [0] }
             ])
         };
         this.enemiesList = [];
     }
 
-    create(level, wave) {
-        const enemy = new Enemy(level, wave, this);
+    create(enemyType, level, wave) {
+        const enemy = new Enemy(enemyType, level, wave, this);
         this.enemiesList.push(enemy);
         return enemy;
     }
@@ -175,12 +202,6 @@ class Enemies {
             this.enemiesList.splice(index, 1);
         }
         this.mapEntities.remove(enemyToRemove.id);
-    }
-
-    calculateReward(level) {
-        const base = settings.enemyLevels[0];
-        const enemy = settings.enemyLevels[level];
-        return Math.round((enemy.health / base.health) * (enemy.speed / base.speed)) + 4;
     }
 }
 
