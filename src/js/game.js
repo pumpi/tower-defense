@@ -1,3 +1,4 @@
+import Debug from './debug.js';
 import MapController from './controllers/MapController.js';
 import MapEntityManager from './controllers/MapEntityManager.js';
 import MouseController from './controllers/MouseController.js';
@@ -20,6 +21,7 @@ class Game {
         this.gameOver = false;
         this.eventsList = {};
         this.lastFrameTime = 0;
+        this.lastWaveTemplate = [];
 
         // Create instances of all controllers, injecting dependencies
         this.mapEntities = new MapEntityManager(this);
@@ -27,6 +29,7 @@ class Game {
         this.mouse = new MouseController(this);
         this.enemies = new Enemies(this, this.map, this.mapEntities);
         this.towers = new Towers(this, this.map, this.mouse, this.mapEntities, this.enemies);
+        this.debug = new Debug(this);
 
         // UI Listeners
         document.addEventListener('click', (event) => {
@@ -213,6 +216,8 @@ class Game {
                 const fragment = settings.waveFragments[randomFragmentKey];
                 
                 let fragmentDetails = fragment.details;
+                fragmentDetails.threat = fragment.threat;
+
                 if (!Array.isArray(fragmentDetails)) {
                     fragmentDetails = [fragmentDetails];
                 }
@@ -224,8 +229,12 @@ class Game {
                 currentThreat += fragment.threat;
                 attempts++;
             }
+            this.lastWaveMaxThreat = maxThreatForThisWave;
+            this.lastWaveCurrentThreat = currentThreat;
         }
         
+        this.lastWaveTemplate = waveTemplate;
+
         // Spawn enemies from the generated template
         let delay = 0;
         waveTemplate.forEach(spawn => {
