@@ -109,6 +109,7 @@ class Tower extends Entity {
 
     shoot(enemy) {
         let damage = Math.floor(Math.random() * (this.damage.to - this.damage.from + 1)) + this.damage.from;
+        let isCrit = false;
         
         // Crit calculation
         const critChance = (this.critRate - enemy.critResistance) / 100;
@@ -117,13 +118,13 @@ class Tower extends Entity {
         if (Math.random() < finalCritChance) {
             damage *= this.critDamage;
             this.stats.crits++;
-            // maybe add visual indicator later
+            isCrit = true;
         }
 
         damage = Math.round(damage);
         this.stats.shoots++;
         this.stats.dmg += damage;
-        enemy.damage(damage);
+        enemy.damage(damage, isCrit);
 
         if (enemy.deleted) {
             this.stats.kills++;

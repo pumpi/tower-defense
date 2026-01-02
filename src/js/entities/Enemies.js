@@ -2,6 +2,7 @@ import helpers from '../helpers.js';
 import settings from '../game.settings.js';
 import Entity from './Entity.js';
 import HealthBar from './enemies/HealthBar.js';
+import DamageNumber from './enemies/DamageNumber.js';
 import wispImage from '../../img/enemy/wisp.png';
 import bugImage from '../../img/enemy/bug.png';
 
@@ -49,7 +50,7 @@ class Enemy extends Entity {
         this.deleted = false;
         this.zIndex = 5;
 
-        // Add self to the entity manager
+        // Add self and health bar to the entity manager
         this.enemiesController.mapEntities.add(this);
         this.enemiesController.mapEntities.add(new HealthBar(this, this.enemiesController.game));
 
@@ -128,8 +129,16 @@ class Enemy extends Entity {
         }
     }
 
-    damage(amount) {
+    damage(amount, isCrit = false) {
         if (this.deleted) return;
+
+        // If enemy is moving up, numbers float down. Otherwise, they float up.
+        const floatDirection = this.velocity.y < 0 ? 1 : -1;
+
+        this.enemiesController.mapEntities.add(
+            new DamageNumber(amount, this.x, this.y - this.r, isCrit, floatDirection, this.enemiesController.game)
+        );
+
         this.health -= amount;
         if (this.health <= 0) {
             this.die();
