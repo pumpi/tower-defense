@@ -25,11 +25,13 @@ class Enemy extends Entity {
         const healthFactor = definition.levelFactors?.health ?? settings.leveling.healthFactor;
         const speedFactor = definition.levelFactors?.speed ?? settings.leveling.speedFactor;
         const rewardFactor = definition.levelFactors?.reward ?? settings.leveling.rewardFactor;
+        const critResistanceFactor = definition.levelFactors?.critResistanceFactor ?? 1.1;
 
         this.health = definition.baseHealth * Math.pow(healthFactor, level0);
         this.maxHealth = this.health;
         this.speed = definition.baseSpeed * Math.pow(speedFactor, level0);
         this.reward = Math.round(definition.baseReward * Math.pow(rewardFactor, level0));
+        this.critResistance = definition.baseCritResistance * Math.pow(critResistanceFactor, level0);
         
         this.graphicType = definition.graphic; // 'wisp', 'bug', or undefined
         this.level = level;

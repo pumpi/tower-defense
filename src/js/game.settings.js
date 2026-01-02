@@ -14,6 +14,8 @@ export default {
             fireRange: 110,
             damage: {from: 3, to: 4},
             coolDownTime: 0.6,
+            baseCritRate: 5, // Base chance in %
+            baseCritDamage: 1.5, // Base multiplier
             images: helpers.createImage(laserTowerImage, [
                 {x: 0, y: 0, w: 80, h: 80},
                 {x: 0, y: 160, w: 80, h: 80},
@@ -24,9 +26,9 @@ export default {
             ]),
             audio: laserAudio,
             upgrades: [
-                {cost: 70, fireRange: 120, damage: {from: 6, to: 8}, color: '#2CE85B'},
-                {cost: 180, fireRange: 130, damage: {from: 10, to: 14}, color: '#2CE8B9'},
-                {cost: 250, fireRange: 140, damage: {from: 18, to: 25}, color: '#2A62DB'}
+                {cost: 70, fireRange: 120, damage: {from: 6, to: 8}, color: '#2CE85B', critRate: 2, critDamage: 0.1},
+                {cost: 180, fireRange: 130, damage: {from: 10, to: 14}, color: '#2CE8B9', critRate: 3, critDamage: 0.2},
+                {cost: 250, fireRange: 140, damage: {from: 18, to: 25}, color: '#2A62DB', critRate: 5, critDamage: 0.2}
             ]
         }
     },
@@ -53,9 +55,11 @@ export default {
             baseHealth: 24,
             baseSpeed: 50,
             baseReward: 5,
+            baseCritResistance: 5,
             levelFactors: {
                 health: 1.6,
                 speed: 1.1,
+                critResistanceFactor: 1.1,
             }
         },
         'bug': {
@@ -63,9 +67,11 @@ export default {
             baseHealth: 18,
             baseSpeed: 90,
             baseReward: 5,
+            baseCritResistance: 2,
             levelFactors: {
                 health: 1.5,
                 speed: 1.2,
+                critResistanceFactor: 1.1,
             }
         },
         'slime': {
@@ -73,9 +79,11 @@ export default {
             baseHealth: 100,
             baseSpeed: 30,
             baseReward: 10,
+            baseCritResistance: 0, // Slimes are easy to crit
             levelFactors: {
                 health: 1.8,
                 speed: 1.0,
+                critResistanceFactor: 1.05,
             }
         },
         'scout': {
@@ -83,9 +91,11 @@ export default {
             baseHealth: 10,
             baseSpeed: 160,
             baseReward: 8,
+            baseCritResistance: 10, // Scouts are dodgy
             levelFactors: {
                 health: 1.3,
                 speed: 1.05,
+                critResistanceFactor: 1.2,
             }
         },
         'boss': {
@@ -94,9 +104,11 @@ export default {
             baseHealth: 400,
             baseSpeed: 40,
             baseReward: 100,
+            baseCritResistance: 50, // Bosses are very resistant
             levelFactors: {
                 health: 2.5,
                 speed: 1.3,
+                critResistanceFactor: 1.4,
             }
         }
     },

@@ -16,9 +16,14 @@ class Tower extends Entity {
         this.damage = towerSettings.damage;
         this.cooldownTime = towerSettings.coolDownTime;
         this.level = 0;
+
+        // Crit stats
+        this.critRate = towerSettings.baseCritRate;
+        this.critDamage = towerSettings.baseCritDamage;
+
         this.audio = new Audio(towerSettings.audio);
         this.audio.volume = 0.3;
-        this.stats = { shoots: 0, dmg: 0, kills: 0 };
+        this.stats = { shoots: 0, dmg: 0, kills: 0, crits: 0 };
         this.cooldownCounter = 0;
         this.closestEnemy = false;
 
@@ -35,6 +40,11 @@ class Tower extends Entity {
             game.stat('coins', coins - upgrade.cost, true);
             this.damage = upgrade.damage;
             this.fireRange = upgrade.fireRange;
+            
+            // Add upgrade stats
+            this.critRate += upgrade.critRate;
+            this.critDamage += upgrade.critDamage;
+
             this.level++;
             this.color = upgrade.color;
             this.towersController.closeOptions();
@@ -98,7 +108,19 @@ class Tower extends Entity {
     }
 
     shoot(enemy) {
-        const damage = Math.floor(Math.random() * (this.damage.to - this.damage.from + 1)) + this.damage.from;
+        let damage = Math.floor(Math.random() * (this.damage.to - this.damage.from + 1)) + this.damage.from;
+        
+        // Crit calculation
+        const critChance = (this.critRate - enemy.critResistance) / 100;
+        const finalCritChance = Math.max(0.05, Math.min(critChance, 0.75)); // Clamp chance between 5% and 75%
+        
+        if (Math.random() < finalCritChance) {
+            damage *= this.critDamage;
+            this.stats.crits++;
+            // maybe add visual indicator later
+        }
+
+        damage = Math.round(damage);
         this.stats.shoots++;
         this.stats.dmg += damage;
         enemy.damage(damage);
@@ -141,10 +163,19 @@ class Towers {
         this.mapEntities = mapEntities;
         this.enemies = enemies;
         this.optionsModal = null;
+        this.justOpened = false;
 
         this.optionsModal = document.querySelector('.modal-options');
         this.game.on('update', () => this.update());
         this.game.on('afterDraw', () => this.draw());
+
+        document.addEventListener('click', (event) => {
+            if (this.optionsModal.classList.contains('is--open')) {
+                if (!event.target.closest('.modal-options')) {
+                    this.closeOptions();
+                }
+            }
+        });
     }
 
     update() {
@@ -187,34 +218,48 @@ class Towers {
     }
 
     openOptions(tower) {
-        this.game.output('#tower-position-x', tower.x);
-        this.game.output('#tower-position-y', tower.y);
-        this.game.output('#tower-level', tower.level + 1);
-        this.game.output('#tower-fire-range', tower.fireRange);
-        this.game.output('#tower-cooldown-time', tower.cooldownTime);
-        this.game.output('#tower-damage-from', tower.damage.from);
-        this.game.output('#tower-damage-to', tower.damage.to);
-        this.game.output('#tower-stats-shoots', tower.stats.shoots);
-        this.game.output('#tower-stats-damage', tower.stats.dmg);
-        this.game.output('#tower-stats-kills', tower.stats.kills);
+        const statsContainer = this.optionsModal.querySelector('#tower-stats-container');
+        const upgradeContainer = this.optionsModal.querySelector('#tower-upgrade-container');
 
+        // Build current stats HTML
+        statsContainer.innerHTML = `
+            <h4>Current Stats (Level ${tower.level + 1})</h4>
+            <table class="tower-stats">
+                <tr><td>Schaden:</td><td>${tower.damage.from} - ${tower.damage.to}</td></tr>
+                <tr><td>Reichweite:</td><td>${tower.fireRange}</td></tr>
+                <tr><td>Feuerrate:</td><td>${tower.cooldownTime}s</td></tr>
+                <tr><td>Crit Chance:</td><td>${tower.critRate.toFixed(0)}%</td></tr>
+                <tr><td>Crit Schaden:</td><td>${tower.critDamage * 100}%</td></tr>
+            </table>
+            <h4>Lifetime Stats</h4>
+            <table class="tower-stats">
+                <tr><td>Schüsse:</td><td>${tower.stats.shoots}</td></tr>
+                <tr><td>Crits:</td><td>${tower.stats.crits} (${((tower.stats.crits / tower.stats.shoots || 0) * 100).toFixed(2)}%)</td></tr>
+                <tr><td>Kills:</td><td>${tower.stats.kills}</td></tr>
+                <tr><td>Schaden:</td><td>${tower.stats.dmg}</td></tr>
+            </table>
+        `;
+        
+        // Build upgrade stats HTML
         const upgrade = settings.towers[tower.bullet].upgrades[tower.level];
-        const upgradeEl = this.optionsModal.querySelector('.tower-upgrade');
-
         if (upgrade) {
-            upgradeEl.classList.remove('is--hidden');
+            upgradeContainer.innerHTML = `
+                <h4>Upgrade auf Level ${tower.level + 2}</h4>
+                <table class="tower-stats">
+                    <tr><td>Kosten:</td><td>${upgrade.cost} Coins</td></tr>
+                    <tr><td>Schaden:</td><td>${upgrade.damage.from} - ${upgrade.damage.to}</td></tr>
+                    <tr><td>Reichweite:</td><td>${upgrade.fireRange}</td></tr>
+                    <tr><td>Crit Chance:</td><td>+${upgrade.critRate}%</td></tr>
+                    <tr><td>Crit Schaden:</td><td>+${upgrade.critDamage * 100}%</td></tr>
+                </table>
+                <button id="tower-buy-upgrade-btn" class="btn">Upgrade Kaufen</button>
+            `;
 
-            this.game.output('.tower-upgrade-level', tower.level + 2);
-            this.game.output('#tower-upgrade-cost', upgrade.cost);
-            this.game.output('#tower-upgrade-fire-range', upgrade.fireRange);
-            this.game.output('#tower-upgrade-damage-from', upgrade.damage.from);
-            this.game.output('#tower-upgrade-damage-to', upgrade.damage.to);
-
-            const upgradeButton = this.optionsModal.querySelector('.tower-buy-upgrade');
+            const upgradeButton = this.optionsModal.querySelector('#tower-buy-upgrade-btn');
             upgradeButton.onclick = () => tower.upgrade();
             upgradeButton.disabled = upgrade.cost > this.game.stat('coins');
         } else {
-            upgradeEl.classList.add('is--hidden');
+            upgradeContainer.innerHTML = '<h4>Max Level</h4>';
         }
 
         this.optionsModal.classList.add('is--open');
