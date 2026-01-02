@@ -6,6 +6,8 @@ import Enemies from './entities/Enemies.js';
 import Towers from './entities/Towers.js';
 import settings from './game.settings.js';
 import helpers from "./helpers.js";
+import optionsIcon from '../img/options.svg';
+import Modal from './components/Modal.js';
 
 class Game {
     constructor() {
@@ -30,6 +32,14 @@ class Game {
         this.enemies = new Enemies(this, this.map, this.mapEntities);
         this.towers = new Towers(this, this.map, this.mouse, this.mapEntities, this.enemies);
         this.debug = new Debug(this);
+        this.modal = new Modal();
+
+        // Initialize game settings from defaults
+        this.stat('soundEnabled', settings.game.soundEnabled);
+        this.stat('showNormalDamage', settings.game.showNormalDamage);
+
+        // Load settings from localStorage or use defaults
+        this.loadSettings();
 
         // UI Listeners
         document.addEventListener('click', (event) => {
@@ -44,10 +54,6 @@ class Game {
             if (event.target.matches('#next-wave')) {
                 event.preventDefault();
                 this.nextWave();
-            }
-            if (event.target.matches('.modal-close')) {
-                event.preventDefault();
-                this.towers.closeOptions();
             }
         }, false);
         document.addEventListener('keydown', (event) => {

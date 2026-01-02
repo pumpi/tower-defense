@@ -1,14 +1,12 @@
 <!DOCTYPE html>
-<html>
+<html lang="de-DE">
 <head>
     <meta charset="UTF-8">
     <title>Tower Defense</title>
     <link rel="stylesheet" type="text/css" href="./scss/main.scss">
+    <link rel="icon" type="image/png" href="./img/favicon.png">
 
     <script type="module" src="./js/main.js"></script>
-
-
-    <link rel="icon" type="image/png" href="./img/favicon.png">
 </head>
 <body>
     <div id="gui">
@@ -41,11 +39,10 @@
 
     <canvas id="canvas" width="1200" height="640"></canvas>
 
-    <div class="modal modal-options">
+    <div class="modal">
         <div class="modal-close">X</div>
-        <div class="modal-title">Tower Options</div>
-        <div id="tower-stats-container"></div>
-        <div id="tower-upgrade-container"></div>
+        <div class="modal-title"></div>
+        <div class="modal-content"></div>
     </div>
 
     <script>

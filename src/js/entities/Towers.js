@@ -47,7 +47,7 @@ class Tower extends Entity {
 
             this.level++;
             this.color = upgrade.color;
-            this.towersController.closeOptions();
+            game.modal.close();
         }
     }
 
@@ -163,20 +163,9 @@ class Towers {
         this.mouse = mouse;
         this.mapEntities = mapEntities;
         this.enemies = enemies;
-        this.optionsModal = null;
-        this.justOpened = false;
 
-        this.optionsModal = document.querySelector('.modal-options');
         this.game.on('update', () => this.update());
         this.game.on('afterDraw', () => this.draw());
-
-        document.addEventListener('click', (event) => {
-            if (this.optionsModal.classList.contains('is--open')) {
-                if (!event.target.closest('.modal-options')) {
-                    this.closeOptions();
-                }
-            }
-        });
     }
 
     update() {
@@ -219,32 +208,32 @@ class Towers {
     }
 
     openOptions(tower) {
-        const statsContainer = this.optionsModal.querySelector('#tower-stats-container');
-        const upgradeContainer = this.optionsModal.querySelector('#tower-upgrade-container');
-
         // Build current stats HTML
-        statsContainer.innerHTML = `
-            <h4>Current Stats (Level ${tower.level + 1})</h4>
-            <table class="tower-stats">
-                <tr><td>Schaden:</td><td>${tower.damage.from} - ${tower.damage.to}</td></tr>
-                <tr><td>Reichweite:</td><td>${tower.fireRange}</td></tr>
-                <tr><td>Feuerrate:</td><td>${tower.cooldownTime}s</td></tr>
-                <tr><td>Crit Chance:</td><td>${tower.critRate.toFixed(0)}%</td></tr>
-                <tr><td>Crit Schaden:</td><td>${tower.critDamage * 100}%</td></tr>
-            </table>
-            <h4>Lifetime Stats</h4>
-            <table class="tower-stats">
-                <tr><td>Schüsse:</td><td>${tower.stats.shoots}</td></tr>
-                <tr><td>Crits:</td><td>${tower.stats.crits} (${((tower.stats.crits / tower.stats.shoots || 0) * 100).toFixed(2)}%)</td></tr>
-                <tr><td>Kills:</td><td>${tower.stats.kills}</td></tr>
-                <tr><td>Schaden:</td><td>${tower.stats.dmg}</td></tr>
-            </table>
+        let content = `
+            <div id="tower-stats-container">
+                <h4>Current Stats (Level ${tower.level + 1})</h4>
+                <table class="tower-stats">
+                    <tr><td>Schaden:</td><td>${tower.damage.from} - ${tower.damage.to}</td></tr>
+                    <tr><td>Reichweite:</td><td>${tower.fireRange}</td></tr>
+                    <tr><td>Feuerrate:</td><td>${tower.cooldownTime}s</td></tr>
+                    <tr><td>Crit Chance:</td><td>${tower.critRate.toFixed(0)}%</td></tr>
+                    <tr><td>Crit Schaden:</td><td>${tower.critDamage * 100}%</td></tr>
+                </table>
+                <h4>Lifetime Stats</h4>
+                <table class="tower-stats">
+                    <tr><td>Schüsse:</td><td>${tower.stats.shoots}</td></tr>
+                    <tr><td>Crits:</td><td>${tower.stats.crits} (${((tower.stats.crits / tower.stats.shoots || 0) * 100).toFixed(2)}%)</td></tr>
+                    <tr><td>Kills:</td><td>${tower.stats.kills}</td></tr>
+                    <tr><td>Schaden:</td><td>${tower.stats.dmg}</td></tr>
+                </table>
+            </div>
+            <div id="tower-upgrade-container">
         `;
-        
+
         // Build upgrade stats HTML
         const upgrade = settings.towers[tower.bullet].upgrades[tower.level];
         if (upgrade) {
-            upgradeContainer.innerHTML = `
+            content += `
                 <h4>Upgrade auf Level ${tower.level + 2}</h4>
                 <table class="tower-stats">
                     <tr><td>Kosten:</td><td>${upgrade.cost} Coins</td></tr>
@@ -255,19 +244,22 @@ class Towers {
                 </table>
                 <button id="tower-buy-upgrade-btn" class="btn">Upgrade Kaufen</button>
             `;
-
-            const upgradeButton = this.optionsModal.querySelector('#tower-buy-upgrade-btn');
-            upgradeButton.onclick = () => tower.upgrade();
-            upgradeButton.disabled = upgrade.cost > this.game.stat('coins');
         } else {
-            upgradeContainer.innerHTML = '<h4>Max Level</h4>';
+            content += '<h4>Max Level</h4>';
         }
 
-        this.optionsModal.classList.add('is--open');
-    }
+        content += '</div>';
 
-    closeOptions() {
-        this.optionsModal.classList.remove('is--open');
+        this.game.modal.open('Tower Options', content);
+
+        // Add event listener for upgrade button if it exists
+        if (upgrade) {
+            const upgradeButton = document.getElementById('tower-buy-upgrade-btn');
+            if (upgradeButton) {
+                upgradeButton.onclick = () => tower.upgrade();
+                upgradeButton.disabled = upgrade.cost > this.game.stat('coins');
+            }
+        }
     }
 }
 
