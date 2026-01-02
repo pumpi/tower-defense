@@ -132,12 +132,15 @@ class Enemy extends Entity {
     damage(amount, isCrit = false) {
         if (this.deleted) return;
 
-        // If enemy is moving up, numbers float down. Otherwise, they float up.
-        const floatDirection = this.velocity.y < 0 ? 1 : -1;
+        // Only show damage numbers if it's a crit OR showNormalDamage is enabled
+        if (isCrit || this.enemiesController.game.stat('showNormalDamage')) {
+            // If enemy is moving up, numbers float down. Otherwise, they float up.
+            const floatDirection = this.velocity.y < 0 ? 1 : -1;
 
-        this.enemiesController.mapEntities.add(
-            new DamageNumber(amount, this.x, this.y - this.r, isCrit, floatDirection, this.enemiesController.game)
-        );
+            this.enemiesController.mapEntities.add(
+                new DamageNumber(amount, this.x, this.y - this.r, isCrit, floatDirection, this.enemiesController.game)
+            );
+        }
 
         this.health -= amount;
         if (this.health <= 0) {

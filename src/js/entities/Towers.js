@@ -16,13 +16,12 @@ class Tower extends Entity {
         this.damage = towerSettings.damage;
         this.cooldownTime = towerSettings.coolDownTime;
         this.level = 0;
+        this.audio = towerSettings.audio;
 
         // Crit stats
         this.critRate = towerSettings.baseCritRate;
         this.critDamage = towerSettings.baseCritDamage;
 
-        this.audio = new Audio(towerSettings.audio);
-        this.audio.volume = 0.3;
         this.stats = { shoots: 0, dmg: 0, kills: 0, crits: 0 };
         this.cooldownCounter = 0;
         this.closestEnemy = false;
@@ -69,7 +68,7 @@ class Tower extends Entity {
         if (this.closestEnemy) {
             if (this.cooldownCounter >= this.cooldownTime) {
                 this.shoot(this.closestEnemy);
-                this.audio.play().catch(() => {});
+                helpers.playAudio(this.audio);
                 this.cooldownCounter = 0; // Reset cooldown
             }
         }

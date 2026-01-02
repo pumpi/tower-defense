@@ -6,6 +6,11 @@ export default {
     playerLifes: 10,
     coins: 180,
 
+    game: {
+        soundEnabled: true,
+        showNormalDamage: true,
+    },
+
     towers: {
         laser: {
             costs: 80,

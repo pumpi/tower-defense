@@ -25,6 +25,11 @@ class Game {
         this.lastFrameTime = 0;
         this.lastWaveTemplate = [];
 
+        // Load the options icon image and define its position/size
+        this.optionsIconImage = new Image();
+        this.optionsIconImage.src = optionsIcon;
+        this.optionsIconPos = {x: this.canvas.width - 40, y: 10, width: 30, height: 30}; // Top-right position
+
         // Create instances of all controllers, injecting dependencies
         this.mapEntities = new MapEntityManager(this);
         this.map = new MapController(this, this.mapEntities);
@@ -56,6 +61,20 @@ class Game {
                 this.nextWave();
             }
         }, false);
+        
+        // Listener for Options Icon click on Canvas
+        this.canvas.addEventListener('click', (event) => {
+            const rect = this.canvas.getBoundingClientRect();
+            const mouseX = event.clientX - rect.left;
+            const mouseY = event.clientY - rect.top;
+
+            // Check if click is within Options Icon bounds
+            if (mouseX >= this.optionsIconPos.x && mouseX <= (this.optionsIconPos.x + this.optionsIconPos.width) &&
+                mouseY >= this.optionsIconPos.y && mouseY <= (this.optionsIconPos.y + this.optionsIconPos.height)) {
+                this.openSettingsModal();
+            }
+        });
+
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape' && this.stat('mode') === 'dropTower') {
                 this.stat('mode', '');
@@ -71,6 +90,50 @@ class Game {
 
         window.requestAnimationFrame(this.draw.bind(this));
     }
+
+    // --- Settings Management ---
+    loadSettings() {
+        const storedSettings = JSON.parse(localStorage.getItem('gameSettings')) || {};
+        this.stat('soundEnabled', storedSettings.soundEnabled ?? settings.game.soundEnabled);
+        this.stat('showNormalDamage', storedSettings.showNormalDamage ?? settings.game.showNormalDamage);
+    }
+
+    saveSettings() {
+        const currentSettings = {
+            soundEnabled: this.stat('soundEnabled'),
+            showNormalDamage: this.stat('showNormalDamage'),
+        };
+        localStorage.setItem('gameSettings', JSON.stringify(currentSettings));
+    }
+
+    openSettingsModal() {
+        const content = `
+            <div>
+                <label>
+                    <input type="checkbox" id="setting-sound-enabled" ${this.stat('soundEnabled') ? 'checked' : ''}>
+                    Sound aktivieren
+                </label>
+            </div>
+            <div>
+                <label>
+                    <input type="checkbox" id="setting-show-normal-damage" ${this.stat('showNormalDamage') ? 'checked' : ''}>
+                    Normale Schadenszahlen anzeigen (Crits immer anzeigen)
+                </label>
+            </div>
+        `;
+
+        this.modal.open('Settings', content);
+
+        document.getElementById('setting-sound-enabled').addEventListener('change', (event) => {
+            this.stat('soundEnabled', event.target.checked);
+            this.saveSettings();
+        });
+        document.getElementById('setting-show-normal-damage').addEventListener('change', (event) => {
+            this.stat('showNormalDamage', event.target.checked);
+            this.saveSettings();
+        });
+    }
+    // --- End Settings Management ---
 
     resetGame() {
         this.gameOver = false;
@@ -123,6 +186,11 @@ class Game {
         this.drawList = [];
 
         this.trigger('afterDraw');
+
+        // Draw Options Icon
+        if (this.optionsIconImage.complete) {
+            this.ctx.drawImage(this.optionsIconImage, this.optionsIconPos.x, this.optionsIconPos.y, this.optionsIconPos.width, this.optionsIconPos.height);
+        }
 
         // If the game is over, draw the overlay on top of the last game state
         if (this.gameOver) {
