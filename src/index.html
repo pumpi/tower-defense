@@ -1,14 +1,12 @@
 <!DOCTYPE html>
-<html>
+<html lang="de-DE">
 <head>
     <meta charset="UTF-8">
     <title>Tower Defense</title>
     <link rel="stylesheet" type="text/css" href="./scss/main.scss">
+    <link rel="icon" type="image/png" href="./img/favicon.png">
 
     <script type="module" src="./js/main.js"></script>
-
-
-    <link rel="icon" type="image/png" href="./img/favicon.png">
 </head>
 <body>
     <div id="gui">
@@ -41,52 +39,10 @@
 
     <canvas id="canvas" width="1200" height="640"></canvas>
 
-    <div class="modal modal-options">
+    <div class="modal">
         <div class="modal-close">X</div>
-        <div class="modal-title">Tower Options</div>
-        <table class="tower-stats">
-            <tr class="tower-position">
-                <td>Position:</td><td>x:<span id="tower-position-x">0</span> y:<span id="tower-position-y">0</span></td>
-            </tr>
-            <tr class="tower-level">
-                <td>Level:</td><td><span id="tower-level">0</span></td>
-            </tr>
-            <tr class="tower-fire-range">
-                <td>Reichweite:</td><td><span id="tower-fire-range">0</span></td>
-            </tr>
-            <tr class="tower-fire-range">
-                <td>Feuerrate:</td><td><span id="tower-cooldown-time">0</span></td>
-            </tr>
-            <tr class="tower-fire-range">
-                <td>Schaden:</td><td><span id="tower-damage-from">0</span> - <span id="tower-damage-to">0</span></td>
-            </tr>
-            <tr class="tower-stats-shoots">
-                <td>Gesamte Schüsse:</td><td><span id="tower-stats-shoots">0</span></td>
-            </tr>
-            <tr class="tower-stats-damage">
-                <td>Gesamter Schaden:</td><td><span id="tower-stats-damage">0</span></td>
-            </tr>
-            <tr class="tower-stats-kills">
-                <td>Gesamte Kills:</td><td><span id="tower-stats-kills">0</span></td>
-            </tr>
-        </table>
-
-        <div class="tower-upgrade">
-            <strong>Upgrade auf Level <span class="tower-upgrade-level"></span></strong>
-            <table class="tower-stats">
-                <tr class="tower-upgrade-cost">
-                    <td>Kosten:</td><td><span id="tower-upgrade-cost">0</span></td>
-                </tr>
-                <tr class="tower-upgrade-cost">
-                    <td>Reichweite:</td><td><span id="tower-upgrade-fire-range">0</span></td>
-                </tr>
-                <tr class="tower-upgrade-cost">
-                    <td>Schaden:</td><td><span id="tower-upgrade-damage-from">0</span> - <span id="tower-upgrade-damage-to">0</span></td>
-                </tr>
-            </table>
-            <button class="btn tower-buy-upgrade">Upgrade auf Level <span class="tower-upgrade-level">0</span> kaufen</button>
-        </div>
-
+        <div class="modal-title"></div>
+        <div class="modal-content"></div>
     </div>
 
     <script>

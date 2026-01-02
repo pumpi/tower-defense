@@ -1,6 +1,8 @@
 import helpers from '../helpers.js';
 import settings from '../game.settings.js';
 import Entity from './Entity.js';
+import HealthBar from './enemies/HealthBar.js';
+import DamageNumber from './enemies/DamageNumber.js';
 import wispImage from '../../img/enemy/wisp.png';
 import bugImage from '../../img/enemy/bug.png';
 
@@ -25,11 +27,13 @@ class Enemy extends Entity {
         const healthFactor = definition.levelFactors?.health ?? settings.leveling.healthFactor;
         const speedFactor = definition.levelFactors?.speed ?? settings.leveling.speedFactor;
         const rewardFactor = definition.levelFactors?.reward ?? settings.leveling.rewardFactor;
+        const critResistanceFactor = definition.levelFactors?.critResistanceFactor ?? 1.1;
 
         this.health = definition.baseHealth * Math.pow(healthFactor, level0);
         this.maxHealth = this.health;
         this.speed = definition.baseSpeed * Math.pow(speedFactor, level0);
         this.reward = Math.round(definition.baseReward * Math.pow(rewardFactor, level0));
+        this.critResistance = definition.baseCritResistance * Math.pow(critResistanceFactor, level0);
         
         this.graphicType = definition.graphic; // 'wisp', 'bug', or undefined
         this.level = level;
@@ -46,8 +50,9 @@ class Enemy extends Entity {
         this.deleted = false;
         this.zIndex = 5;
 
-        // Add self to the entity manager
+        // Add self and health bar to the entity manager
         this.enemiesController.mapEntities.add(this);
+        this.enemiesController.mapEntities.add(new HealthBar(this, this.enemiesController.game));
 
         this.nextWaypoint();
     }
@@ -120,26 +125,23 @@ class Enemy extends Entity {
             helpers.drawAnimatedSprite(this.enemiesController.images[this.graphicType], this.direction, this.frame, Math.round(this.x), Math.round(this.y), 40, 40);
         } else {
             // Draw a placeholder circle if no graphic is defined
-            this.game.drawCircle(this.x, this.y, this.r, this.color, true);
-        }
-
-        const healthPercent = this.health / this.maxHealth;
-        if (healthPercent < 1) {
-            const healthBar = {
-                x: this.x - this.r,
-                y: this.y - this.r - 5,
-                width: this.r * 2,
-                height: 3
-            };
-            this.game.ctx.fillStyle = "black";
-            this.game.ctx.fillRect(healthBar.x, healthBar.y, healthBar.width, healthBar.height);
-            this.game.ctx.fillStyle = "green";
-            this.game.ctx.fillRect(healthBar.x, healthBar.y, healthBar.width * healthPercent, healthBar.height);
+            this.enemiesController.game.drawCircle(this.x, this.y, this.r, this.color, true);
         }
     }
 
-    damage(amount) {
+    damage(amount, isCrit = false) {
         if (this.deleted) return;
+
+        // Only show damage numbers if it's a crit OR showNormalDamage is enabled
+        if (isCrit || this.enemiesController.game.stat('showNormalDamage')) {
+            // If enemy is moving up, numbers float down. Otherwise, they float up.
+            const floatDirection = this.velocity.y < 0 ? 1 : -1;
+
+            this.enemiesController.mapEntities.add(
+                new DamageNumber(amount, this.x, this.y - this.r, isCrit, floatDirection, this.enemiesController.game)
+            );
+        }
+
         this.health -= amount;
         if (this.health <= 0) {
             this.die();
@@ -181,9 +183,9 @@ class Enemies {
             ]),
             bug: helpers.createImage(bugImage, [
                 { x: 0, y: 0, w: 20, h: 20, frames: [0] },
-                { x: 40, y: 0, w: 20, h: 20, frames: [0] },
-                { x: 80, y: 0, w: 20, h: 20, frames: [0] },
-                { x: 120, y: 0, w: 20, h: 20, frames: [0] }
+                { x: 40, y: 0, w: 20, h: 20, frames: [40] },
+                { x: 80, y: 0, w: 20, h: 20, frames: [80] },
+                { x: 120, y: 0, w: 20, h: 20, frames: [120] }
             ])
         };
         this.enemiesList = [];

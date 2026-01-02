@@ -36,7 +36,7 @@ class Debug {
         const enemies = this.game.enemies.enemiesList;
 
         const towerInfo = towers.map(t => 
-            `<li>LvL ${t.level + 1} ${t.bullet} (${t.stats.kills} kills)</li>`
+            `<li>LvL ${t.level + 1} ${t.bullet} (${t.stats.kills} kills, ${t.stats.crits} crits)</li>`
         ).join('');
 
         const enemyInfo = enemies.map(e => 

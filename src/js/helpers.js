@@ -4,6 +4,7 @@ export default {
     init: (gameInstance) => {
         game = gameInstance;
     },
+
     sortEntity: (list) => {
         // Die Liste wird rückwärts durchlaufen, daher umgekehrt sortieren
         // Objekte mit höherem zIndex kommen zuerst in die Liste,
@@ -40,5 +41,13 @@ export default {
         let spr = image.sprites[spriteInd];
         //game.ctx.setTransform(1,0,0,1,x,y); // set scale and position
         game.ctx.drawImage(image,spr.frames[parseInt(frameInd)],spr.y,w,h,x - spr.w / 2,y - spr.h / 2,spr.w,spr.h); // render the subimage
+    },
+
+    playAudio: (audioFile) => {
+        if (game.stat('soundEnabled')) {
+            const audio = new Audio(audioFile);
+            audio.volume = 0.3;
+            audio.play().catch(() => {});
+        }
     }
 }
