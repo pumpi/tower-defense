@@ -181,9 +181,9 @@ class Enemies {
             ]),
             bug: helpers.createImage(bugImage, [
                 { x: 0, y: 0, w: 20, h: 20, frames: [0] },
-                { x: 40, y: 0, w: 20, h: 20, frames: [0] },
-                { x: 80, y: 0, w: 20, h: 20, frames: [0] },
-                { x: 120, y: 0, w: 20, h: 20, frames: [0] }
+                { x: 40, y: 0, w: 20, h: 20, frames: [40] },
+                { x: 80, y: 0, w: 20, h: 20, frames: [80] },
+                { x: 120, y: 0, w: 20, h: 20, frames: [120] }
             ])
         };
         this.enemiesList = [];
