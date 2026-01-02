@@ -1,6 +1,7 @@
 import helpers from '../helpers.js';
 import settings from '../game.settings.js';
 import Entity from './Entity.js';
+import HealthBar from './enemies/HealthBar.js';
 import wispImage from '../../img/enemy/wisp.png';
 import bugImage from '../../img/enemy/bug.png';
 
@@ -50,6 +51,7 @@ class Enemy extends Entity {
 
         // Add self to the entity manager
         this.enemiesController.mapEntities.add(this);
+        this.enemiesController.mapEntities.add(new HealthBar(this, this.enemiesController.game));
 
         this.nextWaypoint();
     }
@@ -122,21 +124,7 @@ class Enemy extends Entity {
             helpers.drawAnimatedSprite(this.enemiesController.images[this.graphicType], this.direction, this.frame, Math.round(this.x), Math.round(this.y), 40, 40);
         } else {
             // Draw a placeholder circle if no graphic is defined
-            this.game.drawCircle(this.x, this.y, this.r, this.color, true);
-        }
-
-        const healthPercent = this.health / this.maxHealth;
-        if (healthPercent < 1) {
-            const healthBar = {
-                x: this.x - this.r,
-                y: this.y - this.r - 5,
-                width: this.r * 2,
-                height: 3
-            };
-            this.game.ctx.fillStyle = "black";
-            this.game.ctx.fillRect(healthBar.x, healthBar.y, healthBar.width, healthBar.height);
-            this.game.ctx.fillStyle = "green";
-            this.game.ctx.fillRect(healthBar.x, healthBar.y, healthBar.width * healthPercent, healthBar.height);
+            this.enemiesController.game.drawCircle(this.x, this.y, this.r, this.color, true);
         }
     }
 
