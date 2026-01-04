@@ -1,6 +1,7 @@
 import helpers from '../helpers';
 import settings from '../game.settings';
-import backgroundImage from '../../img/background.png';
+import backLayerImage from '../../img/backlayer.png';
+import frontLayerImage from '../../img/frontlayer.png';
 
 class MapController {
     constructor(game, mapEntities) {
@@ -22,22 +23,23 @@ class MapController {
             {x: 1200, y: 200},
         ];
         this.images = {
-            background: helpers.createImage(backgroundImage)
+            background: helpers.createImage(backLayerImage),
+            frontLayer: helpers.createImage(frontLayerImage),
         };
 
         // Init logic
         this.game.on('update', () => this.update());
-        this.game.on('beforeDraw', () => this.draw());
+        this.game.on('beforeDraw', () => this.beforeDraw());
+        this.game.on('afterDraw', () => this.afterDraw());
     }
 
     update() {
     }
 
-    draw() {
-        // Rahmen und das Canvas herumziehen um die Ausmaße besser zu erkennen
+    beforeDraw() {
         this.game.ctx.drawImage(this.images.background,0,0,this.game.canvas.width,this.game.canvas.height);
 
-        // Game Raster
+        // Game grid
         this.grid(settings.mapGrid);
     }
 
@@ -48,6 +50,10 @@ class MapController {
             right: x + settings.towers[bulletType].size,
             bottom: y + settings.towers[bulletType].size,
         };
+    afterDraw() {
+        this.game.ctx.drawImage(this.images.frontLayer,0,0,this.game.canvas.width,this.game.canvas.height);
+    }
+
 
         for (let i = 0; i < this.waypoints.length - 1; i++) {
             let x1 = Math.min(this.waypoints[i + 1].x, this.waypoints[i].x),

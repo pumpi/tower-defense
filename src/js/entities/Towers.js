@@ -164,7 +164,7 @@ class Towers {
         this.enemies = enemies;
 
         this.game.on('update', () => this.update());
-        this.game.on('afterDraw', () => this.draw());
+        this.game.on('beforeDraw', () => this.draw());
     }
 
     update() {
