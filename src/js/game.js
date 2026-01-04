@@ -211,8 +211,15 @@ class Game {
 
     stat(name, value, output) {
         if (value === undefined) return this.stats[name] || false;
+        const oldValue = this.stats[name];
         this.stats[name] = value;
         if (output !== undefined) this.output(`#${name}`, value);
+
+        // Trigger event if value changed
+        if (oldValue !== value) {
+            this.trigger(`stat:${name}`, value);
+        }
+
         return this;
     }
 

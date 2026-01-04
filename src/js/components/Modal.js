@@ -5,6 +5,7 @@ class Modal {
         this.contentElement = null;
         this.closeButton = null;
         this.isOpen = false;
+        this.cleanupCallbacks = [];
 
         this.init();
     }
@@ -71,8 +72,18 @@ class Modal {
         // Remove click outside listener
         document.removeEventListener('click', this.handleOutsideClick);
 
+        // Execute cleanup callbacks
+        this.cleanupCallbacks.forEach(callback => callback());
+        this.cleanupCallbacks = [];
+
         // Clear content when closing
         this.setContent('');
+    }
+
+    onClose(callback) {
+        if (typeof callback === 'function') {
+            this.cleanupCallbacks.push(callback);
+        }
     }
 
     setTitle(title) {

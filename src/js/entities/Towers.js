@@ -257,7 +257,21 @@ class Towers {
             const upgradeButton = document.getElementById('tower-buy-upgrade-btn');
             if (upgradeButton) {
                 upgradeButton.onclick = () => tower.upgrade();
-                upgradeButton.disabled = upgrade.cost > this.game.stat('coins');
+
+                // Update button status based on current coins
+                const updateButtonStatus = () => {
+                    upgradeButton.disabled = upgrade.cost > this.game.stat('coins');
+                };
+                updateButtonStatus();
+
+                // Listen to coin changes and update button status
+                const coinChangeHandler = () => updateButtonStatus();
+                this.game.on('stat:coins', coinChangeHandler);
+
+                // Clean up listener when modal closes
+                this.game.modal.onClose(() => {
+                    this.game.off('stat:coins', coinChangeHandler);
+                });
             }
         }
     }
