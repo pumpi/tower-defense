@@ -5,12 +5,12 @@
     transform: translate(-50%, -50%);
     width: 400px;
     height: auto;
-    background: #FFF;
+    background: #121010;
     display: none;
     -webkit-box-shadow: 0px 0px 20px -1px rgba(0, 0, 0, 0.7);
     box-shadow: 0px 0px 20px -1px rgba(0, 0, 0, 0.7);
     padding: 15px;
-    color: #333;
+    color: #b5b5b5;
 }
 
 .modal-close {
@@ -36,7 +36,7 @@
     margin-bottom: 20px;
 }
 .modal .tower-stats tr:nth-child(odd) {
-    background: #EEE;
+    background: #292424;
 }
 .modal .tower-stats td {
     padding: 5px;
