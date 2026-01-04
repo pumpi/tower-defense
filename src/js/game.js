@@ -298,11 +298,17 @@ class Game {
                 const fragment = settings.waveFragments[randomFragmentKey];
                 
                 let fragmentDetails = fragment.details;
+
+                // Debug infos
                 fragmentDetails.threat = fragment.threat;
+                fragmentDetails.name = randomFragmentKey;
 
                 if (!Array.isArray(fragmentDetails)) {
                     fragmentDetails = [fragmentDetails];
                 }
+
+                // Calculate sapwn count based on game level and factor
+                fragmentDetails.count = fragmentDetails.count + ((gameLevel - 1) * (fragmentDetails.countFactor || 0));
 
                 fragmentDetails.forEach(spawnDef => {
                     waveTemplate.push({ ...spawnDef, level: gameLevel });
@@ -320,9 +326,8 @@ class Game {
         // Spawn enemies from the generated template
         let delay = 0;
         waveTemplate.forEach(spawn => {
-            const enemyCount = spawn.count + ((gameLevel - 1) * (spawn.countFactor || 0));
             setTimeout(() => {
-                for (let i = 0; i < enemyCount; i++) {
+                for (let i = 0; i < spawn.count; i++) {
                     setTimeout(() => {
                         this.enemies.create(spawn.enemyType, spawn.level, this.waveCounter);
                     }, i * (spawn.coolDown || 500));

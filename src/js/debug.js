@@ -44,7 +44,7 @@ class Debug {
         ).join('');
         
         const lastWave = this.game.lastWaveTemplate || [];
-        const waveInfo = lastWave.map(s => `<li>${s.count}x Lvl ${s.level} ${s.enemyType} (${s.threat})</li>`).join('');
+        const waveInfo = lastWave.map(s => `<li>${s.name} - ${s.count}x Lvl ${s.level} ${s.enemyType} (${s.threat})</li>`).join('');
 
         this.panel.innerHTML = `
             <h3>Debug Info</h3>
