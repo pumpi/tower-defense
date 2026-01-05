@@ -1,6 +1,7 @@
 import helpers from '../helpers';
 import settings from '../game.settings';
-import backgroundImage from '../../img/background.png';
+import backLayerImage from '../../img/backlayer.png';
+import frontLayerImage from '../../img/frontlayer.png';
 
 class MapController {
     constructor(game, mapEntities) {
@@ -22,64 +23,88 @@ class MapController {
             {x: 1200, y: 200},
         ];
         this.images = {
-            background: helpers.createImage(backgroundImage)
+            background: helpers.createImage(backLayerImage),
+            frontLayer: helpers.createImage(frontLayerImage),
         };
 
         // Init logic
         this.game.on('update', () => this.update());
-        this.game.on('beforeDraw', () => this.draw());
+        this.game.on('beforeDraw', () => this.beforeDraw());
+        this.game.on('afterDraw', () => this.afterDraw());
     }
 
     update() {
     }
 
-    draw() {
-        // Rahmen und das Canvas herumziehen um die Ausmaße besser zu erkennen
+    beforeDraw() {
         this.game.ctx.drawImage(this.images.background,0,0,this.game.canvas.width,this.game.canvas.height);
 
-        // Game Raster
+        // Game grid
         this.grid(settings.mapGrid);
     }
 
-    isValidTowerPlace(x, y, bulletType) {
-        const r = {
-            left: x - settings.towers[bulletType].size,
-            top: y - settings.towers[bulletType].size,
-            right: x + settings.towers[bulletType].size,
-            bottom: y + settings.towers[bulletType].size,
-        };
+    afterDraw() {
+        this.game.ctx.drawImage(this.images.frontLayer,0,0,this.game.canvas.width,this.game.canvas.height);
+    }
+
+    isValidTowerPlace(x, y) {
+        const distanceToPath = this.distanceToPath(x, y);
+
+        // Tower is ON the path (too close to path centerline)
+        if (distanceToPath <= settings.mapGrid / 2) return false;
+
+        // Tower position already occupied
+        if (this.isTowerAtPosition(x, y)) return false;
+
+        // Tower must be adjacent to path (within diagonal distance)
+        return distanceToPath <= Math.sqrt(2) * settings.mapGrid;
+    }
+
+    distanceToPath(x, y) {
+        // Returns the minimum distance from point (x, y) to any path segment
+        let minDistance = Infinity;
 
         for (let i = 0; i < this.waypoints.length - 1; i++) {
-            let x1 = Math.min(this.waypoints[i + 1].x, this.waypoints[i].x),
-                y1 = Math.min(this.waypoints[i + 1].y, this.waypoints[i].y),
-                x2 = Math.max(this.waypoints[i + 1].x, this.waypoints[i].x),
-                y2 = Math.max(this.waypoints[i + 1].y, this.waypoints[i].y),
-                width = (x2 - x1) + 80,
-                height = (y2 - y1) + 80;
+            const x1 = this.waypoints[i].x;
+            const y1 = this.waypoints[i].y;
+            const x2 = this.waypoints[i + 1].x;
+            const y2 = this.waypoints[i + 1].y;
 
-            x1 -= 40;
-            y1 -= 40;
-            x2 = x1 + width;
-            y2 = y1 + height;
+            // Calculate distance to this line segment
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const lengthSquared = dx * dx + dy * dy;
 
-            let r2 = {
-                left: x1,
-                top: y1,
-                right: x2,
-                bottom: y2
-            };
+            let distance;
+            if (lengthSquared === 0) {
+                // Segment is actually a point
+                distance = this.game.distance(x, y, x1, y1);
+            } else {
+                // Calculate projection of point onto the line (clamped to segment)
+                let t = ((x - x1) * dx + (y - y1) * dy) / lengthSquared;
+                t = Math.max(0, Math.min(1, t)); // Clamp to [0, 1]
 
-            if (this.game.intersectRect(r, r2)) return false;
+                // Find the closest point on the segment
+                const closestX = x1 + t * dx;
+                const closestY = y1 + t * dy;
+
+                distance = this.game.distance(x, y, closestX, closestY);
+            }
+
+            minDistance = Math.min(minDistance, distance);
         }
 
-        for ( let id in this.mapEntities.list ) {
+        return minDistance;
+    }
+
+    isTowerAtPosition(x, y) {
+        for (let id in this.mapEntities.list) {
             let entity = this.mapEntities.list[id];
-            if ( entity.type === 'tower' && this.game.distance(entity.x, entity.y, x, y) <= settings.towers[bulletType].size * 2) {
-                return false;
+            if (entity.type === 'tower' && entity.x === x && entity.y === y) {
+                return true;
             }
         }
-
-        return true;
+        return false;
     }
 
     grid(gap) {

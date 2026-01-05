@@ -164,14 +164,14 @@ class Towers {
         this.enemies = enemies;
 
         this.game.on('update', () => this.update());
-        this.game.on('afterDraw', () => this.draw());
+        this.game.on('beforeDraw', () => this.draw());
     }
 
     update() {
         const gridPosition = this.gridPosition();
         const bulletType = this.game.stat('selectedTowerType');
 
-        if (this.game.stat('mode') === 'dropTower' && this.map.isValidTowerPlace(gridPosition.x, gridPosition.y, bulletType) && this.mouse.clicked) {
+        if (this.game.stat('mode') === 'dropTower' && this.map.isValidTowerPlace(gridPosition.x, gridPosition.y) && this.mouse.clicked) {
             this.game.stat('mode', '');
             this.game.stat('coins', this.game.stat('coins') - settings.towers[bulletType].costs, true);
             this.create(gridPosition.x, gridPosition.y, bulletType);
@@ -182,12 +182,13 @@ class Towers {
         if (this.game.stat('mode') === 'dropTower') {
             const gridPosition = this.gridPosition();
             const bulletType = this.game.stat('selectedTowerType');
-            const isValid = this.map.isValidTowerPlace(gridPosition.x, gridPosition.y, bulletType);
+            const isValid = this.map.isValidTowerPlace(gridPosition.x, gridPosition.y);
+            const isOccupied = this.map.isTowerAtPosition(gridPosition.x, gridPosition.y);
 
             if (isValid) {
                 this.game.drawCircle(gridPosition.x, gridPosition.y, settings.towers[bulletType].fireRange, 'rgba(0,0,255,0.2)', true);
                 helpers.drawSprite(settings.towers[bulletType].images, 0, gridPosition.x, gridPosition.y - 20, 160, 160);
-            } else {
+            } else if (!isOccupied) {
                 this.game.ctx.save();
                 this.game.ctx.filter = 'grayscale(100%)';
                 helpers.drawSprite(settings.towers[bulletType].images, 0, gridPosition.x, gridPosition.y - 20, 160, 160);
@@ -256,7 +257,21 @@ class Towers {
             const upgradeButton = document.getElementById('tower-buy-upgrade-btn');
             if (upgradeButton) {
                 upgradeButton.onclick = () => tower.upgrade();
-                upgradeButton.disabled = upgrade.cost > this.game.stat('coins');
+
+                // Update button status based on current coins
+                const updateButtonStatus = () => {
+                    upgradeButton.disabled = upgrade.cost > this.game.stat('coins');
+                };
+                updateButtonStatus();
+
+                // Listen to coin changes and update button status
+                const coinChangeHandler = () => updateButtonStatus();
+                this.game.on('stat:coins', coinChangeHandler);
+
+                // Clean up listener when modal closes
+                this.game.modal.onClose(() => {
+                    this.game.off('stat:coins', coinChangeHandler);
+                });
             }
         }
     }
