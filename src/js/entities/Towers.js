@@ -24,7 +24,10 @@ class Tower extends Entity {
 
         this.stats = { shoots: 0, dmg: 0, kills: 0, crits: 0 };
         this.cooldownCounter = 0;
-        this.closestEnemy = false;
+        this.targetEnemy = null;
+
+        // Targeting priority (ordered list of strategies)
+        this.targetingPriority = ['most-advanced'];
 
         // Add self to the entity manager
         this.towersController.mapEntities.add(this);
@@ -54,20 +57,20 @@ class Tower extends Entity {
         const { game, mouse } = this.towersController;
         this.cooldownCounter += deltaTime;
 
-        if (this.closestEnemy) {
-            const enemyDistance = game.distance(this.x, this.y, this.closestEnemy.x, this.closestEnemy.y);
-            if (enemyDistance >= (this.fireRange + this.closestEnemy.r) || this.closestEnemy.health <= 0) {
-                this.closestEnemy = false;
+        if (this.targetEnemy) {
+            const enemyDistance = game.distance(this.x, this.y, this.targetEnemy.x, this.targetEnemy.y);
+            if (enemyDistance >= (this.fireRange + this.targetEnemy.r) || this.targetEnemy.health <= 0) {
+                this.targetEnemy = null;
             }
         }
 
-        if (!this.closestEnemy) {
-            this.closestEnemy = this.findClosestEnemy();
+        if (!this.targetEnemy) {
+            this.targetEnemy = this.findTargetEnemy();
         }
 
-        if (this.closestEnemy) {
+        if (this.targetEnemy) {
             if (this.cooldownCounter >= this.cooldownTime) {
-                this.shoot(this.closestEnemy);
+                this.shoot(this.targetEnemy);
                 helpers.playAudio(this.audio);
                 this.cooldownCounter = 0; // Reset cooldown
             }
@@ -80,30 +83,88 @@ class Tower extends Entity {
         }
     }
 
-    findClosestEnemy() {
+    getEnemiesInRange() {
         const { game, enemies } = this.towersController;
-        let mostAdvancedEnemy = null;
-        let highestWaypointIndex = -1;
-        let shortestDistanceToWaypoint = Infinity;
-
-        for (const enemy of enemies.enemiesList) {
+        return enemies.enemiesList.filter(enemy => {
             const distance = game.distance(this.x, this.y, enemy.x, enemy.y);
+            return distance <= (this.fireRange + enemy.r);
+        });
+    }
 
-            if (distance <= (this.fireRange + enemy.r)) {
-                if (enemy.waypointIndex > highestWaypointIndex) {
-                    highestWaypointIndex = enemy.waypointIndex;
-                    mostAdvancedEnemy = enemy;
-                    shortestDistanceToWaypoint = enemy.waypoint ? game.distance(enemy.x, enemy.y, enemy.waypoint.x, enemy.waypoint.y) : Infinity;
-                } else if (enemy.waypointIndex === highestWaypointIndex && enemy.waypoint) {
-                    const distanceToWaypoint = game.distance(enemy.x, enemy.y, enemy.waypoint.x, enemy.waypoint.y);
-                    if (distanceToWaypoint < shortestDistanceToWaypoint) {
-                        mostAdvancedEnemy = enemy;
-                        shortestDistanceToWaypoint = distanceToWaypoint;
-                    }
+    compareByStrategy(enemyA, enemyB, strategy) {
+        const { game } = this.towersController;
+
+        switch (strategy) {
+            case 'most-advanced':
+                if (enemyB.waypointIndex !== enemyA.waypointIndex) {
+                    return enemyB.waypointIndex - enemyA.waypointIndex;
                 }
-            }
+                // Same waypoint: closer to next waypoint = more advanced
+                const distA = enemyA.waypoint ? game.distance(enemyA.x, enemyA.y, enemyA.waypoint.x, enemyA.waypoint.y) : Infinity;
+                const distB = enemyB.waypoint ? game.distance(enemyB.x, enemyB.y, enemyB.waypoint.x, enemyB.waypoint.y) : Infinity;
+                return distA - distB;
+
+            case 'least-health':
+                return enemyA.health - enemyB.health;
+
+            case 'most-health':
+                return enemyB.health - enemyA.health;
+
+            case 'fastest':
+                return enemyB.speed - enemyA.speed;
+
+            case 'slowest':
+                return enemyA.speed - enemyB.speed;
+
+            case 'closest':
+                const distToA = game.distance(this.x, this.y, enemyA.x, enemyA.y);
+                const distToB = game.distance(this.x, this.y, enemyB.x, enemyB.y);
+                return distToA - distToB;
+
+            case 'prioritize-boss':
+                const aIsBoss = enemyA.enemyType === 'boss';
+                const bIsBoss = enemyB.enemyType === 'boss';
+                if (aIsBoss && !bIsBoss) return -1; // A (boss) comes first
+                if (!aIsBoss && bIsBoss) return 1;  // B (boss) comes first
+                return 0; // Both boss or both normal → tie
+
+            case 'prioritize-normal':
+                const aIsNormal = enemyA.enemyType !== 'boss';
+                const bIsNormal = enemyB.enemyType !== 'boss';
+                if (aIsNormal && !bIsNormal) return -1; // A (normal) comes first
+                if (!aIsNormal && bIsNormal) return 1;  // B (normal) comes first
+                return 0; // Both boss or both normal → tie
+
+            default:
+                return 0;
         }
-        return mostAdvancedEnemy;
+    }
+
+    findTargetEnemy() {
+        const enemiesInRange = this.getEnemiesInRange();
+
+        if (enemiesInRange.length === 0) {
+            return null;
+        }
+
+        // Only one enemy: no need to sort
+        if (enemiesInRange.length === 1) {
+            return enemiesInRange[0];
+        }
+
+        // Multi-level sort: use each strategy as tiebreaker for the previous one
+        const sorted = [...enemiesInRange].sort((a, b) => {
+            for (const strategy of this.targetingPriority) {
+                const comparison = this.compareByStrategy(a, b, strategy);
+                if (comparison !== 0) {
+                    return comparison; // Found a difference, use this strategy
+                }
+                // Tie: continue to next strategy
+            }
+            return 0; // All strategies resulted in tie
+        });
+
+        return sorted[0];
     }
 
     shoot(enemy) {
@@ -226,6 +287,18 @@ class Towers {
                     <tr><td>Kills:</td><td>${tower.stats.kills}</td></tr>
                     <tr><td>Schaden:</td><td>${tower.stats.dmg}</td></tr>
                 </table>
+                <h4>Zielpriorität</h4>
+                <p style="font-size: 12px; margin-bottom: 8px;">Wähle mehrere Strategien. Bei Gleichstand wird die nächste Strategie als Tiebreaker verwendet.</p>
+                <select id="tower-targeting-priority" multiple autocomplete="off">
+                    <option value="most-advanced">Am weitesten fortgeschritten</option>
+                    <option value="least-health">Wenigsten Leben</option>
+                    <option value="most-health">Meisten Leben</option>
+                    <option value="fastest">Am schnellsten</option>
+                    <option value="slowest">Am langsamsten</option>
+                    <option value="closest">Am nächsten</option>
+                    <option value="prioritize-boss">Bosse bevorzugen</option>
+                    <option value="prioritize-normal">Normale Gegner bevorzugen</option>
+                </select>
             </div>
             <div id="tower-upgrade-container">
         `;
@@ -251,6 +324,28 @@ class Towers {
         content += '</div>';
 
         this.game.modal.open('Tower Options', content);
+
+        // Initialize Tom Select for targeting priority
+        const targetingSelect = new window.TomSelect('#tower-targeting-priority', {
+            plugins: ['drag_drop', 'remove_button'],
+            persist: false,
+            maxItems: null,
+            items: tower.targetingPriority, // Set current priorities
+            onItemAdd: function() {
+                tower.targetingPriority = this.items;
+            },
+            onItemRemove: function() {
+                tower.targetingPriority = this.items;
+            },
+            onDropdownClose: function() {
+                tower.targetingPriority = this.items;
+            }
+        });
+
+        // Clean up Tom Select when modal closes
+        this.game.modal.onClose(() => {
+            targetingSelect.destroy();
+        });
 
         // Add event listener for upgrade button if it exists
         if (upgrade) {
