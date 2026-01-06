@@ -1,5 +1,6 @@
 class Modal {
     constructor() {
+        this.containerElement = null;
         this.modalElement = null;
         this.titleElement = null;
         this.contentElement = null;
@@ -12,13 +13,14 @@ class Modal {
 
     init() {
         // Get modal elements from DOM
-        this.modalElement = document.querySelector('.modal');
+        this.containerElement = document.querySelector('.modal');
+        this.modalElement = this.containerElement?.querySelector('.modal-content');
         this.titleElement = this.modalElement?.querySelector('.modal-title');
-        this.contentElement = this.modalElement?.querySelector('.modal-content');
+        this.contentElement = this.modalElement?.querySelector('.modal-body');
         this.closeButton = this.modalElement?.querySelector('.modal-close');
 
-        if (!this.modalElement) {
-            console.error('Modal element not found in DOM');
+        if (!this.containerElement || !this.modalElement) {
+            console.error('Modal elements not found in DOM');
             return;
         }
 
@@ -37,14 +39,14 @@ class Modal {
     }
 
     handleOutsideClick(event) {
-        if (!event.target.closest('.modal')) {
+        if (!event.target.closest('.modal-content')) {
             event.stopPropagation();
             this.close();
         }
     }
 
     open(title, content) {
-        if (!this.modalElement) return;
+        if (!this.containerElement) return;
 
         // If already open, don't reopen
         if (this.isOpen) {
@@ -54,7 +56,10 @@ class Modal {
         this.setTitle(title);
         this.setContent(content);
 
-        this.modalElement.classList.add('is--open');
+        // Prevent body scroll and compensate for scrollbar width
+        this.preventBodyScroll();
+
+        this.containerElement.classList.add('is--open');
         this.isOpen = true;
 
         // Add click outside listener on next tick to avoid immediate close
@@ -63,11 +68,33 @@ class Modal {
         });
     }
 
-    close() {
-        if (!this.modalElement) return;
+    preventBodyScroll() {
+        // Measure scrollbar width before hiding it
+        const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
 
-        this.modalElement.classList.remove('is--open');
+        // Add padding to compensate for scrollbar removal
+        if (scrollbarWidth > 0) {
+            document.body.style.paddingRight = `${scrollbarWidth}px`;
+        }
+
+        // Prevent scrolling
+        document.body.style.overflow = 'hidden';
+    }
+
+    restoreBodyScroll() {
+        // Remove overflow and padding
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }
+
+    close() {
+        if (!this.containerElement) return;
+
+        this.containerElement.classList.remove('is--open');
         this.isOpen = false;
+
+        // Restore body scrolling
+        this.restoreBodyScroll();
 
         // Remove click outside listener
         document.removeEventListener('click', this.handleOutsideClick);

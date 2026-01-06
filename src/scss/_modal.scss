@@ -1,16 +1,74 @@
 .modal {
+    display: none;
     position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 400px;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1000;
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    &.is--open {
+        display: block;
+    }
+}
+
+.modal-dialog {
+    display: flex;
+    align-items: center;
+    min-height: calc(100% - 80px);
+    max-width: 500px;
+    margin: 40px auto;
+}
+
+
+.modal-content {
+    position: relative;
+
     height: auto;
     background: #121010;
-    display: none;
-    -webkit-box-shadow: 0px 0px 20px -1px rgba(0, 0, 0, 0.7);
-    box-shadow: 0px 0px 20px -1px rgba(0, 0, 0, 0.7);
+    -webkit-box-shadow: 0 0 20px -1px rgba(0, 0, 0, 0.7);
+    box-shadow: 0 0 20 -1px rgba(0, 0, 0, 0.7);
     padding: 15px;
     color: #b5b5b5;
+
+    .tower-stats {
+        width: 100%;
+        margin-bottom: 20px;
+
+        tr:nth-child(odd) {
+            background: #292424;
+        }
+
+        td {
+            padding: 5px;
+        }
+    }
+
+    .ts-control {
+        background: #292424;
+        border-color: #292424;
+        border-radius: 0;
+        color: #fff;
+    }
+
+    .ts-wrapper.multi .ts-control > div {
+        color: #fff;
+        background: #423939;
+    }
+
+    .ts-dropdown {
+        background: #423c3c;
+        border-color: #292424;
+        border-radius: 0;
+        color: #fff;
+
+        .active {
+            background: #1d2337;
+            color: #fff;
+        }
+    }
 }
 
 .modal-close {
@@ -21,23 +79,9 @@
     cursor: pointer;
 }
 
-.modal.is--open {
-    display: block;
-}
-
 .modal-title {
     font-family: Impact, Charcoal, sans-serif;
     margin-bottom: 10px;
     font-size: 20px;
-}
-
-.modal .tower-stats {
-    width: 100%;
-    margin-bottom: 20px;
-}
-.modal .tower-stats tr:nth-child(odd) {
-    background: #292424;
-}
-.modal .tower-stats td {
-    padding: 5px;
+    font-weight: bold;
 }
