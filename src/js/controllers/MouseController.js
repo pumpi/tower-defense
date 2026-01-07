@@ -22,7 +22,7 @@ class MouseController {
         this.updatePosition(e.clientX, e.clientY);
     }
 
-    onClick(e) {
+    onClick() {
         this.clicked = true;
     }
 
