@@ -5,8 +5,13 @@ class MouseController {
         this.y = 0;
         this.clicked = false;
 
+        // Mouse events
         this.game.canvas.addEventListener('mousemove', (e) => this.onMove(e));
         this.game.canvas.addEventListener('click', (e) => this.onClick(e));
+
+        // Touch events for mobile
+        this.game.canvas.addEventListener('touchstart', (e) => this.onTouchStart(e), { passive: false });
+        this.game.canvas.addEventListener('touchmove', (e) => this.onTouchMove(e), { passive: false });
     }
 
     update() {
@@ -14,12 +19,41 @@ class MouseController {
     }
 
     onMove(e) {
-        this.x = e.offsetX;
-        this.y = e.offsetY;
+        this.updatePosition(e.clientX, e.clientY);
     }
 
     onClick(e) {
         this.clicked = true;
+    }
+
+    onTouchStart(e) {
+        e.preventDefault(); // Prevent scrolling
+        this.clicked = true;
+
+        if (e.touches.length > 0) {
+            const touch = e.touches[0];
+            this.updatePosition(touch.clientX, touch.clientY);
+        }
+    }
+
+    onTouchMove(e) {
+        e.preventDefault(); // Prevent scrolling
+
+        if (e.touches.length > 0) {
+            const touch = e.touches[0];
+            this.updatePosition(touch.clientX, touch.clientY);
+        }
+    }
+
+    updatePosition(clientX, clientY) {
+        // Get canvas scaling factor
+        const rect = this.game.canvas.getBoundingClientRect();
+        const scaleX = this.game.canvas.width / rect.width;
+        const scaleY = this.game.canvas.height / rect.height;
+
+        // Convert to canvas coordinates
+        this.x = (clientX - rect.left) * scaleX;
+        this.y = (clientY - rect.top) * scaleY;
     }
 
     isMouseOver(x, y, radius) {
