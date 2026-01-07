@@ -262,6 +262,10 @@ class Game {
     nextWave() {
         if (Object.keys(this.mapEntities.list).length === 0) return this;
 
+        if (!import.meta.env.DEV && this.enemies.enemiesList.length > 0) {
+            return this; // Prevent wave spam in production
+        }
+
         this.waveCounter++;
         this.stat('wave', this.waveCounter, true);
 
