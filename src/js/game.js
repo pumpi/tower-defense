@@ -24,6 +24,8 @@ class Game {
         this.eventsList = {};
         this.lastFrameTime = 0;
         this.lastWaveTemplate = [];
+        this.isPaused = false;
+        this.spawnQueue = []; // Queue for enemies to spawn
 
         // Load the options icon image and define its position/size
         this.optionsIconImage = new Image();
@@ -80,7 +82,18 @@ class Game {
                 this.stat('mode', '');
             }
         });
-        
+
+        // Pause game when tab becomes inactive
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                this.isPaused = true;
+            } else {
+                this.isPaused = false;
+                // Reset lastFrameTime to prevent huge deltaTime jump
+                this.lastFrameTime = performance.now();
+            }
+        });
+
         // Initial static setup
         this.output('#towerCosts', settings.towers.laser.costs);
         this.output('#app-version', `v${import.meta.env.VITE_APP_VERSION}`);
@@ -140,6 +153,7 @@ class Game {
         this.waveCounter = 0;
         this.mapEntities.list = {}; // Reset entities
         this.enemies.enemiesList = []; // Clear the specific enemies list
+        this.spawnQueue = []; // Clear spawn queue
         this.stat('life', settings.playerLifes, true);
         this.stat('coins', settings.coins, true);
         this.stat('wave', 0, true);
@@ -161,6 +175,10 @@ class Game {
             this.mouse.update();
             return;
         }
+
+        // Process spawn queue
+        this.processSpawnQueue(deltaTime);
+
         this.trigger('update', deltaTime);
         this.mouse.update();
     }
@@ -172,7 +190,10 @@ class Game {
 
         window.requestAnimationFrame(this.draw.bind(this));
 
-        this.update(deltaTime);
+        // Skip update if paused (but still render)
+        if (!this.isPaused) {
+            this.update(deltaTime);
+        }
         
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -351,7 +372,7 @@ class Game {
     }
 
     spawnEnemiesFromTemplate(waveTemplate) {
-        let totalDelay = 0;
+        let totalDelay = 0; // in seconds
         const enemySpriteSize = 20;
 
         waveTemplate.forEach(spawn => {
@@ -363,20 +384,35 @@ class Game {
 
             // Calculate cooldown based on spacing and speed
             const desiredSpacing = (spawn.spacing || 1) * enemySpriteSize;
-            const coolDown = (desiredSpacing / enemySpeed) * 1000; // Convert to ms
+            const coolDown = (desiredSpacing / enemySpeed); // in seconds
 
-            // Spawn all enemies in this wave fragment
-            setTimeout(() => {
-                for (let i = 0; i < spawn.count; i++) {
-                    setTimeout(() => {
-                        this.enemies.create(spawn.enemyType, spawn.level, this.waveCounter);
-                    }, i * coolDown);
-                }
-            }, totalDelay);
+            // Add all enemies in this wave fragment to spawn queue
+            for (let i = 0; i < spawn.count; i++) {
+                this.spawnQueue.push({
+                    enemyType: spawn.enemyType,
+                    level: spawn.level,
+                    wave: this.waveCounter,
+                    timeUntilSpawn: totalDelay + (i * coolDown)
+                });
+            }
 
-            // Next wave fragment starts after all enemies are spawned + one more spacing
+            // Next wave fragment starts after all enemies are spawned
             totalDelay += spawn.count * coolDown;
         });
+    }
+
+    processSpawnQueue(deltaTime) {
+        // Decrease time for all items in queue
+        for (let i = this.spawnQueue.length - 1; i >= 0; i--) {
+            this.spawnQueue[i].timeUntilSpawn -= deltaTime;
+
+            // Spawn if time has come
+            if (this.spawnQueue[i].timeUntilSpawn <= 0) {
+                const spawn = this.spawnQueue[i];
+                this.enemies.create(spawn.enemyType, spawn.level, spawn.wave);
+                this.spawnQueue.splice(i, 1); // Remove from queue
+            }
+        }
     }
 
     on(event, fn) {
