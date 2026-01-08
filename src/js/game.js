@@ -2,8 +2,8 @@ import Debug from './debug.js';
 import MapController from './controllers/MapController.js';
 import MapEntityManager from './controllers/MapEntityManager.js';
 import MouseController from './controllers/MouseController.js';
-import Enemies from './entities/Enemies.js';
-import Towers from './entities/Towers.js';
+import EnemiesController from './controllers/EnemiesController.js';
+import TowersController from './controllers/TowersController.js';
 import settings from './game.settings.js';
 import helpers from "./helpers.js";
 import optionsIcon from '../img/options.svg';
@@ -36,8 +36,8 @@ class Game {
         this.mapEntities = new MapEntityManager(this);
         this.map = new MapController(this, this.mapEntities);
         this.mouse = new MouseController(this);
-        this.enemies = new Enemies(this, this.map, this.mapEntities);
-        this.towers = new Towers(this, this.map, this.mouse, this.mapEntities, this.enemies);
+        this.enemies = new EnemiesController(this, this.map, this.mapEntities);
+        this.towers = new TowersController(this, this.map, this.mouse, this.mapEntities, this.enemies);
         this.debug = new Debug(this);
         this.modal = new Modal();
 

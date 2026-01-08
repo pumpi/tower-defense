@@ -3,8 +3,6 @@ import settings from '../game.settings.js';
 import Entity from './Entity.js';
 import HealthBar from './enemies/HealthBar.js';
 import DamageNumber from './enemies/DamageNumber.js';
-import wispImage from '../../img/enemy/wisp.png';
-import bugImage from '../../img/enemy/bug.png';
 
 class Enemy extends Entity {
     constructor(enemyType, level, wave, enemiesController) {
@@ -34,11 +32,11 @@ class Enemy extends Entity {
         this.speed = definition.baseSpeed * Math.pow(speedFactor, level0);
         this.reward = Math.round(definition.baseReward * Math.pow(rewardFactor, level0));
         this.critResistance = definition.baseCritResistance * Math.pow(critResistanceFactor, level0);
-        
+
         this.graphicType = definition.graphic; // 'wisp', 'bug', or undefined
         this.level = level;
         this.wave = wave;
-        
+
         // Standard properties
         const shift = Math.round(Math.random() * 40) - 10;
         this.waypointIndex = 0;
@@ -111,7 +109,7 @@ class Enemy extends Entity {
             this.x += this.velocity.x * deltaTime;
             this.y += this.velocity.y * deltaTime;
         }
-        
+
         if (this.graphicType) {
             const enemySprite = this.enemiesController.images[this.graphicType].sprites[this.direction];
             if (enemySprite.frames) {
@@ -169,42 +167,4 @@ class Enemy extends Entity {
     }
 }
 
-class Enemies {
-    constructor(game, map, mapEntities) {
-        this.game = game;
-        this.map = map;
-        this.mapEntities = mapEntities;
-        this.images = {
-            wisp: helpers.createImage(wispImage, [
-                { x: 0, y: 0, w: 20, h: 20, frames: [0,40,80,120,160,200]},
-                { x: 0, y: 40, w: 20, h: 20, frames: [0,40,80,120,160,200] },
-                { x: 0, y: 80, w: 20, h: 20, frames: [0,40,80,120,160,200] },
-                { x: 0, y: 120, w: 20, h: 20, frames: [0,40,80,120,160,200] }
-            ]),
-            bug: helpers.createImage(bugImage, [
-                { x: 0, y: 0, w: 20, h: 20, frames: [0] },
-                { x: 40, y: 0, w: 20, h: 20, frames: [40] },
-                { x: 80, y: 0, w: 20, h: 20, frames: [80] },
-                { x: 120, y: 0, w: 20, h: 20, frames: [120] }
-            ])
-        };
-        this.enemiesList = [];
-    }
-
-    create(enemyType, level, wave) {
-        const enemy = new Enemy(enemyType, level, wave, this);
-        this.enemiesList.push(enemy);
-        return enemy;
-    }
-
-    remove(enemyToRemove) {
-        if (!enemyToRemove) return;
-        const index = this.enemiesList.indexOf(enemyToRemove);
-        if (index > -1) {
-            this.enemiesList.splice(index, 1);
-        }
-        this.mapEntities.remove(enemyToRemove.id);
-    }
-}
-
-export default Enemies;
+export default Enemy;
