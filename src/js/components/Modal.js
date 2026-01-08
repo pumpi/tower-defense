@@ -1,5 +1,6 @@
 class Modal {
-    constructor() {
+    constructor(game = null) {
+        this.game = game;
         this.containerElement = null;
         this.modalElement = null;
         this.titleElement = null;
@@ -65,6 +66,50 @@ class Modal {
         // Add click outside listener on next tick to avoid immediate close
         requestAnimationFrame(() => {
             document.addEventListener('click', this.handleOutsideClick);
+        });
+
+        // Auto-setup coin-based buttons if game instance available
+        if (this.game) {
+            this.setupCoinBasedButtons();
+        }
+    }
+
+    setupCoinBasedButtons() {
+        // Find all buttons with data-required-coins attribute
+        const buttons = this.contentElement?.querySelectorAll('[data-required-coins]');
+        if (!buttons || buttons.length === 0) return;
+
+        // Function to update button states
+        const updateButtons = () => {
+            const currentCoins = this.game.stat('coins');
+            buttons.forEach(button => {
+                const requiredCoins = parseInt(button.getAttribute('data-required-coins'), 10);
+                button.disabled = currentCoins < requiredCoins;
+
+                // Update parent disabled class if specified via data-disable-parent
+                const parentSelector = button.getAttribute('data-disable-parent');
+                if (parentSelector) {
+                    const parent = button.closest(parentSelector);
+                    if (parent) {
+                        if (currentCoins < requiredCoins) {
+                            parent.classList.add('disabled');
+                        } else {
+                            parent.classList.remove('disabled');
+                        }
+                    }
+                }
+            });
+        };
+
+        // Initial update
+        updateButtons();
+
+        // Listen to coin changes
+        this.game.on('stat:coins', updateButtons);
+
+        // Cleanup on modal close
+        this.onClose(() => {
+            this.game.off('stat:coins', updateButtons);
         });
     }
 

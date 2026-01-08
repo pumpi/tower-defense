@@ -85,3 +85,49 @@
     font-size: 20px;
     font-weight: bold;
 }
+
+.tower-shop {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.tower-shop-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: #1a1717;
+    border: 2px solid #292424;
+    border-radius: var(--border-radius);
+
+    &.disabled {
+        opacity: 0.5;
+    }
+
+    canvas {
+        flex-shrink: 0;
+        border: 2px solid #423939;
+        padding: 5px;
+        border-radius: var(--border-radius);
+    }
+
+    .tower-shop-info {
+        flex-grow: 1;
+
+        h4 {
+            margin: 0 0 8px 0;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        div {
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+    }
+
+    .tower-buy-btn {
+        flex-shrink: 0;
+    }
+}

@@ -39,7 +39,7 @@ class Game {
         this.enemies = new EnemiesController(this, this.map, this.mapEntities);
         this.towers = new TowersController(this, this.map, this.mouse, this.mapEntities, this.enemies);
         this.debug = new Debug(this);
-        this.modal = new Modal();
+        this.modal = new Modal(this);
 
         // Initialize game settings from defaults
         this.stat('soundEnabled', settings.game.soundEnabled);
@@ -56,7 +56,7 @@ class Game {
             }
             if (event.target.matches('#buy-tower')) {
                 event.preventDefault();
-                this.buyTower('laser');
+                this.openTowerShopModal();
             }
             if (event.target.matches('#next-wave')) {
                 event.preventDefault();
@@ -144,6 +144,93 @@ class Game {
         document.getElementById('setting-show-normal-damage').addEventListener('change', (event) => {
             this.stat('showNormalDamage', event.target.checked);
             this.saveSettings();
+        });
+    }
+
+    openTowerShopModal() {
+        const coins = this.stat('coins');
+        const towerTypes = Object.keys(settings.towers);
+
+        let content = '<div class="tower-shop">';
+
+        towerTypes.forEach(towerType => {
+            const tower = settings.towers[towerType];
+            const canAfford = coins >= tower.costs;
+            const disabledClass = !canAfford ? 'disabled' : '';
+
+            // Generate preview canvas for tower
+            const previewId = `tower-preview-${towerType}`;
+
+            // Get tower type specific info
+            let statsHTML = '';
+            if (towerType === 'laser') {
+                statsHTML = `
+                    <div>Schaden: ${tower.damage.from}-${tower.damage.to}</div>
+                    <div>Reichweite: ${tower.fireRange}</div>
+                    <div>Feuerrate: ${tower.coolDownTime}s</div>
+                `;
+            } else if (towerType === 'gravity') {
+                statsHTML = `
+                    <div>Slow: ${Math.round((1 - tower.slowEffect) * 100)}%</div>
+                    <div>Reichweite: ${tower.fireRange}</div>
+                `;
+            }
+
+            content += `
+                <div class="tower-shop-item ${disabledClass}">
+                    <canvas id="${previewId}" width="80" height="80"></canvas>
+                    <div class="tower-shop-info">
+                        <h4>${towerType === 'laser' ? 'Laser Turm' : 'Schwerkraft Turm'}</h4>
+                        ${statsHTML}
+                        <div><strong>Kosten: ${tower.costs} Coins</strong></div>
+                    </div>
+                    <button class="btn tower-buy-btn" data-tower-type="${towerType}" data-required-coins="${tower.costs}" data-disable-parent=".tower-shop-item">
+                        Kaufen
+                    </button>
+                </div>
+            `;
+        });
+
+        content += '</div>';
+
+        this.modal.open('Turm kaufen', content, this);
+
+        // Draw preview for each tower
+        towerTypes.forEach(towerType => {
+            const previewCanvas = document.getElementById(`tower-preview-${towerType}`);
+            if (previewCanvas) {
+                const previewCtx = previewCanvas.getContext('2d');
+                const tower = settings.towers[towerType];
+
+                // Clear canvas
+                previewCtx.clearRect(0, 0, 80, 80);
+
+                // Draw tower preview
+                if (tower.images?.complete) {
+                    const sprite = tower.images.sprites[0];
+                    // Scale sprite to fit in 80x80 canvas
+                    previewCtx.drawImage(
+                        tower.images,
+                        sprite.x, sprite.y, sprite.w * 2 , sprite.h * 2,
+                        0, 0, 80, 80
+                    );
+                } else {
+                    // Fallback: draw circle for gravity tower
+                    previewCtx.beginPath();
+                    previewCtx.arc(40, 40, 20, 0, 2 * Math.PI);
+                    previewCtx.fillStyle = tower.color;
+                    previewCtx.fill();
+                }
+            }
+        });
+
+        // Add event listeners for buy buttons
+        document.querySelectorAll('.tower-buy-btn').forEach(button => {
+            button.addEventListener('click', (event) => {
+                const towerType = event.target.getAttribute('data-tower-type');
+                this.buyTower(towerType);
+                this.modal.close();
+            });
         });
     }
     // --- End Settings Management ---
