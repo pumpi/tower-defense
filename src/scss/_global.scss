@@ -25,6 +25,7 @@ ul {
 
 #canvas {
     margin-bottom: 6%;
+    border-radius: var(--border-radius);
 
     // Responsive scaling while maintaining aspect ratio
     max-width: 100%;
