@@ -35,6 +35,27 @@ export default {
                 {cost: 180, fireRange: 130, damage: {from: 10, to: 14}, color: '#2CE8B9', critRate: 3, critDamage: 0.2},
                 {cost: 250, fireRange: 140, damage: {from: 18, to: 25}, color: '#2A62DB', critRate: 5, critDamage: 0.2}
             ]
+        },
+        gravity: {
+            costs: 100,
+            color: '#9C27B0',
+            size: 20,
+            fireRange: 140,
+            slowEffect: 0.5, // 50% slow (enemies move at 50% speed)
+            /*images: helpers.createImage(laserTowerImage, [ // Placeholder: reuse laser image for now
+                {x: 0, y: 0, w: 80, h: 80},
+                {x: 0, y: 160, w: 80, h: 80},
+                {x: 0, y: 320, w: 80, h: 80},
+                {x: 0, y: 480, w: 80, h: 80},
+                {x: 0, y: 640, w: 80, h: 80},
+                {x: 0, y: 800, w: 80, h: 80}
+            ]),
+            audio: laserAudio, // Placeholder: reuse laser audio for now */
+            upgrades: [
+                {cost: 80, fireRange: 160, slowEffect: 0.6, color: '#7B1FA2'},
+                {cost: 150, fireRange: 180, slowEffect: 0.7, color: '#6A1B9A'},
+                {cost: 220, fireRange: 200, slowEffect: 0.8, color: '#4A148C'}
+            ]
         }
     },
 

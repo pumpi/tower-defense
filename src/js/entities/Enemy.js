@@ -103,17 +103,24 @@ class Enemy extends Entity {
     update(deltaTime) {
         if (this.deleted) return;
 
+        // Calculate slow multiplier from all gravity towers affecting this enemy
+        let slowMultiplier = 1.0;
+        if (this.slowedBy && this.slowedBy.size > 0) {
+            // Use the strongest slow effect (minimum multiplier)
+            slowMultiplier = Math.min(...this.slowedBy.values());
+        }
+
         if (this.waypointReached()) {
             this.nextWaypoint();
         } else {
-            this.x += this.velocity.x * deltaTime;
-            this.y += this.velocity.y * deltaTime;
+            this.x += this.velocity.x * deltaTime * slowMultiplier;
+            this.y += this.velocity.y * deltaTime * slowMultiplier;
         }
 
         if (this.graphicType) {
             const enemySprite = this.enemiesController.images[this.graphicType].sprites[this.direction];
             if (enemySprite.frames) {
-                this.frame = (this.frame + 6 * deltaTime) % enemySprite.frames.length;
+                this.frame = (this.frame + 6 * deltaTime * slowMultiplier) % enemySprite.frames.length;
             }
         }
     }

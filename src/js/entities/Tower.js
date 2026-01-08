@@ -220,7 +220,7 @@ class Tower extends Entity {
                     <tr><td>Crit Chance:</td><td>+${upgrade.critRate}%</td></tr>
                     <tr><td>Crit Schaden:</td><td>+${upgrade.critDamage * 100}%</td></tr>
                 </table>
-                <button id="tower-buy-upgrade-btn" class="btn">Upgrade Kaufen</button>
+                <button id="tower-buy-upgrade-btn" class="btn" data-required-coins="${upgrade.cost}">Upgrade Kaufen</button>
             `;
         } else {
             return '<h4>Max Level</h4>';
@@ -251,28 +251,11 @@ class Tower extends Entity {
     }
 
     setupUpgradeUI() {
-        const upgrade = settings.towers[this.towerType].upgrades[this.level];
-        if (!upgrade) return;
-
         const upgradeButton = document.getElementById('tower-buy-upgrade-btn');
         if (!upgradeButton) return;
 
+        // Only setup click handler - button enable/disable is handled by Modal's setupCoinBasedButtons
         upgradeButton.onclick = () => this.upgrade();
-
-        // Update button status based on current coins
-        const updateButtonStatus = () => {
-            upgradeButton.disabled = upgrade.cost > this.towersController.game.stat('coins');
-        };
-        updateButtonStatus();
-
-        // Listen to coin changes and update button status
-        const coinChangeHandler = () => updateButtonStatus();
-        this.towersController.game.on('stat:coins', coinChangeHandler);
-
-        // Clean up listener when modal closes
-        this.towersController.game.modal.onClose(() => {
-            this.towersController.game.off('stat:coins', coinChangeHandler);
-        });
     }
 
     openOptions() {
@@ -287,7 +270,8 @@ class Tower extends Entity {
             </div>
         `;
 
-        this.towersController.game.modal.open('Tower Options', content);
+        const game = this.towersController.game;
+        game.modal.open('Tower Options', content, game);
 
         // Setup UI components
         this.setupTargetingPriorityUI();

@@ -1,6 +1,7 @@
 import settings from '../game.settings.js';
 import helpers from '../helpers.js';
 import LaserTower from '../entities/towers/LaserTower.js';
+import GravityTower from '../entities/towers/GravityTower.js';
 
 // Tower class definitions are in ../entities/towers/ directory
 
@@ -33,15 +34,27 @@ class TowersController {
             const bulletType = this.game.stat('selectedTowerType');
             const isValid = this.map.isValidTowerPlace(gridPosition.x, gridPosition.y);
             const isOccupied = this.map.isTowerAtPosition(gridPosition.x, gridPosition.y);
+            const tower = settings.towers[bulletType];
 
             if (isValid) {
-                this.game.drawCircle(gridPosition.x, gridPosition.y, settings.towers[bulletType].fireRange, 'rgba(0,0,255,0.2)', true);
-                helpers.drawSprite(settings.towers[bulletType].images, 0, gridPosition.x, gridPosition.y - 20, 160, 160);
+                this.game.drawCircle(gridPosition.x, gridPosition.y, tower.fireRange, 'rgba(0,0,255,0.2)', true);
+
+                // Draw tower sprite or fallback circle
+                if (tower.images?.complete) {
+                    helpers.drawSprite(tower.images, 0, gridPosition.x, gridPosition.y - 20, 160, 160);
+                } else {
+                    this.game.drawCircle(gridPosition.x, gridPosition.y, tower.size, tower.color, true);
+                }
             } else if (!isOccupied) {
-                this.game.ctx.save();
-                this.game.ctx.filter = 'grayscale(100%)';
-                helpers.drawSprite(settings.towers[bulletType].images, 0, gridPosition.x, gridPosition.y - 20, 160, 160);
-                this.game.ctx.restore();
+                // Draw grayed out preview
+                if (tower.images?.complete) {
+                    this.game.ctx.save();
+                    this.game.ctx.filter = 'grayscale(100%)';
+                    helpers.drawSprite(tower.images, 0, gridPosition.x, gridPosition.y - 20, 160, 160);
+                    this.game.ctx.restore();
+                } else {
+                    this.game.drawCircle(gridPosition.x, gridPosition.y, tower.size, '#666', true);
+                }
             }
         }
     }
@@ -51,6 +64,8 @@ class TowersController {
         switch (towerType) {
             case 'laser':
                 return new LaserTower(x, y, this);
+            case 'gravity':
+                return new GravityTower(x, y, this);
             default:
                 throw new Error(`Unknown tower type: ${towerType}`);
         }
