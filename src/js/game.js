@@ -163,24 +163,32 @@ class Game {
 
             // Get tower type specific info
             let statsHTML = '';
-            if (towerType === 'laser') {
+            if (towerType === 'gravity') {
+                statsHTML = `
+                    <div>Slow: ${Math.round((1 - tower.slowEffect) * 100)}%</div>
+                    <div>Reichweite: ${tower.fireRange}</div>
+                `;
+            } else {
                 statsHTML = `
                     <div>Schaden: ${tower.damage.from}-${tower.damage.to}</div>
                     <div>Reichweite: ${tower.fireRange}</div>
                     <div>Feuerrate: ${tower.coolDownTime}s</div>
                 `;
-            } else if (towerType === 'gravity') {
-                statsHTML = `
-                    <div>Slow: ${Math.round((1 - tower.slowEffect) * 100)}%</div>
-                    <div>Reichweite: ${tower.fireRange}</div>
-                `;
+            }
+
+            if(tower.dotType) {
+                statsHTML += `
+                    <div><strong>Schaden über Zeit</strong></div>
+                    <div>Schaden: ${tower.dotDamage.from}-${tower.dotDamage.to} (${tower.dotType})</div>
+                    <div>Dauer: ${tower.dotDuration}s</div>
+                `
             }
 
             content += `
                 <div class="tower-shop-item ${disabledClass}">
                     <canvas id="${previewId}" width="80" height="80"></canvas>
                     <div class="tower-shop-info">
-                        <h4>${towerType === 'laser' ? 'Laser Turm' : 'Schwerkraft Turm'}</h4>
+                        <h4>${tower.label}</h4>
                         ${statsHTML}
                         <div><strong>Kosten: ${tower.costs} Coins</strong></div>
                     </div>

@@ -110,6 +110,44 @@ class Enemy extends Entity {
             slowMultiplier = Math.min(...this.slowedBy.values());
         }
 
+        // Process DoT effects
+        if (this.dotEffects && this.dotEffects.size > 0) {
+            const effectsToRemove = [];
+
+            this.dotEffects.forEach((effect, towerId) => {
+                // Update tick counter
+                effect.tickCounter += deltaTime;
+                effect.remainingTime -= deltaTime;
+
+                // Apply damage when tick rate is reached
+                if (effect.tickCounter >= effect.tickRate) {
+                    const dotDamage = Math.floor(
+                        Math.random() * (effect.damage.to - effect.damage.from + 1)
+                    ) + effect.damage.from;
+
+                    this.damage(dotDamage, 'dot');
+
+                    // Update source tower stats
+                    if (effect.source) {
+                        effect.source.stats.dmg += dotDamage;
+                        if (this.deleted) {
+                            effect.source.stats.kills++;
+                        }
+                    }
+
+                    effect.tickCounter = 0;
+                }
+
+                // Remove effect if duration expired
+                if (effect.remainingTime <= 0) {
+                    effectsToRemove.push(towerId);
+                }
+            });
+
+            // Clean up expired effects
+            effectsToRemove.forEach(towerId => this.dotEffects.delete(towerId));
+        }
+
         if (this.waypointReached()) {
             this.nextWaypoint();
         } else {
@@ -134,16 +172,16 @@ class Enemy extends Entity {
         }
     }
 
-    damage(amount, isCrit = false) {
+    damage(amount, damageType = 'normal') {
         if (this.deleted) return;
 
-        // Only show damage numbers if it's a crit OR showNormalDamage is enabled
-        if (isCrit || this.enemiesController.game.stat('showNormalDamage')) {
+        // Only show damage numbers if it's crit/dot OR showNormalDamage is enabled
+        if (damageType !== 'normal' || this.enemiesController.game.stat('showNormalDamage')) {
             // If enemy is moving up, numbers float down. Otherwise, they float up.
             const floatDirection = this.velocity.y < 0 ? 1 : -1;
 
             this.enemiesController.mapEntities.add(
-                new DamageNumber(amount, this.x, this.y - this.r, isCrit, floatDirection, this.enemiesController.game)
+                new DamageNumber(amount, this.x, this.y - this.r, damageType, floatDirection, this.enemiesController.game)
             );
         }
 

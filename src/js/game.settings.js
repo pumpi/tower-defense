@@ -13,6 +13,7 @@ export default {
 
     towers: {
         laser: {
+            label: 'Laser Turm',
             costs: 80,
             color: '#ffff03',
             size: 20,
@@ -37,6 +38,7 @@ export default {
             ]
         },
         gravity: {
+            label: 'Schwerkraft Generator',
             costs: 100,
             color: '#9C27B0',
             size: 20,
@@ -55,6 +57,28 @@ export default {
                 {cost: 80, fireRange: 160, slowEffect: 0.6, color: '#7B1FA2'},
                 {cost: 150, fireRange: 180, slowEffect: 0.7, color: '#6A1B9A'},
                 {cost: 220, fireRange: 200, slowEffect: 0.8, color: '#4A148C'}
+            ]
+        },
+        flamethrower: {
+            label: 'Flammenwerfer',
+            costs: 120,
+            color: '#FF6600',
+            size: 20,
+            fireRange: 140,
+            coneAngle: 60, // Degrees for the cone area
+            damage: {from: 2, to: 4}, // Initial hit damage
+            dotDamage: {from: 1, to: 2}, // Damage over time per tick
+            dotDuration: 3, // How long the DoT effect lasts (seconds)
+            dotTickRate: 0.5, // Time between DoT ticks (seconds)
+            dotType: 'burning', // Type of DoT (burning, poison, bleed, etc.)
+            coolDownTime: 0.8,
+            baseCritRate: 0, // Flamethrower doesn't crit on initial hit
+            baseCritDamage: 1,
+            // No image yet - will use fallback circle
+            upgrades: [
+                {cost: 100, fireRange: 110, coneAngle: 70, damage: {from: 3, to: 5}, dotDamage: {from: 2, to: 3}, dotDuration: 3.5, color: '#FF5500'},
+                {cost: 200, fireRange: 120, coneAngle: 80, damage: {from: 5, to: 8}, dotDamage: {from: 3, to: 5}, dotDuration: 4, color: '#FF4400'},
+                {cost: 300, fireRange: 130, coneAngle: 90, damage: {from: 7, to: 12}, dotDamage: {from: 5, to: 7}, dotDuration: 5, color: '#FF0000'}
             ]
         }
     },

@@ -62,7 +62,13 @@ class MapController {
 
     distanceToPath(x, y) {
         // Returns the minimum distance from point (x, y) to any path segment
+        return this.getClosestPointOnPath(x, y).distance;
+    }
+
+    getClosestPointOnPath(x, y) {
+        // Returns the closest point on the path and its distance
         let minDistance = Infinity;
+        let closestPoint = null;
 
         for (let i = 0; i < this.waypoints.length - 1; i++) {
             const x1 = this.waypoints[i].x;
@@ -75,26 +81,27 @@ class MapController {
             const dy = y2 - y1;
             const lengthSquared = dx * dx + dy * dy;
 
-            let distance;
-            if (lengthSquared === 0) {
-                // Segment is actually a point
-                distance = this.game.distance(x, y, x1, y1);
-            } else {
-                // Calculate projection of point onto the line (clamped to segment)
-                let t = ((x - x1) * dx + (y - y1) * dy) / lengthSquared;
-                t = Math.max(0, Math.min(1, t)); // Clamp to [0, 1]
+            // Calculate projection of point onto the line (clamped to segment)
+            let t = ((x - x1) * dx + (y - y1) * dy) / lengthSquared;
+            t = Math.max(0, Math.min(1, t)); // Clamp to [0, 1]
 
-                // Find the closest point on the segment
-                const closestX = x1 + t * dx;
-                const closestY = y1 + t * dy;
+            // Find the closest point on the segment
+            const segmentClosestX = x1 + t * dx;
+            const segmentClosestY = y1 + t * dy;
 
-                distance = this.game.distance(x, y, closestX, closestY);
+            const distance = this.game.distance(x, y, segmentClosestX, segmentClosestY);
+
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestPoint = { x: segmentClosestX, y: segmentClosestY };
             }
-
-            minDistance = Math.min(minDistance, distance);
         }
 
-        return minDistance;
+        return {
+            x: closestPoint?.x ?? this.waypoints[0].x,
+            y: closestPoint?.y ?? this.waypoints[0].y,
+            distance: minDistance
+        };
     }
 
     isTowerAtPosition(x, y) {

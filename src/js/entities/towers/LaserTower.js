@@ -9,7 +9,7 @@ class LaserTower extends Tower {
 
     shoot(enemy) {
         let damage = Math.floor(Math.random() * (this.damage.to - this.damage.from + 1)) + this.damage.from;
-        let isCrit = false;
+        let damageType = 'normal';
 
         // Crit calculation
         const critChance = (this.critRate - enemy.critResistance) / 100;
@@ -18,13 +18,13 @@ class LaserTower extends Tower {
         if (Math.random() < finalCritChance) {
             damage *= this.critDamage;
             this.stats.crits++;
-            isCrit = true;
+            damageType = 'crit';
         }
 
         damage = Math.round(damage);
         this.stats.shoots++;
         this.stats.dmg += damage;
-        enemy.damage(damage, isCrit);
+        enemy.damage(damage, damageType);
 
         if (enemy.deleted) {
             this.stats.kills++;

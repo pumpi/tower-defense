@@ -2,6 +2,7 @@ import settings from '../game.settings.js';
 import helpers from '../helpers.js';
 import LaserTower from '../entities/towers/LaserTower.js';
 import GravityTower from '../entities/towers/GravityTower.js';
+import FlameThrower from '../entities/towers/FlameThrower.js';
 
 // Tower class definitions are in ../entities/towers/ directory
 
@@ -37,6 +38,7 @@ class TowersController {
             const tower = settings.towers[bulletType];
 
             if (isValid) {
+                // Draw circle range indicator for all towers
                 this.game.drawCircle(gridPosition.x, gridPosition.y, tower.fireRange, 'rgba(0,0,255,0.2)', true);
 
                 // Draw tower sprite or fallback circle
@@ -66,6 +68,8 @@ class TowersController {
                 return new LaserTower(x, y, this);
             case 'gravity':
                 return new GravityTower(x, y, this);
+            case 'flamethrower':
+                return new FlameThrower(x, y, this);
             default:
                 throw new Error(`Unknown tower type: ${towerType}`);
         }

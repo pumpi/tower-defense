@@ -307,8 +307,8 @@ class Tower extends Entity {
     }
 
     // Abstract method - must be implemented by subclasses
-    draw() {
-        throw new Error('draw() must be implemented by subclass');
+    drawShootingEffect() {
+        throw new Error('drawShootingEffect() must be implemented by subclass');
     }
 }
 

@@ -1,11 +1,12 @@
 import Entity from '../Entity.js';
 
 class DamageNumber extends Entity {
-    constructor(text, x, y, isCrit, floatDirection, game) {
+    constructor(text, x, y, damageType, floatDirection, game) {
         super(game, x, y, 0, 'transparent');
-        
+
         this.text = text;
-        this.isCrit = isCrit;
+        this.damageType = damageType; // 'normal', 'crit', or 'dot'
+        this.isCrit = damageType === 'crit'; // Keep for backward compatibility
         this.floatDirection = floatDirection || -1; // Default to floating up
         this.type = 'damagenumber';
         this.zIndex = 20; // Draw on top of everything
@@ -29,7 +30,25 @@ class DamageNumber extends Entity {
     draw() {
         const ctx = this.game.ctx;
         ctx.save();
-        ctx.font = this.isCrit ? 'bold 18px sans-serif' : 'normal 14px sans-serif';
+
+        // Different styles per damage type
+        let font, color;
+        switch (this.damageType) {
+            case 'crit':
+                font = 'bold 18px sans-serif';
+                color = `rgba(255, 0, 0, ${this.opacity})`; // Red
+                break;
+            case 'dot':
+                font = 'italic 14px sans-serif';
+                color = `rgba(255, 140, 0, ${this.opacity})`; // Orange (for burning)
+                break;
+            default: // 'normal'
+                font = 'normal 14px sans-serif';
+                color = `rgba(255, 255, 255, ${this.opacity})`; // White
+                break;
+        }
+
+        ctx.font = font;
         ctx.textAlign = 'center';
 
         // Outline
@@ -38,9 +57,9 @@ class DamageNumber extends Entity {
         ctx.strokeText(this.text, this.x, this.y);
 
         // Fill
-        ctx.fillStyle = this.isCrit ? `rgba(255, 0, 0, ${this.opacity})` : `rgba(255, 255, 255, ${this.opacity})`;
+        ctx.fillStyle = color;
         ctx.fillText(this.text, this.x, this.y);
-        
+
         ctx.restore();
     }
 }
