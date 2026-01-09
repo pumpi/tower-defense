@@ -1,4 +1,5 @@
 import settings from '../game.settings.js';
+import helpers from '../helpers.js';
 import Entity from './Entity.js';
 
 class Tower extends Entity {
@@ -281,6 +282,28 @@ class Tower extends Entity {
     // Abstract method - must be implemented by subclasses
     shoot(enemy) {
         throw new Error('shoot() must be implemented by subclass');
+    }
+
+    // Standard draw method (can be overridden if needed)
+    draw() {
+        const { game, mouse } = this.towersController;
+        const towerSettings = settings.towers[this.towerType];
+
+        // Draw range circle when hovering
+        if (mouse.isMouseOver(this.x, this.y, this.r) && game.stat('mode') !== 'dropTower') {
+            game.drawCircle(this.x, this.y, this.fireRange, 'rgba(255, 102, 0, 0.2)', true);
+        }
+
+        // Draw tower sprite or fallback circle
+        if (towerSettings.images?.complete) {
+            helpers.drawSprite(towerSettings.images, this.level, this.x, this.y - 20, 160, 160);
+        } else {
+            // Fallback: draw circle
+            game.drawCircle(this.x, this.y, this.r, this.color, true);
+        }
+
+        // Draw tower-specific shooting effect
+        this.drawShootingEffect();
     }
 
     // Abstract method - must be implemented by subclasses

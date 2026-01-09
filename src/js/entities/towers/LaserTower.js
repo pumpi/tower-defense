@@ -1,5 +1,4 @@
 import Tower from '../Tower.js';
-import settings from '../../game.settings.js';
 import helpers from '../../helpers.js';
 
 class LaserTower extends Tower {
@@ -37,13 +36,8 @@ class LaserTower extends Tower {
         setTimeout(() => { this.shootingAt = null; }, 100);
     }
 
-    draw() {
-        const { game, mouse } = this.towersController;
-        if (mouse.isMouseOver(this.x, this.y, this.r) && game.stat('mode') !== 'dropTower') {
-            game.drawCircle(this.x, this.y, this.fireRange, 'rgba(0,0,255,0.2)', true);
-        }
-
-        helpers.drawSprite(settings.towers[this.towerType].images, this.level, this.x, this.y - 20, 160, 160);
+    drawShootingEffect() {
+        const { game } = this.towersController;
 
         if (this.shootingAt) {
             game.ctx.save();

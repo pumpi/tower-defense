@@ -1,6 +1,5 @@
 import Tower from '../Tower.js';
 import settings from '../../game.settings.js';
-import helpers from '../../helpers.js';
 
 class GravityTower extends Tower {
     constructor(x, y, towersController) {
@@ -99,26 +98,8 @@ class GravityTower extends Tower {
         }
     }
 
-    draw() {
-        const { game, mouse } = this.towersController;
-
-        // Draw slow effect range (purple/violet)
-        if (mouse.isMouseOver(this.x, this.y, this.r) && game.stat('mode') !== 'dropTower') {
-            game.drawCircle(this.x, this.y, this.fireRange, 'rgba(156, 39, 176, 0.2)', true);
-        }
-
-        // Draw a pulsing slow effect area
-        // const pulse = Math.sin(Date.now() / 500) * 0.1 + 0.9;
-        // game.drawCircle(this.x, this.y, this.fireRange * pulse, 'rgba(156, 39, 176, 0.05)', true);
-
-        // Draw tower - fallback to circle if no image available
-        const towerSettings = settings.towers[this.towerType];
-        if (towerSettings.images?.image?.complete) {
-            helpers.drawSprite(towerSettings.images, this.level, this.x, this.y - 20, 160, 160);
-        } else {
-            // Fallback: draw circle
-            game.drawCircle(this.x, this.y, this.r, this.color, true);
-        }
+    drawShootingEffect() {
+        const { game } = this.towersController;
 
         // Draw lines to slowed enemies
         game.ctx.save();
