@@ -257,7 +257,7 @@ class Game {
         });
 
         // Add event listeners for buy buttons
-        document.querySelectorAll('.tower-buy-btn').forEach(button => {
+        document.querySelectorAll('.modal .btn-buy[data-tower-type]').forEach(button => {
             button.addEventListener('click', (event) => {
                 const towerType = event.target.getAttribute('data-tower-type');
                 this.buyTower(towerType);
