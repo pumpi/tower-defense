@@ -8,6 +8,7 @@ import settings from './game.settings.js';
 import helpers from "./helpers.js";
 import optionsIcon from '../img/options.svg';
 import Modal from './components/Modal.js';
+import Draw from './draw.js';
 
 class Game {
     constructor() {
@@ -16,6 +17,7 @@ class Game {
         // Core properties
         this.canvas = document.getElementById('canvas');
         this.ctx = this.canvas.getContext("2d");
+        this.drawer = new Draw(this.ctx);
         this.drawList = [];
         this.stats = {};
         this._outputCache = {};
@@ -203,7 +205,7 @@ class Game {
 
         this.modal.open('Turm kaufen', content, this);
 
-        // Draw preview for each tower
+        // Draw a preview for each tower
         towerTypes.forEach(towerType => {
             const previewCanvas = document.getElementById(`tower-preview-${towerType}`);
             if (previewCanvas) {
@@ -361,18 +363,6 @@ class Game {
             r2.right < r1.left ||
             r2.top > r1.bottom ||
             r2.bottom < r1.top);
-    }
-
-    drawCircle(x, y, r, color, fill = true) {
-        this.ctx.beginPath();
-        this.ctx.arc(x, y, r, 0, 2 * Math.PI);
-        if (fill === true) {
-            this.ctx.fillStyle = color;
-            this.ctx.fill();
-        } else {
-            this.ctx.strokeStyle = color;
-            this.ctx.stroke();
-        }
     }
 
     nextWave() {

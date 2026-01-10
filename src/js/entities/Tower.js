@@ -291,7 +291,7 @@ class Tower extends Entity {
 
         // Draw range circle when hovering
         if (mouse.isMouseOver(this.x, this.y, this.r) && game.stat('mode') !== 'dropTower') {
-            game.drawCircle(this.x, this.y, this.fireRange, 'rgba(255, 102, 0, 0.2)', true);
+            game.drawer.circle(this.x, this.y, this.fireRange, 'rgba(255, 102, 0, 0.2)', true);
         }
 
         // Draw tower sprite or fallback circle
@@ -299,7 +299,7 @@ class Tower extends Entity {
             helpers.drawSprite(towerSettings.images, this.level, this.x, this.y - 20, 160, 160);
         } else {
             // Fallback: draw circle
-            game.drawCircle(this.x, this.y, this.r, this.color, true);
+            game.drawer.circle(this.x, this.y, this.r, this.color, true);
         }
 
         // Draw tower-specific shooting effect

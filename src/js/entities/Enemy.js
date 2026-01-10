@@ -168,7 +168,7 @@ class Enemy extends Entity {
             helpers.drawAnimatedSprite(this.enemiesController.images[this.graphicType], this.direction, this.frame, Math.round(this.x), Math.round(this.y), 40, 40);
         } else {
             // Draw a placeholder circle if no graphic is defined
-            this.enemiesController.game.drawCircle(this.x, this.y, this.r, this.color, true);
+            this.enemiesController.game.drawer.circle(this.x, this.y, this.r, this.color, true);
         }
     }
 

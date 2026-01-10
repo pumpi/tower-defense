@@ -15,7 +15,7 @@ export default class Entity {
 
     draw() {
         // Default draw is a simple circle
-        this.game.drawCircle(this.x, this.y, this.r, this.color, true);
+        this.game.drawer.circle(this.x, this.y, this.r, this.color, true);
     }
 
     remove() {

@@ -38,14 +38,13 @@ class TowersController {
             const tower = settings.towers[bulletType];
 
             if (isValid) {
-                // Draw circle range indicator for all towers
-                this.game.drawCircle(gridPosition.x, gridPosition.y, tower.fireRange, 'rgba(0,0,255,0.2)', true);
+                this.game.drawer.circle(gridPosition.x, gridPosition.y, tower.fireRange, 'rgba(0,0,255,0.2)', true);
 
                 // Draw tower sprite or fallback circle
                 if (tower.images?.complete) {
                     helpers.drawSprite(tower.images, 0, gridPosition.x, gridPosition.y - 20, 160, 160);
                 } else {
-                    this.game.drawCircle(gridPosition.x, gridPosition.y, tower.size, tower.color, true);
+                    this.game.drawer.circle(gridPosition.x, gridPosition.y, tower.size, tower.color, true);
                 }
             } else if (!isOccupied) {
                 // Draw grayed out preview
@@ -55,7 +54,7 @@ class TowersController {
                     helpers.drawSprite(tower.images, 0, gridPosition.x, gridPosition.y - 20, 160, 160);
                     this.game.ctx.restore();
                 } else {
-                    this.game.drawCircle(gridPosition.x, gridPosition.y, tower.size, '#666', true);
+                    this.game.drawer.circle(gridPosition.x, gridPosition.y, tower.size, '#666', true);
                 }
             }
         }
