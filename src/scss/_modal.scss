@@ -25,7 +25,8 @@
 
 .modal-content {
     position: relative;
-
+    border-radius: var(--border-radius);
+    width: 100%;
     height: auto;
     background: #121010;
     -webkit-box-shadow: 0 0 20px -1px rgba(0, 0, 0, 0.7);
@@ -84,4 +85,77 @@
     margin-bottom: 10px;
     font-size: 20px;
     font-weight: bold;
+}
+
+.tower-shop {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.tower-shop-item {
+    display: flex;
+    gap: 15px;
+    padding: 15px;
+    background: #1a1717;
+    border: 2px solid #292424;
+    border-radius: var(--border-radius);
+
+    &.disabled {
+        opacity: 0.5;
+    }
+
+    canvas {
+        flex-shrink: 0;
+        border: 2px solid #423939;
+        padding: 5px;
+        border-radius: var(--border-radius);
+        width: 80px;
+        height: 80px;
+    }
+
+    .tower-shop-info {
+        flex-grow: 1;
+
+        h4 {
+            margin: 0 0 8px 0;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        h5 {
+            margin: 10px 0 4px 0;
+            color: #fff;
+            font-size: 13px;
+        }
+
+        div {
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+    }
+
+    .tower-shop-buy-container {
+        display: flex;
+        justify-content: space-between;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .tower-shop-item-price {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 6px;
+
+        img {
+            width: 20px;
+            height: 20px;
+        }
+    }
+
+    .btn-buy {
+        flex-shrink: 0;
+        margin-bottom: 0;
+    }
 }

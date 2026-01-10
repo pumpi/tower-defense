@@ -2,12 +2,13 @@ import Debug from './debug.js';
 import MapController from './controllers/MapController.js';
 import MapEntityManager from './controllers/MapEntityManager.js';
 import MouseController from './controllers/MouseController.js';
-import Enemies from './entities/Enemies.js';
-import Towers from './entities/Towers.js';
+import EnemiesController from './controllers/EnemiesController.js';
+import TowersController from './controllers/TowersController.js';
 import settings from './game.settings.js';
 import helpers from "./helpers.js";
 import optionsIcon from '../img/options.svg';
 import Modal from './components/Modal.js';
+import Draw from './draw.js';
 
 class Game {
     constructor() {
@@ -16,6 +17,7 @@ class Game {
         // Core properties
         this.canvas = document.getElementById('canvas');
         this.ctx = this.canvas.getContext("2d");
+        this.drawer = new Draw(this.ctx);
         this.drawList = [];
         this.stats = {};
         this._outputCache = {};
@@ -36,10 +38,10 @@ class Game {
         this.mapEntities = new MapEntityManager(this);
         this.map = new MapController(this, this.mapEntities);
         this.mouse = new MouseController(this);
-        this.enemies = new Enemies(this, this.map, this.mapEntities);
-        this.towers = new Towers(this, this.map, this.mouse, this.mapEntities, this.enemies);
+        this.enemies = new EnemiesController(this, this.map, this.mapEntities);
+        this.towers = new TowersController(this, this.map, this.mouse, this.mapEntities, this.enemies);
         this.debug = new Debug(this);
-        this.modal = new Modal();
+        this.modal = new Modal(this);
 
         // Initialize game settings from defaults
         this.stat('soundEnabled', settings.game.soundEnabled);
@@ -56,7 +58,7 @@ class Game {
             }
             if (event.target.matches('#buy-tower')) {
                 event.preventDefault();
-                this.buyTower('laser');
+                this.openTowerShopModal();
             }
             if (event.target.matches('#next-wave')) {
                 event.preventDefault();
@@ -146,6 +148,122 @@ class Game {
             this.saveSettings();
         });
     }
+
+    openTowerShopModal() {
+        const coins = this.stat('coins');
+        const towerTypes = Object.keys(settings.towers);
+
+        let content = '<div class="tower-shop">';
+
+        towerTypes.forEach(towerType => {
+            const tower = settings.towers[towerType];
+            const canAfford = coins >= tower.costs;
+            const disabledClass = !canAfford ? 'disabled' : '';
+
+            // Generate preview canvas for tower
+            const previewId = `tower-preview-${towerType}`;
+
+            // Get tower type specific info
+            let statsHTML = `
+                <div>Reichweite: ${tower.fireRange}</div>
+            `;
+
+            if (tower.minRange) {
+                statsHTML = `<div>Reichweite: ${tower.minRange}-${tower.fireRange}</div>`;
+            }
+
+            if (tower.slowEffect) {
+                statsHTML += `<div>Slow: -${Math.round((1 - tower.slowEffect) * 100)}%</div>`;
+            }
+
+            if (tower.damage) {
+                statsHTML += `
+                    <div>Schaden: ${tower.damage.from}-${tower.damage.to}</div>
+                    <div>Feuerrate: ${tower.coolDownTime}s</div>
+                `;
+            }
+
+            if(tower.dotType) {
+                statsHTML += `
+                    <h5>Schaden über Zeit</h5>
+                    <div>Schaden: ${tower.dotDamage.from}-${tower.dotDamage.to} (${tower.dotType})</div>
+                    <div>Dauer: ${tower.dotDuration}s</div>
+                `
+            }
+
+            if(tower.maxChains) {
+                statsHTML += `
+                    <h5>Ketten Effekt</h5>
+                    <div>Kettenreichweite: ${tower.chainRange}</div>
+                    <div>Max Ketten: ${tower.maxChains}</div>
+                `
+            }
+
+            content += `
+                <div class="tower-shop-item ${disabledClass}">
+                    <canvas id="${previewId}" width="80" height="80"></canvas>
+                    
+                    <div class="tower-shop-info">
+                        <h4>${tower.label}</h4>
+                        ${statsHTML}
+                    </div>
+                    
+                    <div class="tower-shop-buy-container">
+                        <div class="tower-shop-item-price">
+                            <img src="./img/coin.svg" alt="Coins" title="Coins">
+                            ${tower.costs}
+                        </div>
+                        
+                        <button class="btn btn-buy" data-tower-type="${towerType}" data-required-coins="${tower.costs}" data-disable-parent=".tower-shop-item">
+                            Kaufen
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+
+        content += '</div>';
+
+        this.modal.open('Turm kaufen', content, this);
+
+        // Draw a preview for each tower
+        towerTypes.forEach(towerType => {
+            const previewCanvas = document.getElementById(`tower-preview-${towerType}`);
+            if (previewCanvas) {
+                const previewCtx = previewCanvas.getContext('2d');
+                const tower = settings.towers[towerType];
+
+                // Clear canvas
+                previewCtx.clearRect(0, 0, 80, 80);
+
+                // Draw tower preview
+                if (tower.images?.complete) {
+                    const sprite = tower.images.sprites[0];
+                    // Scale sprite to fit in 80x80 canvas
+                    previewCtx.drawImage(
+                        tower.images,
+                        sprite.x, sprite.y, sprite.w * 2 , sprite.h * 2,
+                        0, 0, 80, 80
+                    );
+                } else {
+                    // Fallback: draw circle for gravity tower
+                    previewCtx.beginPath();
+                    previewCtx.arc(40, 40, 20, 0, 2 * Math.PI);
+                    previewCtx.fillStyle = tower.color;
+                    previewCtx.fill();
+                }
+            }
+        });
+
+        // Add event listeners for buy buttons
+        document.querySelectorAll('.tower-buy-btn').forEach(button => {
+            button.addEventListener('click', (event) => {
+                const towerType = event.target.getAttribute('data-tower-type');
+                this.buyTower(towerType);
+                this.modal.close();
+            });
+        });
+    }
     // --- End Settings Management ---
 
     resetGame() {
@@ -154,7 +272,7 @@ class Game {
         this.mapEntities.list = {}; // Reset entities
         this.enemies.enemiesList = []; // Clear the specific enemies list
         this.spawnQueue = []; // Clear spawn queue
-        this.stat('life', settings.playerLifes, true);
+        this.stat('live', settings.playersLive, true);
         this.stat('coins', settings.coins, true);
         this.stat('wave', 0, true);
         this.stat('mode', ''); // Reset game mode
@@ -268,18 +386,6 @@ class Game {
             r2.bottom < r1.top);
     }
 
-    drawCircle(x, y, r, color, fill = true) {
-        this.ctx.beginPath();
-        this.ctx.arc(x, y, r, 0, 2 * Math.PI);
-        if (fill === true) {
-            this.ctx.fillStyle = color;
-            this.ctx.fill();
-        } else {
-            this.ctx.strokeStyle = color;
-            this.ctx.stroke();
-        }
-    }
-
     nextWave() {
         if (Object.keys(this.mapEntities.list).length === 0) return this;
 
@@ -387,7 +493,7 @@ class Game {
             const coolDown = (desiredSpacing / enemySpeed); // in seconds
 
             // Add all enemies in this wave fragment to spawn queue
-            for (let i = 0; i < spawn.count; i++) {
+            for (let i = 0; i < Math.round(spawn.count); i++) {
                 this.spawnQueue.push({
                     enemyType: spawn.enemyType,
                     level: spawn.level,

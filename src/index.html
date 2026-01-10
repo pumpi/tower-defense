@@ -9,20 +9,21 @@
 
     <script type="module" src="./js/main.js"></script>
 </head>
+
 <body>
     <div id="gui">
         <h1>Tower Defense (Alpha)</h1>
 
         <div class="buttons">
-            <button id="next-wave">Nächste Welle<br>----------</button>
-            <button id="buy-tower">Turm kaufen<br>(<span id="towerCosts">?</span> Coins)</button>
+            <button class="btn" id="next-wave">Nächste Welle</button>
+            <button class="btn" id="buy-tower">Turm kaufen</button>
         </div>
 
         <div class="stats">
             <ul>
                 <li>
-                    <img src="./img/life.svg" alt="Leben" title="Leben">
-                    <span id="life">-</span>
+                    <img src="./img/live.svg" alt="Leben" title="Leben">
+                    <span id="live">-</span>
                 </li>
                 <li>
                     <img src="./img/coin.svg" alt="Coins" title="Coins">
@@ -33,9 +34,7 @@
                     <span id="wave">0</span>
                 </li>
             </ul>
-
         </div>
-
     </div>
 
     <canvas id="canvas" width="1200" height="640"></canvas>
@@ -53,6 +52,7 @@
     <script>
         (function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='//mrdoob.github.io/stats.js/build/stats.min.js';document.head.appendChild(script);})();
     </script>
+
     <div id="app-version"></div>
 </body>
 </html>

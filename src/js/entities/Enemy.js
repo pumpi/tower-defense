@@ -3,8 +3,6 @@ import settings from '../game.settings.js';
 import Entity from './Entity.js';
 import HealthBar from './enemies/HealthBar.js';
 import DamageNumber from './enemies/DamageNumber.js';
-import wispImage from '../../img/enemy/wisp.png';
-import bugImage from '../../img/enemy/bug.png';
 
 class Enemy extends Entity {
     constructor(enemyType, level, wave, enemiesController) {
@@ -34,11 +32,11 @@ class Enemy extends Entity {
         this.speed = definition.baseSpeed * Math.pow(speedFactor, level0);
         this.reward = Math.round(definition.baseReward * Math.pow(rewardFactor, level0));
         this.critResistance = definition.baseCritResistance * Math.pow(critResistanceFactor, level0);
-        
+
         this.graphicType = definition.graphic; // 'wisp', 'bug', or undefined
         this.level = level;
         this.wave = wave;
-        
+
         // Standard properties
         const shift = Math.round(Math.random() * 40) - 10;
         this.waypointIndex = 0;
@@ -105,17 +103,62 @@ class Enemy extends Entity {
     update(deltaTime) {
         if (this.deleted) return;
 
+        // Calculate slow multiplier from all gravity towers affecting this enemy
+        let slowMultiplier = 1.0;
+        if (this.slowedBy && this.slowedBy.size > 0) {
+            // Use the strongest slow effect (minimum multiplier)
+            slowMultiplier = Math.min(...this.slowedBy.values());
+        }
+
+        // Process DoT effects
+        if (this.dotEffects && this.dotEffects.size > 0) {
+            const effectsToRemove = [];
+
+            this.dotEffects.forEach((effect, towerId) => {
+                // Update tick counter
+                effect.tickCounter += deltaTime;
+                effect.remainingTime -= deltaTime;
+
+                // Apply damage when tick rate is reached
+                if (effect.tickCounter >= effect.tickRate) {
+                    const dotDamage = Math.floor(
+                        Math.random() * (effect.damage.to - effect.damage.from + 1)
+                    ) + effect.damage.from;
+
+                    this.damage(dotDamage, 'dot');
+
+                    // Update source tower stats
+                    if (effect.source) {
+                        effect.source.stats.dmg += dotDamage;
+                        if (this.deleted) {
+                            effect.source.stats.kills++;
+                        }
+                    }
+
+                    effect.tickCounter = 0;
+                }
+
+                // Remove effect if duration expired
+                if (effect.remainingTime <= 0) {
+                    effectsToRemove.push(towerId);
+                }
+            });
+
+            // Clean up expired effects
+            effectsToRemove.forEach(towerId => this.dotEffects.delete(towerId));
+        }
+
         if (this.waypointReached()) {
             this.nextWaypoint();
         } else {
-            this.x += this.velocity.x * deltaTime;
-            this.y += this.velocity.y * deltaTime;
+            this.x += this.velocity.x * deltaTime * slowMultiplier;
+            this.y += this.velocity.y * deltaTime * slowMultiplier;
         }
-        
+
         if (this.graphicType) {
             const enemySprite = this.enemiesController.images[this.graphicType].sprites[this.direction];
             if (enemySprite.frames) {
-                this.frame = (this.frame + 6 * deltaTime) % enemySprite.frames.length;
+                this.frame = (this.frame + 6 * deltaTime * slowMultiplier) % enemySprite.frames.length;
             }
         }
     }
@@ -125,20 +168,20 @@ class Enemy extends Entity {
             helpers.drawAnimatedSprite(this.enemiesController.images[this.graphicType], this.direction, this.frame, Math.round(this.x), Math.round(this.y), 40, 40);
         } else {
             // Draw a placeholder circle if no graphic is defined
-            this.enemiesController.game.drawCircle(this.x, this.y, this.r, this.color, true);
+            this.enemiesController.game.drawer.circle(this.x, this.y, this.r, this.color, true);
         }
     }
 
-    damage(amount, isCrit = false) {
+    damage(amount, damageType = 'normal') {
         if (this.deleted) return;
 
-        // Only show damage numbers if it's a crit OR showNormalDamage is enabled
-        if (isCrit || this.enemiesController.game.stat('showNormalDamage')) {
+        // Only show damage numbers if it's crit/dot OR showNormalDamage is enabled
+        if (damageType !== 'normal' || this.enemiesController.game.stat('showNormalDamage')) {
             // If enemy is moving up, numbers float down. Otherwise, they float up.
             const floatDirection = this.velocity.y < 0 ? 1 : -1;
 
             this.enemiesController.mapEntities.add(
-                new DamageNumber(amount, this.x, this.y - this.r, isCrit, floatDirection, this.enemiesController.game)
+                new DamageNumber(amount, this.x, this.y - this.r, damageType, floatDirection, this.enemiesController.game)
             );
         }
 
@@ -159,52 +202,14 @@ class Enemy extends Entity {
     done() {
         if (this.deleted) return;
         this.deleted = true;
-        let life = this.game.stat('life') - 1;
-        if (life <= 0) {
+        let live = this.game.stat('live') - 1;
+        if (live <= 0) {
             this.game.setGameOver();
         } else {
-            this.game.stat('life', life, true);
+            this.game.stat('live', live, true);
         }
         this.enemiesController.remove(this);
     }
 }
 
-class Enemies {
-    constructor(game, map, mapEntities) {
-        this.game = game;
-        this.map = map;
-        this.mapEntities = mapEntities;
-        this.images = {
-            wisp: helpers.createImage(wispImage, [
-                { x: 0, y: 0, w: 20, h: 20, frames: [0,40,80,120,160,200]},
-                { x: 0, y: 40, w: 20, h: 20, frames: [0,40,80,120,160,200] },
-                { x: 0, y: 80, w: 20, h: 20, frames: [0,40,80,120,160,200] },
-                { x: 0, y: 120, w: 20, h: 20, frames: [0,40,80,120,160,200] }
-            ]),
-            bug: helpers.createImage(bugImage, [
-                { x: 0, y: 0, w: 20, h: 20, frames: [0] },
-                { x: 40, y: 0, w: 20, h: 20, frames: [40] },
-                { x: 80, y: 0, w: 20, h: 20, frames: [80] },
-                { x: 120, y: 0, w: 20, h: 20, frames: [120] }
-            ])
-        };
-        this.enemiesList = [];
-    }
-
-    create(enemyType, level, wave) {
-        const enemy = new Enemy(enemyType, level, wave, this);
-        this.enemiesList.push(enemy);
-        return enemy;
-    }
-
-    remove(enemyToRemove) {
-        if (!enemyToRemove) return;
-        const index = this.enemiesList.indexOf(enemyToRemove);
-        if (index > -1) {
-            this.enemiesList.splice(index, 1);
-        }
-        this.mapEntities.remove(enemyToRemove.id);
-    }
-}
-
-export default Enemies;
+export default Enemy;
