@@ -3,6 +3,7 @@ import helpers from '../helpers.js';
 import LaserTower from '../entities/towers/LaserTower.js';
 import GravityTower from '../entities/towers/GravityTower.js';
 import FlameThrower from '../entities/towers/FlameThrower.js';
+import PlasmaCannon from '../entities/towers/PlasmaCannon.js';
 
 // Tower class definitions are in ../entities/towers/ directory
 
@@ -38,7 +39,11 @@ class TowersController {
             const tower = settings.towers[bulletType];
 
             if (isValid) {
-                this.game.drawer.circle(gridPosition.x, gridPosition.y, tower.fireRange, 'rgba(0,0,255,0.2)', true);
+                if (tower.minRange) {
+                    this.game.drawer.donut(gridPosition.x, gridPosition.y, tower.fireRange, tower.minRange, 'rgba(0,0,255,0.2)');
+                } else {
+                    this.game.drawer.circle(gridPosition.x, gridPosition.y, tower.fireRange, 'rgba(0,0,255,0.2)', true);
+                }
 
                 // Draw tower sprite or fallback circle
                 if (tower.images?.complete) {
@@ -69,6 +74,8 @@ class TowersController {
                 return new GravityTower(x, y, this);
             case 'flamethrower':
                 return new FlameThrower(x, y, this);
+            case 'plasma':
+                return new PlasmaCannon(x, y, this);
             default:
                 throw new Error(`Unknown tower type: ${towerType}`);
         }

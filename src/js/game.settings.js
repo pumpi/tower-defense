@@ -64,7 +64,7 @@ export default {
             costs: 120,
             color: '#FF6600',
             size: 20,
-            fireRange: 140,
+            fireRange: 100,
             coneAngle: 60, // Degrees for the cone area
             damage: {from: 2, to: 4}, // Initial hit damage
             dotDamage: {from: 1, to: 2}, // Damage over time per tick
@@ -76,9 +76,29 @@ export default {
             baseCritDamage: 1,
             // No image yet - will use fallback circle
             upgrades: [
-                {cost: 100, fireRange: 110, coneAngle: 70, damage: {from: 3, to: 5}, dotDamage: {from: 2, to: 3}, dotDuration: 3.5, color: '#FF5500'},
-                {cost: 200, fireRange: 120, coneAngle: 80, damage: {from: 5, to: 8}, dotDamage: {from: 3, to: 5}, dotDuration: 4, color: '#FF4400'},
-                {cost: 300, fireRange: 130, coneAngle: 90, damage: {from: 7, to: 12}, dotDamage: {from: 5, to: 7}, dotDuration: 5, color: '#FF0000'}
+                {cost: 100, fireRange: 110, coneAngle: 70, damage: {from: 3, to: 5}, dotDamage: {from: 2, to: 3}, dotDuration: 3.5, color: '#FF5500', critRate: 0, critDamage: 0},
+                {cost: 200, fireRange: 120, coneAngle: 80, damage: {from: 5, to: 8}, dotDamage: {from: 3, to: 5}, dotDuration: 4, color: '#FF4400', critRate: 0, critDamage: 0},
+                {cost: 300, fireRange: 130, coneAngle: 90, damage: {from: 7, to: 12}, dotDamage: {from: 5, to: 7}, dotDuration: 5, color: '#FF0000', critRate: 0, critDamage: 0}
+            ]
+        },
+        plasma: {
+            label: 'Plasma Kanone',
+            costs: 150,
+            color: '#00BFFF', // Deep sky blue
+            size: 20,
+            minRange: 80, // Cannot shoot close targets
+            fireRange: 200, // Long range artillery
+            explosionRadius: 80, // AoE damage radius (one tile)
+            projectileSpeed: 180, // Projectile travel speed
+            arcHeight: 80, // Height of ballistic arc
+            damage: {from: 15, to: 20}, // High AoE damage
+            coolDownTime: 6, // Slower fire rate
+            baseCritRate: 3,
+            baseCritDamage: 1.5,
+            upgrades: [
+                {cost: 140, fireRange: 240, explosionRadius: 90, damage: {from: 18, to: 25}, color: '#1E90FF', critRate: 2, critDamage: 0.2},
+                {cost: 220, fireRange: 280, explosionRadius: 100, damage: {from: 22, to: 28}, color: '#4169E1', critRate: 3, critDamage: 0.2},
+                {cost: 320, fireRange: 310, explosionRadius: 110, damage: {from: 26, to: 38}, color: '#0000CD', critRate: 5, critDamage: 0.3}
             ]
         }
     },
