@@ -9,6 +9,7 @@ import helpers from "./helpers.js";
 import optionsIcon from '../img/options.svg';
 import Modal from './components/Modal.js';
 import Draw from './draw.js';
+import coinIcon from '../img/coin.svg';
 
 class Game {
     constructor() {
@@ -210,7 +211,7 @@ class Game {
                     
                     <div class="tower-shop-buy-container">
                         <div class="tower-shop-item-price">
-                            <img src="./img/coin.svg" alt="Coins" title="Coins">
+                            <img src="${coinIcon}" alt="Coins" title="Coins">
                             ${tower.costs}
                         </div>
                         
