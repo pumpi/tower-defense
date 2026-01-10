@@ -272,7 +272,7 @@ class Game {
         this.mapEntities.list = {}; // Reset entities
         this.enemies.enemiesList = []; // Clear the specific enemies list
         this.spawnQueue = []; // Clear spawn queue
-        this.stat('life', settings.playerLifes, true);
+        this.stat('live', settings.playersLive, true);
         this.stat('coins', settings.coins, true);
         this.stat('wave', 0, true);
         this.stat('mode', ''); // Reset game mode

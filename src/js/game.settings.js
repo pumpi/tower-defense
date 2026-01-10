@@ -3,7 +3,7 @@ import laserTowerImage from '../img/tower/laser.png';
 import laserAudio from '../audio/laser.mp3';
 
 export default {
-    playerLifes: 10,
+    playersLive: 10,
     coins: 280,
 
     game: {

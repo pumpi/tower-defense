@@ -202,11 +202,11 @@ class Enemy extends Entity {
     done() {
         if (this.deleted) return;
         this.deleted = true;
-        let life = this.game.stat('life') - 1;
-        if (life <= 0) {
+        let live = this.game.stat('live') - 1;
+        if (live <= 0) {
             this.game.setGameOver();
         } else {
-            this.game.stat('life', life, true);
+            this.game.stat('live', live, true);
         }
         this.enemiesController.remove(this);
     }
