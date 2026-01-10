@@ -79,21 +79,8 @@ class FlameThrower extends Tower {
 
         // Apply initial damage and DoT to all enemies in cone
         enemiesInCone.forEach(enemy => {
-            // Calculate initial damage
-            let damage = Math.floor(Math.random() * (this.damage.to - this.damage.from + 1)) + this.damage.from;
-            let damageType = 'normal';
+            const { damage, damageType } = this.calculateDamage(enemy);
 
-            // Crit calculation
-            const critChance = (this.critRate - enemy.critResistance) / 100;
-            const finalCritChance = Math.max(0.05, Math.min(critChance, 0.75)); // Clamp chance between 5% and 75%
-
-            if (Math.random() < finalCritChance) {
-                damage *= this.critDamage;
-                this.stats.crits++;
-                damageType = 'crit';
-            }
-
-            damage = Math.round(damage);
             this.stats.shoots++;
             this.stats.dmg += damage;
             enemy.damage(damage, damageType);
