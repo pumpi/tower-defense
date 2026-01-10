@@ -493,7 +493,7 @@ class Game {
             const coolDown = (desiredSpacing / enemySpeed); // in seconds
 
             // Add all enemies in this wave fragment to spawn queue
-            for (let i = 0; i < spawn.count; i++) {
+            for (let i = 0; i < Math.round(spawn.count); i++) {
                 this.spawnQueue.push({
                     enemyType: spawn.enemyType,
                     level: spawn.level,
