@@ -191,6 +191,14 @@ class Game {
                 `
             }
 
+            if(tower.maxChains) {
+                statsHTML += `
+                    <h5>Ketten Effekt</h5>
+                    <div>Kettenreichweite: ${tower.chainRange}</div>
+                    <div>Max Ketten: ${tower.maxChains}</div>
+                `
+            }
+
             content += `
                 <div class="tower-shop-item ${disabledClass}">
                     <canvas id="${previewId}" width="80" height="80"></canvas>

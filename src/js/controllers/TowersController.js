@@ -4,6 +4,7 @@ import LaserTower from '../entities/towers/LaserTower.js';
 import GravityTower from '../entities/towers/GravityTower.js';
 import FlameThrower from '../entities/towers/FlameThrower.js';
 import PlasmaCannon from '../entities/towers/PlasmaCannon.js';
+import TeslaTower from '../entities/towers/TeslaTower.js';
 
 // Tower class definitions are in ../entities/towers/ directory
 
@@ -76,6 +77,8 @@ class TowersController {
                 return new FlameThrower(x, y, this);
             case 'plasma':
                 return new PlasmaCannon(x, y, this);
+            case 'tesla':
+                return new TeslaTower(x, y, this);
             default:
                 throw new Error(`Unknown tower type: ${towerType}`);
         }

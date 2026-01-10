@@ -81,10 +81,29 @@ export default {
                 {cost: 300, fireRange: 130, coneAngle: 90, damage: {from: 7, to: 12}, dotDamage: {from: 5, to: 7}, dotDuration: 5, color: '#FF0000', critRate: 0, critDamage: 0}
             ]
         },
+        tesla: {
+            label: 'Tesla Turm',
+            costs: 120,
+            color: '#00FFFF', // Cyan for electricity
+            size: 20,
+            fireRange: 120,
+            damage: {from: 12, to: 17}, // High initial damage
+            coolDownTime: 4.2, // Long cooldown between shots
+            baseCritRate: 5,
+            baseCritDamage: 1.8,
+            maxChains: 3, // Maximum number of chain jumps
+            chainRange: 80, // Max distance for chain to next enemy
+            chainDamageMultipliers: [1.0, 0.7, 0.5, 0.3], // Damage reduction per chain (100%, 70%, 50%, 30%)
+            upgrades: [
+                {cost: 100, fireRange: 120, damage: {from: 15, to: 19}, chainRange: 90, color: '#00CCCC', critRate: 3, critDamage: 0.2},
+                {cost: 140, fireRange: 150, damage: {from: 18, to: 23}, chainRange: 90, color: '#0099CC', critRate: 4, critDamage: 0.3},
+                {cost: 200, fireRange: 175, damage: {from: 22, to: 30}, chainRange: 100, color: '#0066CC', critRate: 5, critDamage: 0.4}
+            ]
+        },
         plasma: {
             label: 'Plasma Kanone',
             costs: 150,
-            color: '#00BFFF', // Deep sky blue
+            color: '#00ff48', // Deep sky blue
             size: 20,
             minRange: 80, // Cannot shoot close targets
             fireRange: 200, // Long range artillery
@@ -96,9 +115,9 @@ export default {
             baseCritRate: 3,
             baseCritDamage: 1.5,
             upgrades: [
-                {cost: 140, fireRange: 240, explosionRadius: 90, damage: {from: 18, to: 25}, color: '#1E90FF', critRate: 2, critDamage: 0.2},
-                {cost: 220, fireRange: 280, explosionRadius: 100, damage: {from: 22, to: 28}, color: '#4169E1', critRate: 3, critDamage: 0.2},
-                {cost: 320, fireRange: 310, explosionRadius: 110, damage: {from: 26, to: 38}, color: '#0000CD', critRate: 5, critDamage: 0.3}
+                {cost: 140, fireRange: 240, explosionRadius: 90, damage: {from: 18, to: 25}, color: '#2aa127', critRate: 2, critDamage: 0.2},
+                {cost: 220, fireRange: 280, explosionRadius: 100, damage: {from: 22, to: 28}, color: '#21871e', critRate: 3, critDamage: 0.2},
+                {cost: 320, fireRange: 310, explosionRadius: 110, damage: {from: 26, to: 38}, color: '#064e03', critRate: 5, critDamage: 0.3}
             ]
         }
     },
