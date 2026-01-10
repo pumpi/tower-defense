@@ -95,7 +95,6 @@
 
 .tower-shop-item {
     display: flex;
-    align-items: center;
     gap: 15px;
     padding: 15px;
     background: #1a1717;
@@ -111,6 +110,8 @@
         border: 2px solid #423939;
         padding: 5px;
         border-radius: var(--border-radius);
+        width: 80px;
+        height: 80px;
     }
 
     .tower-shop-info {
@@ -122,13 +123,39 @@
             font-size: 16px;
         }
 
+        h5 {
+            margin: 10px 0 4px 0;
+            color: #fff;
+            font-size: 13px;
+        }
+
         div {
             font-size: 13px;
             margin-bottom: 4px;
         }
     }
 
+    .tower-shop-buy-container {
+        display: flex;
+        justify-content: space-between;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .tower-shop-item-price {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 6px;
+
+        img {
+            width: 20px;
+            height: 20px;
+        }
+    }
+
     .tower-buy-btn {
         flex-shrink: 0;
+        margin-bottom: 0;
     }
 }

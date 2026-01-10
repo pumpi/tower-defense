@@ -164,23 +164,28 @@ class Game {
             const previewId = `tower-preview-${towerType}`;
 
             // Get tower type specific info
-            let statsHTML = '';
-            if (towerType === 'gravity') {
-                statsHTML = `
-                    <div>Slow: ${Math.round((1 - tower.slowEffect) * 100)}%</div>
-                    <div>Reichweite: ${tower.fireRange}</div>
-                `;
-            } else {
-                statsHTML = `
+            let statsHTML = `
+                <div>Reichweite: ${tower.fireRange}</div>
+            `;
+
+            if (tower.minRange) {
+                statsHTML = `<div>Reichweite: ${tower.minRange}-${tower.fireRange}</div>`;
+            }
+
+            if (tower.slowEffect) {
+                statsHTML += `<div>Slow: ${Math.round((1 - tower.slowEffect) * 100)}%</div>`;
+            }
+
+            if (tower.damage) {
+                statsHTML += `
                     <div>Schaden: ${tower.damage.from}-${tower.damage.to}</div>
-                    <div>Reichweite: ${tower.fireRange}</div>
                     <div>Feuerrate: ${tower.coolDownTime}s</div>
                 `;
             }
 
             if(tower.dotType) {
                 statsHTML += `
-                    <div><strong>Schaden über Zeit</strong></div>
+                    <h5>Schaden über Zeit</h5>
                     <div>Schaden: ${tower.dotDamage.from}-${tower.dotDamage.to} (${tower.dotType})</div>
                     <div>Dauer: ${tower.dotDuration}s</div>
                 `
@@ -189,14 +194,22 @@ class Game {
             content += `
                 <div class="tower-shop-item ${disabledClass}">
                     <canvas id="${previewId}" width="80" height="80"></canvas>
+                    
                     <div class="tower-shop-info">
                         <h4>${tower.label}</h4>
                         ${statsHTML}
-                        <div><strong>Kosten: ${tower.costs} Coins</strong></div>
                     </div>
-                    <button class="btn tower-buy-btn" data-tower-type="${towerType}" data-required-coins="${tower.costs}" data-disable-parent=".tower-shop-item">
-                        Kaufen
-                    </button>
+                    
+                    <div class="tower-shop-buy-container">
+                        <div class="tower-shop-item-price">
+                            <img src="./img/coin.svg" alt="Coins" title="Coins">
+                            ${tower.costs}
+                        </div>
+                        
+                        <button class="btn tower-buy-btn" data-tower-type="${towerType}" data-required-coins="${tower.costs}" data-disable-parent=".tower-shop-item">
+                            Kaufen
+                        </button>
+                    </div>
                 </div>
             `;
         });
