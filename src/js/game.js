@@ -173,7 +173,7 @@ class Game {
             }
 
             if (tower.slowEffect) {
-                statsHTML += `<div>Slow: ${Math.round((1 - tower.slowEffect) * 100)}%</div>`;
+                statsHTML += `<div>Slow: -${Math.round((1 - tower.slowEffect) * 100)}%</div>`;
             }
 
             if (tower.damage) {

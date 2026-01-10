@@ -64,7 +64,7 @@ class GravityTower extends Tower {
         return `
             <h4>Current Stats (Level ${this.level + 1})</h4>
             <table class="tower-stats">
-                <tr><td>Slow Effect:</td><td>${Math.round((1 - this.slowEffect) * 100)}%</td></tr>
+                <tr><td>Slow Effect:</td><td>-${Math.round((1 - this.slowEffect) * 100)}%</td></tr>
                 <tr><td>Reichweite:</td><td>${this.fireRange}</td></tr>
             </table>
         `;
@@ -88,7 +88,7 @@ class GravityTower extends Tower {
                 <h4>Upgrade auf Level ${this.level + 2}</h4>
                 <table class="tower-stats">
                     <tr><td>Kosten:</td><td>${upgrade.cost} Coins</td></tr>
-                    <tr><td>Slow Effect:</td><td>${Math.round((1 - upgrade.slowEffect) * 100)}%</td></tr>
+                    <tr><td>Slow Effect:</td><td>-${Math.round(upgrade.slowEffect * 100)}%</td></tr>
                     <tr><td>Reichweite:</td><td>${upgrade.fireRange}</td></tr>
                 </table>
                 <button id="tower-buy-upgrade-btn" class="btn">Upgrade Kaufen</button>
