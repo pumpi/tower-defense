@@ -91,7 +91,7 @@ class GravityTower extends Tower {
                     <tr><td>Slow Effect:</td><td>-${Math.round(upgrade.slowEffect * 100)}%</td></tr>
                     <tr><td>Reichweite:</td><td>${upgrade.fireRange}</td></tr>
                 </table>
-                <button id="tower-buy-upgrade-btn" class="btn">Upgrade Kaufen</button>
+                <button id="tower-buy-upgrade-btn" class="btn btn-buy">Upgrade Kaufen</button>
             `;
         } else {
             return '<h4>Max Level</h4>';

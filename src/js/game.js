@@ -214,7 +214,7 @@ class Game {
                             ${tower.costs}
                         </div>
                         
-                        <button class="btn tower-buy-btn" data-tower-type="${towerType}" data-required-coins="${tower.costs}" data-disable-parent=".tower-shop-item">
+                        <button class="btn btn-buy" data-tower-type="${towerType}" data-required-coins="${tower.costs}" data-disable-parent=".tower-shop-item">
                             Kaufen
                         </button>
                     </div>

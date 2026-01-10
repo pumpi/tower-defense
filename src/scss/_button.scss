@@ -23,10 +23,20 @@ button {
     border-radius: var(--border-radius);
 
     &:hover {
-        background: #273c8c;
+        background: #1c2d70;
     }
 
     &[disabled] {
         background: #aaa;
+    }
+
+    &-buy {
+        background-color: #126c14;
+        display: block;
+        margin-left: auto;
+
+        &:hover {
+            background: #0a400b;
+        }
     }
 }

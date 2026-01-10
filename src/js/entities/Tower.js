@@ -221,7 +221,7 @@ class Tower extends Entity {
                     <tr><td>Crit Chance:</td><td>+${upgrade.critRate}%</td></tr>
                     <tr><td>Crit Schaden:</td><td>+${upgrade.critDamage * 100}%</td></tr>
                 </table>
-                <button id="tower-buy-upgrade-btn" class="btn" data-required-coins="${upgrade.cost}">Upgrade Kaufen</button>
+                <button id="tower-buy-upgrade-btn" class="btn btn-buy" data-required-coins="${upgrade.cost}">Upgrade Kaufen</button>
             `;
         } else {
             return '<h4>Max Level</h4>';
