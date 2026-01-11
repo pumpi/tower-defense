@@ -46,23 +46,72 @@ class PlasmaCannon extends Tower {
         });
     }
 
-    // Calculate predicted target position with inaccuracy
     calculatePredictedTarget(enemy) {
         const { game } = this.towersController;
+        const map = this.towersController.map;
 
-        // Calculate initial distance and flight time
-        const distance = game.distance(this.x, this.y, enemy.x, enemy.y);
-        const estimatedFlightTime = distance / this.projectileSpeed;
+        // 1. Calculate enemy's current effective speed (with slows)
+        let slowMultiplier = 1.0;
+        if (enemy.slowedBy && enemy.slowedBy.size > 0) {
+            slowMultiplier = Math.min(...enemy.slowedBy.values());
+        }
+        const effectiveSpeed = enemy.speed * slowMultiplier;
 
-        // Predict where the enemy will be
-        let predictedX = enemy.x + (enemy.velocity.x * estimatedFlightTime);
-        let predictedY = enemy.y + (enemy.velocity.y * estimatedFlightTime);
+        // 2. Estimate flight time and prediction distance
+        const distanceToEnemy = game.distance(this.x, this.y, enemy.x, enemy.y);
+        const estimatedFlightTime = distanceToEnemy / this.projectileSpeed;
+        let predictionDistance = effectiveSpeed * estimatedFlightTime;
 
-        // Add inaccuracy based on enemy speed (faster = more inaccurate)
+        // 3. "Walk" the enemy along its path to find the future point
+        let predictedX = enemy.x;
+        let predictedY = enemy.y;
+        let currentWaypointIndex = enemy.waypointIndex;
+
+        // Distance to the current target waypoint
+        let distanceToNextWaypoint = game.distance(predictedX, predictedY, enemy.waypoint.x, enemy.waypoint.y);
+
+        while (predictionDistance > distanceToNextWaypoint) {
+            // Enemy will pass its current waypoint
+            predictionDistance -= distanceToNextWaypoint;
+
+            // Move to the next waypoint
+            predictedX = enemy.waypoint.x;
+            predictedY = enemy.waypoint.y;
+
+            // Get the next waypoint in the path
+            currentWaypointIndex++;
+            const nextWaypoint = map.waypoints[currentWaypointIndex];
+            if (!nextWaypoint) {
+                // Enemy is at the end of the path, stop predicting further
+                break;
+            }
+
+            // Update waypoint with the random shift
+            const nextWaypointShifted = {
+                x: nextWaypoint.x + enemy.shift,
+                y: nextWaypoint.y + enemy.shift
+            };
+
+            distanceToNextWaypoint = game.distance(predictedX, predictedY, nextWaypointShifted.x, nextWaypointShifted.y);
+        }
+
+        // If there's remaining distance, calculate position on the current segment
+        if (predictionDistance > 0 && distanceToNextWaypoint > 0) {
+            const nextWaypoint = map.waypoints[currentWaypointIndex];
+            if (nextWaypoint) {
+                const nextWaypointShifted = {
+                    x: nextWaypoint.x + enemy.shift,
+                    y: nextWaypoint.y + enemy.shift
+                };
+                const ratio = predictionDistance / distanceToNextWaypoint;
+                predictedX += (nextWaypointShifted.x - predictedX) * ratio;
+                predictedY += (nextWaypointShifted.y - predictedY) * ratio;
+            }
+        }
+
+        // 4. Add original inaccuracy logic
         const enemySpeed = Math.sqrt(enemy.velocity.x ** 2 + enemy.velocity.y ** 2);
-        const inaccuracyFactor = enemySpeed * 0.15; // 15% inaccuracy per speed unit
-
-        // Random offset in both directions
+        const inaccuracyFactor = enemySpeed * 0.15;
         const offsetX = (Math.random() - 0.5) * 2 * inaccuracyFactor * estimatedFlightTime;
         const offsetY = (Math.random() - 0.5) * 2 * inaccuracyFactor * estimatedFlightTime;
 
