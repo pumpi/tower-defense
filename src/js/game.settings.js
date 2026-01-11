@@ -14,14 +14,16 @@ export default {
     towers: {
         laser: {
             label: 'Laser Turm',
+            description: 'Fokussierter Einzelziel-Laser. Ignoriert Crit-Widerstände komplett!',
             costs: 80,
             color: '#ffff03',
             size: 20,
             fireRange: 110,
-            damage: {from: 3, to: 4},
+            damage: {from: 4, to: 6},
             coolDownTime: 0.6,
             baseCritRate: 5, // Base chance in %
             baseCritDamage: 1.5, // Base multiplier
+            ignoresCritResistance: true, // Laser bypasses all crit resistance
             images: helpers.createImage(laserTowerImage, [
                 {x: 0, y: 0, w: 80, h: 80},
                 {x: 0, y: 160, w: 80, h: 80},
@@ -39,11 +41,13 @@ export default {
         },
         gravity: {
             label: 'Schwerkraft Generator',
+            description: 'Verlangsamt Gegner und macht sie anfälliger für Crits durch reduzierte Ausweichfähigkeit.',
             costs: 100,
             color: '#9C27B0',
             size: 20,
             fireRange: 140,
             slowEffect: 0.5, // 50% slow (enemies move at 50% speed)
+            critRateBonus: 10, // Slowed enemies grant +10% crit chance to all towers
             /*images: helpers.createImage(laserTowerImage, [ // Placeholder: reuse laser image for now
                 {x: 0, y: 0, w: 80, h: 80},
                 {x: 0, y: 160, w: 80, h: 80},
@@ -61,6 +65,7 @@ export default {
         },
         flamethrower: {
             label: 'Flammenwerfer',
+            description: 'Kegel-AoE mit starkem DoT-Effekt. Verbrennt Gegner über längere Zeit.',
             costs: 120,
             color: '#FF6600',
             size: 20,
@@ -68,7 +73,7 @@ export default {
             coneAngle: 60, // Degrees for the cone area
             damage: {from: 2, to: 4}, // Initial hit damage
             dotDamage: {from: 1, to: 2}, // Damage over time per tick
-            dotDuration: 3, // How long the DoT effect lasts (seconds)
+            dotDuration: 5, // How long the DoT effect lasts (seconds)
             dotTickRate: 0.5, // Time between DoT ticks (seconds)
             dotType: 'burning', // Type of DoT (burning, poison, bleed, etc.)
             coolDownTime: 0.8,
@@ -76,24 +81,26 @@ export default {
             baseCritDamage: 1,
             // No image yet - will use fallback circle
             upgrades: [
-                {cost: 100, fireRange: 110, coneAngle: 70, damage: {from: 3, to: 5}, dotDamage: {from: 2, to: 3}, dotDuration: 3.5, color: '#FF5500', critRate: 0, critDamage: 0},
-                {cost: 200, fireRange: 120, coneAngle: 80, damage: {from: 5, to: 8}, dotDamage: {from: 3, to: 5}, dotDuration: 4, color: '#FF4400', critRate: 0, critDamage: 0},
-                {cost: 300, fireRange: 130, coneAngle: 90, damage: {from: 7, to: 12}, dotDamage: {from: 5, to: 7}, dotDuration: 5, color: '#FF0000', critRate: 0, critDamage: 0}
+                {cost: 100, fireRange: 110, coneAngle: 70, damage: {from: 3, to: 5}, dotDamage: {from: 2, to: 3}, dotDuration: 5.5, color: '#FF5500', critRate: 0, critDamage: 0},
+                {cost: 200, fireRange: 120, coneAngle: 80, damage: {from: 5, to: 8}, dotDamage: {from: 3, to: 5}, dotDuration: 6, color: '#FF4400', critRate: 0, critDamage: 0},
+                {cost: 300, fireRange: 130, coneAngle: 90, damage: {from: 7, to: 12}, dotDamage: {from: 5, to: 7}, dotDuration: 7, color: '#FF0000', critRate: 0, critDamage: 0}
             ]
         },
         tesla: {
             label: 'Tesla Turm',
+            description: 'Kettenblitz mit verzweigenden Sprüngen. Betäubt getroffene Gegner kurzzeitig.',
             costs: 120,
             color: '#00FFFF', // Cyan for electricity
             size: 20,
             fireRange: 120,
             damage: {from: 12, to: 17}, // High initial damage
-            coolDownTime: 4.2, // Long cooldown between shots
+            coolDownTime: 2.8, // Long cooldown between shots
             baseCritRate: 5,
             baseCritDamage: 1.8,
             maxChains: 3, // Maximum number of chain jumps
             chainRange: 80, // Max distance for chain to next enemy
             chainDamageMultipliers: [1.0, 0.7, 0.5, 0.3], // Damage reduction per chain (100%, 70%, 50%, 30%)
+            stunDuration: 0.4, // Enemies are stunned for 0.4 seconds
             upgrades: [
                 {cost: 100, fireRange: 120, damage: {from: 15, to: 19}, chainRange: 90, color: '#00CCCC', critRate: 3, critDamage: 0.2},
                 {cost: 140, fireRange: 150, damage: {from: 18, to: 23}, chainRange: 90, color: '#0099CC', critRate: 4, critDamage: 0.3},
@@ -102,6 +109,7 @@ export default {
         },
         plasma: {
             label: 'Plasma Kanone',
+            description: 'Fernkampf-Artillerie mit AoE-Explosion. Wirft Gegner zurück.',
             costs: 150,
             color: '#00ff48', // Deep sky blue
             size: 20,
@@ -114,6 +122,7 @@ export default {
             coolDownTime: 6, // Slower fire rate
             baseCritRate: 3,
             baseCritDamage: 1.5,
+            knockbackForce: 5, // Knockback strength from explosion
             upgrades: [
                 {cost: 140, fireRange: 240, explosionRadius: 90, damage: {from: 18, to: 25}, color: '#2aa127', critRate: 2, critDamage: 0.2},
                 {cost: 220, fireRange: 280, explosionRadius: 100, damage: {from: 22, to: 28}, color: '#21871e', critRate: 3, critDamage: 0.2},
@@ -127,12 +136,12 @@ export default {
     // Defines how the game's difficulty scales over time
     leveling: {
         wavesPerLevel: 10, // A new "game level" every 10 waves (after each boss)
-        healthFactor: 1.4, // Default health multiplier per level
+        healthFactor: 1.3, // Default health multiplier per level
         speedFactor: 1.05, // Default speed multiplier per level
-        rewardFactor: 1.2,  // Default reward multiplier per level
+        rewardFactor: 1.1,  // Default reward multiplier per level
         waveGeneration: {
             minThreat: 30, // Threat level for the first wave in a cycle (e.g., wave 1, 11, etc.)
-            maxThreat: 180, // Threat level for the last wave before a boss (e.g., wave 9, 19, etc.)
+            maxThreat: 120, // Threat level for the last wave before a boss (e.g., wave 9, 19, etc.)
             threatFactor: 1.2, // The budget scales by this factor each game level
         }
     },
@@ -141,7 +150,7 @@ export default {
     enemyTypes: {
         'wisp': {
             graphic: 'wisp',
-            baseHealth: 45,
+            baseHealth: 38,
             baseSpeed: 50,
             baseReward: 5,
             baseCritResistance: 5,
@@ -153,9 +162,9 @@ export default {
         },
         'bug': {
             graphic: 'bug',
-            baseHealth: 35,
+            baseHealth: 30,
             baseSpeed: 90,
-            baseReward: 4,
+            baseReward: 3,
             baseCritResistance: 2,
             levelFactors: {
                 health: 1.5,
@@ -165,7 +174,7 @@ export default {
         },
         'slime': {
             color: '#8A2BE2',
-            baseHealth: 200,
+            baseHealth: 160,
             baseSpeed: 30,
             baseReward: 10,
             baseCritResistance: 0, // Slimes are easy to crit
@@ -177,9 +186,9 @@ export default {
         },
         'scout': {
             color: '#FFD700',
-            baseHealth: 22,
+            baseHealth: 18,
             baseSpeed: 160,
-            baseReward: 3,
+            baseReward: 2,
             baseCritResistance: 10, // Scouts are dodgy
             levelFactors: {
                 health: 1.3,
@@ -190,12 +199,12 @@ export default {
         'boss': {
             graphic: 'wisp',
             color: 'black',
-            baseHealth: 900,
+            baseHealth: 500,
             baseSpeed: 40,
             baseReward: 100,
             baseCritResistance: 50, // Bosses are very resistant
             levelFactors: {
-                health: 2.5,
+                health: 1.9,
                 speed: 1.1,
                 critResistanceFactor: 1.4,
             }
@@ -204,14 +213,14 @@ export default {
 
     // A pool of small, reusable patterns for the dynamic wave generator
     waveFragments: {
-        line_of_wisps: { threat: 25, details: { enemyType: 'wisp', count: 8, spacing: 2, countFactor: 1.3 } },
+        line_of_wisps: { threat: 25, details: { enemyType: 'wisp', count: 5, spacing: 2, countFactor: 1.15 } },
         lone_slime: { threat: 20, details: { enemyType: 'slime', count: 1, spacing: 2, countFactor: 1.1 } },
-        rush_of_bugs: { threat: 30, details: { enemyType: 'bug', count: 7, spacing: 2.5, countFactor: 1.4 } },
-        pair_of_slimes: { threat: 35, details: { enemyType: 'slime', count: 2, spacing: 3, countFactor: 1.3 } },
-        scout_rush: { threat: 35, details: { enemyType: 'scout', count: 10, spacing: 2, countFactor: 2.5 } },
+        rush_of_bugs: { threat: 30, details: { enemyType: 'bug', count: 4, spacing: 2.5, countFactor: 1.2 } },
+        pair_of_slimes: { threat: 35, details: { enemyType: 'slime', count: 2, spacing: 3, countFactor: 1.2 } },
+        scout_rush: { threat: 35, details: { enemyType: 'scout', count: 6, spacing: 2, countFactor: 1.5 } },
         mixed_pair: { threat: 60, details: [
-            { enemyType: 'wisp', count: 8, spacing: 2, countFactor: 1.8 },
-            { enemyType: 'bug', count: 8, spacing: 3, countFactor: 1.8 }
+            { enemyType: 'wisp', count: 5, spacing: 2, countFactor: 1.4 },
+            { enemyType: 'bug', count: 5, spacing: 3, countFactor: 1.4 }
         ]}
     },
 
