@@ -61,9 +61,38 @@ class Game {
                 event.preventDefault();
                 this.openTowerShopModal();
             }
-            if (event.target.matches('#next-wave')) {
+            if (event.target.matches('#next-wave:not([disabled])')) {
                 event.preventDefault();
-                this.nextWave();
+                
+                const enemiesOnField = this.enemies.enemiesList.length;
+                if (enemiesOnField > 0) {
+                    // Open confirmation modal
+                    this.isPaused = true;
+                    const content = `
+                        <p>Bist du sicher? Die verbleibenden ${enemiesOnField} Gegner werden entfernt und von deinem Leben abgezogen.</p>
+                        <div class="modal-actions">
+                            <button id="confirm-force-wave" class="btn">Bestätigen (-${enemiesOnField} Leben)</button>
+                            <button id="cancel-force-wave" class="btn btn-secondary">Abbrechen</button>
+                        </div>
+                    `;
+                    this.modal.open('Nächste Welle erzwingen', content);
+
+                    document.getElementById('confirm-force-wave').onclick = () => {
+                        this.stat('live', this.stat('live') - enemiesOnField, true);
+                        this.enemies.clearAll();
+                        this.isPaused = false;
+                        this.nextWave();
+                        this.modal.close();
+                    };
+                    document.getElementById('cancel-force-wave').onclick = () => {
+                        this.isPaused = false;
+                        this.modal.close();
+                    };
+
+                } else {
+                    // No enemies, start next wave directly
+                    this.nextWave();
+                }
             }
         }, false);
         
@@ -288,18 +317,43 @@ class Game {
         }
     }
 
+    updateNextWaveButtonState() {
+        const btn = document.getElementById('next-wave');
+        if (!btn) return;
+
+        const enemiesOnField = this.enemies.enemiesList.length;
+        const isSpawning = this.spawnQueue.length > 0;
+        const lives = this.stat('live');
+
+        // Disable if a wave is currently being spawned
+        if (isSpawning) {
+            btn.setAttribute('disabled', 'true');
+            return;
+        }
+
+        // Disable if enemies are on field and player cannot afford the life cost
+        if (enemiesOnField > 0 && lives <= enemiesOnField) {
+            btn.setAttribute('disabled', 'true');
+            return;
+        }
+
+        // Otherwise, enable the button
+        btn.removeAttribute('disabled');
+    }
+
     update(deltaTime) {
         if (this.gameOver) {
             // Only mouse updates are needed for the restart click
             this.mouse.update();
             return;
         }
-
+        
         // Process spawn queue
         this.processSpawnQueue(deltaTime);
 
         this.trigger('update', deltaTime);
         this.mouse.update();
+        this.updateNextWaveButtonState();
     }
 
     draw(timestamp) {
@@ -389,10 +443,6 @@ class Game {
 
     nextWave() {
         if (Object.keys(this.mapEntities.list).length === 0) return this;
-
-        if (!import.meta.env.DEV && this.enemies.enemiesList.length > 0) {
-            return this; // Prevent wave spam in production
-        }
 
         this.waveCounter++;
         this.stat('wave', this.waveCounter, true);

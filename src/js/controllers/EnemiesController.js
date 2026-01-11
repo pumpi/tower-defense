@@ -39,6 +39,13 @@ class EnemiesController {
         }
         this.mapEntities.remove(enemyToRemove.id);
     }
+
+    clearAll() {
+        // Iterate backwards because the list is being modified
+        for (let i = this.enemiesList.length - 1; i >= 0; i--) {
+            this.enemiesList[i].clear();
+        }
+    }
 }
 
 export default EnemiesController;

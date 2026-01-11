@@ -210,6 +210,12 @@ class Enemy extends Entity {
         }
         this.enemiesController.remove(this);
     }
+
+    clear() {
+        if (this.deleted) return;
+        this.deleted = true;
+        this.enemiesController.remove(this);
+    }
 }
 
 export default Enemy;
