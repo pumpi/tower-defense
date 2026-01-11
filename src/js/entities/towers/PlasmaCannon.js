@@ -187,9 +187,9 @@ class PlasmaCannon extends Tower {
                 explosion.x, explosion.y, currentRadius * 0.5,
                 explosion.x, explosion.y, currentRadius
             );
-            gradient.addColorStop(0, `rgba(200, 220, 255, 0)`);
-            gradient.addColorStop(0.5, `rgba(100, 150, 255, ${alpha * 0.6})`);
-            gradient.addColorStop(1, `rgba(0, 100, 200, 0)`);
+            gradient.addColorStop(0, `rgba(200, 255, 200, 0)`); // Very light green, almost transparent
+            gradient.addColorStop(0.5, `rgba(100, 255, 100, ${alpha * 0.6})`); // Bright green
+            gradient.addColorStop(1, `rgba(0, 200, 0, 0)`); // Darker green, fading
 
             ctx.fillStyle = gradient;
             ctx.beginPath();
@@ -204,7 +204,7 @@ class PlasmaCannon extends Tower {
                     explosion.x, explosion.y, currentRadius * 0.4
                 );
                 flashGradient.addColorStop(0, `rgba(255, 255, 255, ${flashAlpha})`);
-                flashGradient.addColorStop(1, `rgba(150, 200, 255, 0)`);
+                flashGradient.addColorStop(1, `rgba(150, 255, 150, 0)`); // Lighter green flash
 
                 ctx.fillStyle = flashGradient;
                 ctx.beginPath();
