@@ -5,6 +5,7 @@ class GravityTower extends Tower {
     constructor(x, y, towersController) {
         super(x, y, 'gravity', towersController);
         this.slowEffect = settings.towers.gravity.slowEffect;
+        this.critRateBonus = settings.towers.gravity.critRateBonus;
         this.affectedEnemies = new Set(); // Track which enemies are currently slowed
     }
 
@@ -14,21 +15,27 @@ class GravityTower extends Tower {
         // Update slow effect on all enemies in range
         const enemiesInRange = this.getEnemiesInRange();
 
-        // Apply slow to enemies in range
+        // Apply slow and crit debuff to enemies in range
         enemiesInRange.forEach(enemy => {
             if (!enemy.slowedBy) {
                 enemy.slowedBy = new Map();
             }
             enemy.slowedBy.set(this.id, this.slowEffect);
+
+            // Apply crit rate debuff (makes enemy easier to crit)
+            enemy.critRateDebuff = this.critRateBonus;
+
             this.affectedEnemies.add(enemy);
         });
 
-        // Remove slow from enemies that left the range
+        // Remove slow and crit debuff from enemies that left the range
         this.affectedEnemies.forEach(enemy => {
             if (!enemiesInRange.includes(enemy)) {
                 if (enemy.slowedBy) {
                     enemy.slowedBy.delete(this.id);
                 }
+                // Reset crit debuff
+                enemy.critRateDebuff = 0;
                 this.affectedEnemies.delete(enemy);
             }
         });

@@ -289,7 +289,20 @@ class Tower extends Entity {
         let damageType = 'normal';
 
         // Crit calculation
-        const critChance = (this.critRate - enemy.critResistance) / 100;
+        const towerSettings = settings.towers[this.towerType];
+
+        // Calculate effective crit resistance
+        let effectiveCritResistance = enemy.critResistance;
+
+        // Laser Tower ignores crit resistance
+        if (towerSettings.ignoresCritResistance) {
+            effectiveCritResistance = 0;
+        }
+
+        // Apply gravity debuff (slowed enemies are easier to crit)
+        const gravityDebuff = enemy.critRateDebuff || 0;
+
+        const critChance = (this.critRate + gravityDebuff - effectiveCritResistance) / 100;
         const finalCritChance = Math.max(0.05, Math.min(critChance, 0.75)); // Clamp chance between 5% and 75%
 
         if (Math.random() < finalCritChance) {

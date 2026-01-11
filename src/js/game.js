@@ -234,7 +234,7 @@ class Game {
                     <canvas id="${previewId}" width="80" height="80"></canvas>
                     
                     <div class="tower-shop-info">
-                        <h4>${tower.label}</h4>
+                        <h4>${tower.label} <span class="question-sign" data-tooltip="${tower.description}">?</span></h4>
                         ${statsHTML}
                     </div>
                     

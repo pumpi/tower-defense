@@ -11,6 +11,7 @@ class PlasmaCannon extends Tower {
         this.explosionRadius = towerSettings.explosionRadius;
         this.projectileSpeed = towerSettings.projectileSpeed;
         this.arcHeight = towerSettings.arcHeight;
+        this.knockbackForce = towerSettings.knockbackForce;
 
         this.activeExplosions = []; // Track active explosion effects for drawing
     }
@@ -152,12 +153,60 @@ class PlasmaCannon extends Tower {
             return distance <= radius;
         });
 
-        // Apply damage to all enemies in radius
+        // Apply damage and knockback to all enemies in radius
         hitEnemies.forEach(enemy => {
             const { damage, damageType } = this.calculateDamage(enemy);
 
             this.stats.dmg += damage;
             enemy.damage(damage, damageType);
+
+            // Apply mass-based knockback (heavier enemies get knocked back less)
+            if (!enemy.deleted && enemy.velocity && (enemy.velocity.x !== 0 || enemy.velocity.y !== 0)) {
+                // Base reference HP for knockback calculation (average enemy)
+                const baseHP = 100;
+
+                // Calculate knockback distance (inversely proportional to enemy mass/HP)
+                const baseKnockbackDistance = this.knockbackForce * (baseHP / enemy.maxHealth);
+
+                // Calculate direction from explosion center to enemy
+                const dx = enemy.x - x;
+                const dy = enemy.y - y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance > 0) {
+                    // Normalize explosion direction
+                    const explosionDirX = dx / distance;
+                    const explosionDirY = dy / distance;
+
+                    // Get enemy's current movement direction (normalized)
+                    const velocityLength = Math.sqrt(enemy.velocity.x ** 2 + enemy.velocity.y ** 2);
+                    const velocityDirX = enemy.velocity.x / velocityLength;
+                    const velocityDirY = enemy.velocity.y / velocityLength;
+
+                    // Calculate dot product to determine alignment
+                    // > 0: explosion pushes forward along path
+                    // < 0: explosion pushes backward along path
+                    const dotProduct = explosionDirX * velocityDirX + explosionDirY * velocityDirY;
+
+                    // Knockback strength depends on alignment (perpendicular = weak, aligned = strong)
+                    const alignmentStrength = Math.abs(dotProduct);
+                    const knockbackDistance = baseKnockbackDistance * alignmentStrength;
+
+                    // Only apply if strong enough alignment
+                    if (knockbackDistance > 5) {
+                        // Knockback direction is along the path (forward or backward)
+                        const knockbackSign = Math.sign(dotProduct);
+
+                        // Start knockback animation
+                        enemy.knockbackActive = true;
+                        enemy.knockbackProgress = 0;
+                        enemy.knockbackStartX = enemy.x;
+                        enemy.knockbackStartY = enemy.y;
+                        enemy.knockbackTargetX = enemy.x + velocityDirX * knockbackSign * knockbackDistance;
+                        enemy.knockbackTargetY = enemy.y + velocityDirY * knockbackSign * knockbackDistance;
+                    }
+                }
+            }
 
             if (enemy.deleted) {
                 this.stats.kills++;

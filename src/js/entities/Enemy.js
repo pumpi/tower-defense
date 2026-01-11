@@ -48,6 +48,21 @@ class Enemy extends Entity {
         this.deleted = false;
         this.zIndex = 5;
 
+        // Debuff/Status tracking
+        this.critRateDebuff = 0; // Crit rate bonus from gravity towers
+        this.stunned = false;
+        this.stunEndTime = 0;
+
+        // Knockback animation
+        this.knockbackActive = false;
+        this.knockbackProgress = 0;
+        this.knockbackDuration = 0.3; // seconds
+        this.knockbackStartX = 0;
+        this.knockbackStartY = 0;
+        this.knockbackTargetX = 0;
+        this.knockbackTargetY = 0;
+        this.knockbackArcHeight = 30;
+
         // Add self and health bar to the entity manager
         this.enemiesController.mapEntities.add(this);
         this.enemiesController.mapEntities.add(new HealthBar(this, this.enemiesController.game));
@@ -102,6 +117,47 @@ class Enemy extends Entity {
 
     update(deltaTime) {
         if (this.deleted) return;
+
+        // Handle knockback animation
+        if (this.knockbackActive) {
+            this.knockbackProgress += deltaTime / this.knockbackDuration;
+
+            if (this.knockbackProgress >= 1) {
+                // Animation complete - snap to target and start returning
+                this.x = this.knockbackTargetX;
+                this.y = this.knockbackTargetY;
+                this.knockbackActive = false;
+                this.knockbackProgress = 0;
+
+                // After knockback, enemy will naturally path back to their waypoint
+                // We don't need to explicitly handle "return" - the normal waypoint logic will handle it
+            } else {
+                // Interpolate position with arc (ballistic curve)
+                const t = this.knockbackProgress;
+                const easeOut = 1 - Math.pow(1 - t, 3); // Ease out cubic for smooth landing
+
+                this.x = this.knockbackStartX + (this.knockbackTargetX - this.knockbackStartX) * easeOut;
+                this.y = this.knockbackStartY + (this.knockbackTargetY - this.knockbackStartY) * easeOut;
+
+                // Add arc height (parabolic)
+                const arcOffset = Math.sin(t * Math.PI) * this.knockbackArcHeight;
+                this.y -= arcOffset;
+            }
+
+            // Skip normal movement during knockback
+            return;
+        }
+
+        // Check if stunned
+        if (this.stunned) {
+            this.stunEndTime -= deltaTime;
+            if (this.stunEndTime <= 0) {
+                this.stunned = false;
+                this.stunEndTime = 0;
+            }
+            // Skip movement while stunned
+            return;
+        }
 
         // Calculate slow multiplier from all gravity towers affecting this enemy
         let slowMultiplier = 1.0;

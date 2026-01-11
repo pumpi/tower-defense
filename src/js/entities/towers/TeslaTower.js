@@ -9,6 +9,7 @@ class TeslaTower extends Tower {
         this.maxChains = towerSettings.maxChains;
         this.chainRange = towerSettings.chainRange;
         this.chainDamageMultipliers = towerSettings.chainDamageMultipliers;
+        this.stunDuration = towerSettings.stunDuration;
 
         // Visual effects tracking
         this.activeLightning = []; // Array of lightning chains to draw
@@ -93,6 +94,10 @@ class TeslaTower extends Tower {
         this.stats.shoots++;
         this.stats.dmg += damage;
         enemy.damage(damage, damageType);
+
+        // Apply stun effect
+        enemy.stunned = true;
+        enemy.stunEndTime = this.stunDuration;
 
         if (enemy.deleted) {
             this.stats.kills++;
