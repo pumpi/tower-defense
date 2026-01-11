@@ -55,7 +55,6 @@ class Tower extends Entity {
 
     update(deltaTime) {
         const { game, mouse } = this.towersController;
-        this.cooldownCounter += deltaTime;
 
         if (this.targetEnemy) {
             const enemyDistance = game.distance(this.x, this.y, this.targetEnemy.x, this.targetEnemy.y);
@@ -69,10 +68,15 @@ class Tower extends Entity {
         }
 
         if (this.targetEnemy) {
+            this.cooldownCounter += deltaTime;
+
+            // 4. If cooldown is ready, shoot the currently locked-on target.
             if (this.cooldownCounter >= this.cooldownTime) {
                 this.shoot(this.targetEnemy);
-                this.cooldownCounter = 0; // Reset cooldown
+                this.cooldownCounter = 0; // Reset after shooting.
             }
+        } else {
+            this.cooldownCounter = 0;
         }
 
         this.zIndex = mouse.isMouseOver(this.x, this.y, this.r) ? 20 : 10;
