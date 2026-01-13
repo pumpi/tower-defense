@@ -8,8 +8,8 @@ import settings from './game.settings.js';
 import helpers from "./helpers.js";
 import optionsIcon from '../img/options.svg';
 import Modal from './components/Modal.js';
+import TowerShopModal from './components/TowerShopModal.js';
 import Draw from './draw.js';
-import coinIcon from '../img/coin.svg';
 
 class Game {
     constructor() {
@@ -43,6 +43,7 @@ class Game {
         this.towers = new TowersController(this, this.map, this.mouse, this.mapEntities, this.enemies);
         this.debug = new Debug(this);
         this.modal = new Modal(this);
+        this.towerShopModal = new TowerShopModal(this);
 
         // Initialize game settings from defaults
         this.stat('soundEnabled', settings.game.soundEnabled);
@@ -59,7 +60,7 @@ class Game {
             }
             if (event.target.matches('#buy-tower')) {
                 event.preventDefault();
-                this.openTowerShopModal();
+                this.towerShopModal.open();
             }
             if (event.target.matches('#next-wave:not([disabled])')) {
                 event.preventDefault();
@@ -127,7 +128,6 @@ class Game {
         });
 
         // Initial static setup
-        this.output('#towerCosts', settings.towers.laser.costs);
         this.output('#app-version', `v${import.meta.env.VITE_APP_VERSION}`);
 
         // Start the game
@@ -178,122 +178,6 @@ class Game {
             this.saveSettings();
         });
     }
-
-    openTowerShopModal() {
-        const coins = this.stat('coins');
-        const towerTypes = Object.keys(settings.towers);
-
-        let content = '<div class="tower-shop">';
-
-        towerTypes.forEach(towerType => {
-            const tower = settings.towers[towerType];
-            const canAfford = coins >= tower.costs;
-            const disabledClass = !canAfford ? 'disabled' : '';
-
-            // Generate preview canvas for tower
-            const previewId = `tower-preview-${towerType}`;
-
-            // Get tower type specific info
-            let statsHTML = `
-                <div>Reichweite: ${tower.fireRange}</div>
-            `;
-
-            if (tower.minRange) {
-                statsHTML = `<div>Reichweite: ${tower.minRange}-${tower.fireRange}</div>`;
-            }
-
-            if (tower.slowEffect) {
-                statsHTML += `<div>Slow: -${Math.round((1 - tower.slowEffect) * 100)}%</div>`;
-            }
-
-            if (tower.damage) {
-                statsHTML += `
-                    <div>Schaden: ${tower.damage.from}-${tower.damage.to}</div>
-                    <div>Feuerrate: ${tower.coolDownTime}s</div>
-                `;
-            }
-
-            if(tower.dotType) {
-                statsHTML += `
-                    <h5>Schaden über Zeit</h5>
-                    <div>Schaden: ${tower.dotDamage.from}-${tower.dotDamage.to} (${tower.dotType})</div>
-                    <div>Dauer: ${tower.dotDuration}s</div>
-                `
-            }
-
-            if(tower.maxChains) {
-                statsHTML += `
-                    <h5>Ketten Effekt</h5>
-                    <div>Kettenreichweite: ${tower.chainRange}</div>
-                    <div>Max Ketten: ${tower.maxChains}</div>
-                `
-            }
-
-            content += `
-                <div class="tower-shop-item ${disabledClass}">
-                    <canvas id="${previewId}" width="80" height="80"></canvas>
-                    
-                    <div class="tower-shop-info">
-                        <h4>${tower.label} <span class="question-sign" data-tooltip="${tower.description}">?</span></h4>
-                        ${statsHTML}
-                    </div>
-                    
-                    <div class="tower-shop-buy-container">
-                        <div class="tower-shop-item-price">
-                            <img src="${coinIcon}" alt="Coins" title="Coins">
-                            ${tower.costs}
-                        </div>
-                        
-                        <button class="btn btn-buy" data-tower-type="${towerType}" data-required-coins="${tower.costs}" data-disable-parent=".tower-shop-item">
-                            Kaufen
-                        </button>
-                    </div>
-                </div>
-            `;
-        });
-
-        content += '</div>';
-
-        this.modal.open('Turm kaufen', content, this);
-
-        // Draw a preview for each tower
-        towerTypes.forEach(towerType => {
-            const previewCanvas = document.getElementById(`tower-preview-${towerType}`);
-            if (previewCanvas) {
-                const previewCtx = previewCanvas.getContext('2d');
-                const tower = settings.towers[towerType];
-
-                // Clear canvas
-                previewCtx.clearRect(0, 0, 80, 80);
-
-                // Draw tower preview
-                if (tower.images?.complete) {
-                    const sprite = tower.images.sprites[0];
-                    // Scale sprite to fit in 80x80 canvas
-                    previewCtx.drawImage(
-                        tower.images,
-                        sprite.x, sprite.y, sprite.w * 2 , sprite.h * 2,
-                        0, 0, 80, 80
-                    );
-                } else {
-                    // Fallback: draw circle for gravity tower
-                    previewCtx.beginPath();
-                    previewCtx.arc(40, 40, 20, 0, 2 * Math.PI);
-                    previewCtx.fillStyle = tower.color;
-                    previewCtx.fill();
-                }
-            }
-        });
-
-        // Add event listeners for buy buttons
-        document.querySelectorAll('.modal .btn-buy[data-tower-type]').forEach(button => {
-            button.addEventListener('click', (event) => {
-                const towerType = event.target.getAttribute('data-tower-type');
-                this.buyTower(towerType);
-                this.modal.close();
-            });
-        });
-    }
     // --- End Settings Management ---
 
     resetGame() {
@@ -306,15 +190,6 @@ class Game {
         this.stat('coins', settings.coins, true);
         this.stat('wave', 0, true);
         this.stat('mode', ''); // Reset game mode
-    }
-
-    buyTower(bulletType) {
-        if (this.stat('mode') !== 'dropTower') {
-            if (this.stat('coins') >= settings.towers[bulletType].costs) {
-                this.stat('mode', 'dropTower');
-                this.stat('selectedTowerType', bulletType);
-            }
-        }
     }
 
     updateNextWaveButtonState() {
