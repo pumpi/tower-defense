@@ -1,6 +1,9 @@
 import helpers from './helpers';
 import laserTowerImage from '../img/tower/laser.png';
 import laserAudio from '../audio/laser.mp3';
+import wispImage from '../img/enemy/wisp.png';
+import bugImage from '../img/enemy/bug.png';
+import slimeImage from '../img/enemy/slime.png';
 
 export default {
     playersLive: 10,
@@ -149,7 +152,15 @@ export default {
     // Defines the core archetypes of enemies
     enemyTypes: {
         'wisp': {
-            graphic: 'wisp',
+            label: 'Wisp',
+            description: 'Schwebende Geister mit ausgewogenen Werten. Grundsolide Gegner ohne Schwächen.',
+            radius: 10,
+            images: helpers.createImage(wispImage, [
+                { x: 0, y: 0, w: 20, h: 20, frames: [0,40,80,120,160,200]},
+                { x: 0, y: 40, w: 20, h: 20, frames: [0,40,80,120,160,200] },
+                { x: 0, y: 80, w: 20, h: 20, frames: [0,40,80,120,160,200] },
+                { x: 0, y: 120, w: 20, h: 20, frames: [0,40,80,120,160,200] }
+            ]),
             baseHealth: 38,
             baseSpeed: 50,
             baseReward: 5,
@@ -161,7 +172,15 @@ export default {
             }
         },
         'bug': {
-            graphic: 'bug',
+            label: 'Bug',
+            description: 'Schnelle Insekten mit wenig Leben. Schwärmen in Gruppen und sind schwer zu treffen.',
+            radius: 10,
+            images: helpers.createImage(bugImage, [
+                { x: 0, y: 0, w: 20, h: 20, frames: [0] },
+                { x: 40, y: 0, w: 20, h: 20, frames: [40] },
+                { x: 80, y: 0, w: 20, h: 20, frames: [80] },
+                { x: 120, y: 0, w: 20, h: 20, frames: [120] }
+            ]),
             baseHealth: 30,
             baseSpeed: 90,
             baseReward: 3,
@@ -173,6 +192,9 @@ export default {
             }
         },
         'slime': {
+            label: 'Slime',
+            description: 'Langsame Schleimmonster mit viel Leben. Perfekt für kritische Treffer, aber zäh.',
+            radius: 10,
             color: '#8A2BE2',
             baseHealth: 160,
             baseSpeed: 30,
@@ -185,6 +207,9 @@ export default {
             }
         },
         'scout': {
+            label: 'Scout',
+            description: 'Extrem schnelle Späher mit minimalen Lebenspunkten. Hohe Ausweichfähigkeit gegen Crits.',
+            radius: 10,
             color: '#FFD700',
             baseHealth: 18,
             baseSpeed: 160,
@@ -197,7 +222,9 @@ export default {
             }
         },
         'boss': {
-            graphic: 'wisp',
+            label: 'Boss',
+            description: 'Mächtiger Boss mit enormen Lebenspunkten und hoher Crit-Resistenz. Erscheint alle 10 Wellen.',
+            radius: 20,
             color: 'black',
             baseHealth: 500,
             baseSpeed: 40,

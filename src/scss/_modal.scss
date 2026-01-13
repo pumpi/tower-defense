@@ -87,13 +87,13 @@
     font-weight: bold;
 }
 
-.tower-shop {
+.info-grid {
     display: flex;
     flex-direction: column;
     gap: 15px;
 }
 
-.tower-shop-item {
+.info-card {
     display: flex;
     gap: 15px;
     padding: 15px;
@@ -113,49 +113,55 @@
         width: 80px;
         height: 80px;
     }
+}
 
-    .tower-shop-info {
-        flex-grow: 1;
+.info-card-content {
+    flex-grow: 1;
 
-        h4 {
-            margin: 0 0 8px 0;
-            color: #fff;
-            font-size: 16px;
-        }
-
-        h5 {
-            margin: 10px 0 4px 0;
-            color: #fff;
-            font-size: 13px;
-        }
-
-        div {
-            font-size: 13px;
-            margin-bottom: 4px;
-        }
+    h4 {
+        margin: 0 0 8px 0;
+        color: #fff;
+        font-size: 16px;
     }
 
-    .tower-shop-buy-container {
-        display: flex;
-        justify-content: space-between;
-        flex-direction: column;
-        gap: 15px;
+    h5 {
+        margin: 10px 0 4px 0;
+        color: #fff;
+        font-size: 13px;
     }
 
-    .tower-shop-item-price {
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        gap: 6px;
-
-        img {
-            width: 20px;
-            height: 20px;
-        }
+    div {
+        font-size: 13px;
+        margin-bottom: 4px;
     }
+}
 
-    .btn-buy {
-        flex-shrink: 0;
-        margin-bottom: 0;
+.coin-icon {
+    width: 16px;
+    height: 16px;
+    vertical-align: sub;
+}
+
+.tower-shop-buy-container {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.tower-shop-item-price {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 6px;
+
+    img {
+        width: 20px;
+        height: 20px;
     }
+}
+
+.btn-buy {
+    flex-shrink: 0;
+    margin-bottom: 0;
 }

@@ -12,9 +12,10 @@ class Enemy extends Entity {
             return;
         }
 
-        // Must calculate color before calling super()
+        // Must calculate color and radius before calling super()
         const color = definition.color || 'red';
-        super(enemiesController.game, 0, 0, 10, color);
+        const radius = definition.radius || 10;
+        super(enemiesController.game, 0, 0, radius, color);
 
         this.enemiesController = enemiesController;
         this.type = 'enemy';
@@ -33,7 +34,6 @@ class Enemy extends Entity {
         this.reward = Math.round(definition.baseReward * Math.pow(rewardFactor, level0));
         this.critResistance = definition.baseCritResistance * Math.pow(critResistanceFactor, level0);
 
-        this.graphicType = definition.graphic; // 'wisp', 'bug', or undefined
         this.level = level;
         this.wave = wave;
 
@@ -211,19 +211,24 @@ class Enemy extends Entity {
             this.y += this.velocity.y * deltaTime * slowMultiplier;
         }
 
-        if (this.graphicType) {
-            const enemySprite = this.enemiesController.images[this.graphicType].sprites[this.direction];
-            if (enemySprite.frames) {
+        // Update animation frame if enemy has sprite images
+        const enemyImages = settings.enemyTypes[this.enemyType].images;
+        if (enemyImages) {
+            const enemySprite = enemyImages.sprites[this.direction];
+            if (enemySprite?.frames) {
                 this.frame = (this.frame + 6 * deltaTime * slowMultiplier) % enemySprite.frames.length;
             }
         }
     }
 
     draw() {
-        if (this.graphicType) {
-            helpers.drawAnimatedSprite(this.enemiesController.images[this.graphicType], this.direction, this.frame, Math.round(this.x), Math.round(this.y), 40, 40);
+        const definition = settings.enemyTypes[this.enemyType];
+        const enemyImages = definition.images;
+
+        if (enemyImages) {
+            helpers.drawAnimatedSprite(enemyImages, this.direction, this.frame, Math.round(this.x), Math.round(this.y), 40, 40);
         } else {
-            // Draw a placeholder circle if no graphic is defined
+            // Fallback to circle if no images defined
             this.enemiesController.game.drawer.circle(this.x, this.y, this.r, this.color, true);
         }
     }

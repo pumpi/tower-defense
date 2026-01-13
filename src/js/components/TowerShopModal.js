@@ -10,7 +10,7 @@ class TowerShopModal {
         const coins = this.game.stat('coins');
         const towerTypes = Object.keys(settings.towers);
 
-        let content = '<div class="tower-shop">';
+        let content = '<div class="info-grid">';
 
         towerTypes.forEach(towerType => {
             const tower = settings.towers[towerType];
@@ -57,10 +57,10 @@ class TowerShopModal {
             }
 
             content += `
-                <div class="tower-shop-item ${disabledClass}">
+                <div class="info-card ${disabledClass}">
                     <canvas id="${previewId}" width="80" height="80"></canvas>
 
-                    <div class="tower-shop-info">
+                    <div class="info-card-content">
                         <h4>${tower.label} <span class="question-sign" data-tooltip="${tower.description}">?</span></h4>
                         ${statsHTML}
                     </div>
@@ -71,7 +71,7 @@ class TowerShopModal {
                             ${tower.costs}
                         </div>
 
-                        <button class="btn btn-buy" data-tower-type="${towerType}" data-required-coins="${tower.costs}" data-disable-parent=".tower-shop-item">
+                        <button class="btn btn-buy" data-tower-type="${towerType}" data-required-coins="${tower.costs}" data-disable-parent=".info-card">
                             Kaufen
                         </button>
                     </div>

@@ -9,6 +9,7 @@ import helpers from "./helpers.js";
 import optionsIcon from '../img/options.svg';
 import Modal from './components/Modal.js';
 import TowerShopModal from './components/TowerShopModal.js';
+import EnemyInfoModal from './components/EnemyInfoModal.js';
 import Draw from './draw.js';
 
 class Game {
@@ -44,6 +45,7 @@ class Game {
         this.debug = new Debug(this);
         this.modal = new Modal(this);
         this.towerShopModal = new TowerShopModal(this);
+        this.enemyInfoModal = new EnemyInfoModal(this);
 
         // Initialize game settings from defaults
         this.stat('soundEnabled', settings.game.soundEnabled);
@@ -61,6 +63,10 @@ class Game {
             if (event.target.matches('#buy-tower')) {
                 event.preventDefault();
                 this.towerShopModal.open();
+            }
+            if (event.target.matches('#enemy-info')) {
+                event.preventDefault();
+                this.enemyInfoModal.open();
             }
             if (event.target.matches('#next-wave:not([disabled])')) {
                 event.preventDefault();
