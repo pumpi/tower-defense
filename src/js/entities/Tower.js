@@ -58,7 +58,7 @@ class Tower extends Entity {
 
         if (this.targetEnemy) {
             const enemyDistance = game.distance(this.x, this.y, this.targetEnemy.x, this.targetEnemy.y);
-            if (enemyDistance >= (this.fireRange + this.targetEnemy.r) || this.targetEnemy.health <= 0) {
+            if (enemyDistance >= (this.fireRange + this.targetEnemy.r) || this.targetEnemy.health <= 0 || this.targetEnemy.deleted) {
                 this.targetEnemy = null;
             }
         }
