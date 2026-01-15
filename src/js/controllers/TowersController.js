@@ -48,7 +48,7 @@ class TowersController {
 
                 // Draw tower sprite or fallback circle
                 if (tower.images?.complete) {
-                    helpers.drawSprite(tower.images, 0, gridPosition.x, gridPosition.y - 20, 160, 160);
+                    helpers.drawSprite(tower.images, 0, gridPosition.x, gridPosition.y - 20);
                 } else {
                     this.game.drawer.circle(gridPosition.x, gridPosition.y, tower.size, tower.color, true);
                 }
@@ -57,7 +57,7 @@ class TowersController {
                 if (tower.images?.complete) {
                     this.game.ctx.save();
                     this.game.ctx.filter = 'grayscale(100%)';
-                    helpers.drawSprite(tower.images, 0, gridPosition.x, gridPosition.y - 20, 160, 160);
+                    helpers.drawSprite(tower.images, 0, gridPosition.x, gridPosition.y - 20);
                     this.game.ctx.restore();
                 } else {
                     this.game.drawer.circle(gridPosition.x, gridPosition.y, tower.size, '#666', true);

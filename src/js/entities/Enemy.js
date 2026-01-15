@@ -226,7 +226,7 @@ class Enemy extends Entity {
         const enemyImages = definition.images;
 
         if (enemyImages) {
-            helpers.drawAnimatedSprite(enemyImages, this.direction, this.frame, Math.round(this.x), Math.round(this.y), 40, 40);
+            helpers.drawAnimatedSprite(enemyImages, this.direction, this.frame, Math.round(this.x), Math.round(this.y));
         } else {
             // Fallback to circle if no images defined
             this.enemiesController.game.drawer.circle(this.x, this.y, this.r, this.color, true);

@@ -326,7 +326,7 @@ class PlasmaCannon extends Tower {
         // Draw tower sprite or fallback circle
         if (towerSettings.images?.complete) {
             const helpers = require('../../helpers.js').default;
-            helpers.drawSprite(towerSettings.images, this.level, this.x, this.y - 20, 160, 160);
+            helpers.drawSprite(towerSettings.images, this.level, this.x, this.y - 20);
         } else {
             // Fallback: draw circle
             game.drawer.circle(this.x, this.y, this.r, this.color, true);
