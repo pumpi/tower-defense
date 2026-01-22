@@ -31,3 +31,16 @@
         height: 20px;
     }
 }
+
+.settings {
+    position: absolute;
+    right: 0;
+    z-index: 10;
+    padding: 10px;
+    cursor: pointer;
+
+    img {
+        width: 20px;
+        height: 20px;
+    }
+}

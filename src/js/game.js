@@ -10,6 +10,7 @@ import optionsIcon from '../img/options.svg';
 import Modal from './components/Modal.js';
 import TowerShopModal from './components/TowerShopModal.js';
 import EnemyInfoModal from './components/EnemyInfoModal.js';
+import SettingsModal from './components/SettingsModal.js';
 import Draw from './draw.js';
 
 class Game {
@@ -46,6 +47,7 @@ class Game {
         this.modal = new Modal(this);
         this.towerShopModal = new TowerShopModal(this);
         this.enemyInfoModal = new EnemyInfoModal(this);
+        this.settingsModal = new SettingsModal(this);
 
         // Initialize game settings from defaults
         this.stat('soundEnabled', settings.game.soundEnabled);
@@ -60,14 +62,22 @@ class Game {
                 this.resetGame();
                 return;
             }
+
             if (event.target.matches('#buy-tower')) {
                 event.preventDefault();
                 this.towerShopModal.open();
             }
+
             if (event.target.matches('#enemy-info')) {
                 event.preventDefault();
                 this.enemyInfoModal.open();
             }
+
+            if (event.target.matches('.settings img')) {
+                event.preventDefault();
+                this.settingsModal.open();
+            }
+
             if (event.target.matches('#next-wave:not([disabled])')) {
                 event.preventDefault();
                 
@@ -102,19 +112,6 @@ class Game {
                 }
             }
         }, false);
-        
-        // Listener for Options Icon click on Canvas
-        this.canvas.addEventListener('click', (event) => {
-            const rect = this.canvas.getBoundingClientRect();
-            const mouseX = event.clientX - rect.left;
-            const mouseY = event.clientY - rect.top;
-
-            // Check if click is within Options Icon bounds
-            if (mouseX >= this.optionsIconPos.x && mouseX <= (this.optionsIconPos.x + this.optionsIconPos.width) &&
-                mouseY >= this.optionsIconPos.y && mouseY <= (this.optionsIconPos.y + this.optionsIconPos.height)) {
-                this.openSettingsModal();
-            }
-        });
 
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape' && this.stat('mode') === 'dropTower') {
@@ -142,7 +139,6 @@ class Game {
         window.requestAnimationFrame(this.draw.bind(this));
     }
 
-    // --- Settings Management ---
     loadSettings() {
         const storedSettings = JSON.parse(localStorage.getItem('gameSettings')) || {};
         this.stat('soundEnabled', storedSettings.soundEnabled ?? settings.game.soundEnabled);
@@ -156,35 +152,6 @@ class Game {
         };
         localStorage.setItem('gameSettings', JSON.stringify(currentSettings));
     }
-
-    openSettingsModal() {
-        const content = `
-            <div>
-                <label>
-                    <input type="checkbox" id="setting-sound-enabled" ${this.stat('soundEnabled') ? 'checked' : ''}>
-                    Sound aktivieren
-                </label>
-            </div>
-            <div>
-                <label>
-                    <input type="checkbox" id="setting-show-normal-damage" ${this.stat('showNormalDamage') ? 'checked' : ''}>
-                    Normale Schadenszahlen anzeigen (Crits immer anzeigen)
-                </label>
-            </div>
-        `;
-
-        this.modal.open('Settings', content);
-
-        document.getElementById('setting-sound-enabled').addEventListener('change', (event) => {
-            this.stat('soundEnabled', event.target.checked);
-            this.saveSettings();
-        });
-        document.getElementById('setting-show-normal-damage').addEventListener('change', (event) => {
-            this.stat('showNormalDamage', event.target.checked);
-            this.saveSettings();
-        });
-    }
-    // --- End Settings Management ---
 
     resetGame() {
         this.gameOver = false;
@@ -261,11 +228,6 @@ class Game {
         this.drawList = [];
 
         this.trigger('afterDraw');
-
-        // Draw Options Icon
-        if (this.optionsIconImage.complete) {
-            this.ctx.drawImage(this.optionsIconImage, this.optionsIconPos.x, this.optionsIconPos.y, this.optionsIconPos.width, this.optionsIconPos.height);
-        }
 
         // If the game is over, draw the overlay on top of the last game state
         if (this.gameOver) {
