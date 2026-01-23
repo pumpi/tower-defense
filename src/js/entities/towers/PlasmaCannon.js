@@ -158,7 +158,7 @@ class PlasmaCannon extends Tower {
             const { damage, damageType } = this.calculateDamage(enemy);
 
             this.stats.dmg += damage;
-            enemy.damage(damage, damageType);
+            enemy.damage(damage, damageType, this);
 
             // Apply mass-based knockback (heavier enemies get knocked back less)
             if (!enemy.deleted && enemy.velocity && (enemy.velocity.x !== 0 || enemy.velocity.y !== 0)) {

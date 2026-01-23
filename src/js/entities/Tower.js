@@ -2,12 +2,15 @@ import settings from '../game.settings.js';
 import helpers from '../helpers.js';
 import Entity from './Entity.js';
 
+let towerIdCounter = 0;
+
 class Tower extends Entity {
     constructor(x, y, towerType, towersController) {
         const towerSettings = settings.towers[towerType];
         // Call parent constructor
         super(towersController.game, x, y, towerSettings.size, towerSettings.color);
 
+        this.id = ++towerIdCounter;
         this.towersController = towersController;
         this.type = 'tower';
         this.towerType = towerType;
@@ -31,6 +34,10 @@ class Tower extends Entity {
 
         // Add self to the entity manager
         this.towersController.mapEntities.add(this);
+
+        // Log tower placed
+        const cost = towerSettings.costs;
+        this.game.debug.log('tower_placed', { towerId: this.id, towerType: this.towerType, cost, x: this.x, y: this.y });
     }
 
     upgrade() {
@@ -49,6 +56,10 @@ class Tower extends Entity {
 
             this.level++;
             this.color = upgrade.color;
+
+            // Log upgrade
+            game.debug.log('tower_upgraded', { towerId: this.id, towerType: this.towerType, level: this.level, cost: upgrade.cost });
+
             game.modal.close();
         }
     }
@@ -303,7 +314,7 @@ class Tower extends Entity {
         const gravityDebuff = enemy.critRateDebuff || 0;
 
         const critChance = (this.critRate + gravityDebuff - effectiveCritResistance) / 100;
-        const finalCritChance = Math.max(0.05, Math.min(critChance, 0.75)); // Clamp chance between 5% and 75%
+        const finalCritChance = Math.max(0.01, Math.min(critChance, 0.75)); // Clamp chance between 1% and 75%
 
         if (Math.random() < finalCritChance) {
             damage *= this.critDamage;

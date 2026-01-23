@@ -156,6 +156,7 @@ class Game {
     resetGame() {
         this.gameOver = false;
         this.waveCounter = 0;
+        this.time = 0; // Reset game time
         this.mapEntities.list = {}; // Reset entities
         this.enemies.enemiesList = []; // Clear the specific enemies list
         this.spawnQueue = []; // Clear spawn queue
@@ -163,6 +164,9 @@ class Game {
         this.stat('coins', settings.coins, true);
         this.stat('wave', 0, true);
         this.stat('mode', ''); // Reset game mode
+
+        // Reset debug logger
+        this.debug.resetLog();
     }
 
     updateNextWaveButtonState() {
@@ -244,6 +248,7 @@ class Game {
 
     setGameOver() {
         this.gameOver = true;
+        this.debug.log('game_over', {});
     }
 
     stat(name, value, output) {
@@ -297,6 +302,11 @@ class Game {
 
         this.lastWaveTemplate = waveTemplate;
         this.spawnEnemiesFromTemplate(waveTemplate);
+
+        // Log wave start
+        this.debug.log('wave_start', {
+            enemies: waveTemplate.map(e => ({ type: e.enemyType, count: e.count, level: e.level }))
+        });
 
         return this;
     }

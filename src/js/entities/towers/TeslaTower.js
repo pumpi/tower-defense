@@ -93,7 +93,7 @@ class TeslaTower extends Tower {
 
         this.stats.shoots++;
         this.stats.dmg += damage;
-        enemy.damage(damage, damageType);
+        enemy.damage(damage, damageType, this);
 
         // Apply stun effect
         enemy.stunned = true;

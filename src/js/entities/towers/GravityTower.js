@@ -7,6 +7,15 @@ class GravityTower extends Tower {
         this.slowEffect = settings.towers.gravity.slowEffect;
         this.critRateBonus = settings.towers.gravity.critRateBonus;
         this.affectedEnemies = new Set(); // Track which enemies are currently slowed
+
+        // Override stats for support tower tracking
+        this.stats = {
+            totalEnemiesSlowed: 0,      // Unique enemies that were slowed
+            totalSlowTime: 0,           // Accumulated slow-seconds (enemies * time)
+            totalCritDebuffTime: 0,     // Accumulated crit debuff-seconds
+            currentlyAffecting: 0       // Current enemies being affected
+        };
+        this.trackedEnemies = new Set(); // Track unique enemies we've ever slowed
     }
 
     update(deltaTime) {
@@ -26,7 +35,20 @@ class GravityTower extends Tower {
             enemy.critRateDebuff = this.critRateBonus;
 
             this.affectedEnemies.add(enemy);
+
+            // Track unique enemies for stats
+            if (!this.trackedEnemies.has(enemy)) {
+                this.trackedEnemies.add(enemy);
+                this.stats.totalEnemiesSlowed++;
+            }
         });
+
+        // Track slow time (enemy-seconds of slow effect)
+        if (deltaTime && this.affectedEnemies.size > 0) {
+            this.stats.totalSlowTime += deltaTime * this.affectedEnemies.size;
+            this.stats.totalCritDebuffTime += deltaTime * this.affectedEnemies.size;
+        }
+        this.stats.currentlyAffecting = this.affectedEnemies.size;
 
         // Remove slow and crit debuff from enemies that left the range
         this.affectedEnemies.forEach(enemy => {
@@ -63,6 +85,10 @@ class GravityTower extends Tower {
 
             this.level++;
             this.color = upgrade.color;
+
+            // Log upgrade
+            game.debug.log('tower_upgraded', { towerId: this.id, towerType: this.towerType, level: this.level, cost: upgrade.cost });
+
             game.modal.close();
         }
     }
@@ -85,7 +111,14 @@ class GravityTower extends Tower {
     }
 
     getLifetimeStatsHTML() {
-        return ``
+        return `
+            <h4>Lifetime Stats</h4>
+            <table class="tower-stats">
+                <tr><td>Enemies verlangsamt:</td><td>${this.stats.totalEnemiesSlowed}</td></tr>
+                <tr><td>Slow-Zeit (gesamt):</td><td>${this.stats.totalSlowTime.toFixed(1)}s</td></tr>
+                <tr><td>Aktuell betroffene:</td><td>${this.stats.currentlyAffecting}</td></tr>
+            </table>
+        `;
     }
 
     getUpgradeHTML() {

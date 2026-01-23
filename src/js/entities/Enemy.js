@@ -68,6 +68,9 @@ class Enemy extends Entity {
         this.enemiesController.mapEntities.add(new HealthBar(this, this.enemiesController.game));
 
         this.nextWaypoint();
+
+        // Log enemy spawn
+        this.game.debug.log('enemy_spawn', { enemyType: this.enemyType, level: this.level, health: Math.round(this.maxHealth), speed: Math.round(this.speed), reward: this.reward });
     }
 
     nextWaypoint() {
@@ -181,11 +184,12 @@ class Enemy extends Entity {
                         Math.random() * (effect.damage.to - effect.damage.from + 1)
                     ) + effect.damage.from;
 
-                    this.damage(dotDamage, 'dot');
+                    this.damage(dotDamage, 'dot', effect.source);
 
                     // Update source tower stats
                     if (effect.source) {
                         effect.source.stats.dmg += dotDamage;
+
                         if (this.deleted) {
                             effect.source.stats.kills++;
                         }
@@ -233,8 +237,15 @@ class Enemy extends Entity {
         }
     }
 
-    damage(amount, damageType = 'normal') {
+    damage(amount, damageType = 'normal', source = null) {
         if (this.deleted) return;
+
+        // Track last damage source for kill attribution
+        if (source) {
+            this.lastDamageSource = source;
+            this.lastDamageType = damageType;
+            this.lastDamageAmount = amount;
+        }
 
         // Only show damage numbers if it's crit/dot OR showNormalDamage is enabled
         if (damageType !== 'normal' || this.enemiesController.game.stat('showNormalDamage')) {
@@ -257,12 +268,27 @@ class Enemy extends Entity {
         this.health = 0;
         this.deleted = true;
         this.game.stat('coins', this.game.stat('coins') + this.reward, true);
+
+        // Log enemy killed
+        this.game.debug.log('enemy_killed', {
+            enemyType: this.enemyType,
+            level: this.level,
+            killedBy: this.lastDamageSource?.towerType,
+            towerId: this.lastDamageSource?.id,
+            damageType: this.lastDamageType,
+            reward: this.reward
+        });
+
         this.enemiesController.remove(this);
     }
 
     done() {
         if (this.deleted) return;
         this.deleted = true;
+
+        // Log enemy reached end
+        this.game.debug.log('enemy_escaped', { enemyType: this.enemyType, level: this.level, remainingHealth: Math.round(this.health), maxHealth: Math.round(this.maxHealth) });
+
         let live = this.game.stat('live') - 1;
         if (live <= 0) {
             this.game.setGameOver();
