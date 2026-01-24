@@ -2,6 +2,7 @@ import helpers from '../helpers';
 import settings from '../game.settings';
 import backLayerImage from '../../img/backlayer.png';
 import frontLayerImage from '../../img/frontlayer.png';
+import bossWarningImage from '../../img/boss_wave_warning.svg';
 
 class MapController {
     constructor(game, mapEntities) {
@@ -25,6 +26,7 @@ class MapController {
         this.images = {
             background: helpers.createImage(backLayerImage),
             frontLayer: helpers.createImage(frontLayerImage),
+            bossWarning: helpers.createImage(bossWarningImage),
         };
 
         // Init logic
@@ -41,6 +43,41 @@ class MapController {
 
         // Game grid
         this.grid(settings.mapGrid);
+
+        // Boss warning at path start (only when no enemies on field and none spawning)
+        const noEnemies = this.game.enemies.enemiesList.length === 0 && this.game.spawnQueue.length === 0;
+        if (noEnemies && this.game.isBossWave(this.game.waveCounter + 1)) {
+            this.drawBossWarning();
+        }
+    }
+
+    drawBossWarning() {
+        const ctx = this.game.ctx;
+        const startX = this.waypoints[0].x + 40;
+        const startY = this.waypoints[0].y;
+        const time = Date.now() / 1000;
+
+        // Pulsating scale effect
+        const pulseScale = 1 + Math.sin(time * 4) * 0.15;
+        const size = 50 * pulseScale;
+
+        ctx.save();
+
+        // Glow effect
+        const glowAlpha = 0.4 + Math.sin(time * 4) * 0.3;
+        ctx.shadowColor = `rgba(255, 100, 0, ${glowAlpha})`;
+        ctx.shadowBlur = 15 * pulseScale;
+
+        // Draw the warning icon centered
+        ctx.drawImage(
+            this.images.bossWarning,
+            startX - size / 2,
+            startY - size / 2,
+            size,
+            size
+        );
+
+        ctx.restore();
     }
 
     afterDraw() {

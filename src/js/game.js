@@ -80,27 +80,50 @@ class Game {
 
             if (event.target.matches('#next-wave:not([disabled])')) {
                 event.preventDefault();
-                
-                const enemiesOnField = this.enemies.enemiesList.length;
-                if (enemiesOnField > 0) {
-                    // Open confirmation modal
-                    this.isPaused = true;
-                    const content = `
-                        <p>Bist du sicher? Die verbleibenden ${enemiesOnField} Gegner werden entfernt und von deinem Leben abgezogen.</p>
-                        <div class="modal-actions">
-                            <button id="confirm-force-wave" class="btn">Bestätigen (-${enemiesOnField} Leben)</button>
-                            <button id="cancel-force-wave" class="btn btn-secondary">Abbrechen</button>
-                        </div>
-                    `;
-                    this.modal.open('Nächste Welle erzwingen', content);
 
-                    document.getElementById('confirm-force-wave').onclick = () => {
-                        this.stat('live', this.stat('live') - enemiesOnField, true);
-                        this.enemies.clearAll();
-                        this.isPaused = false;
-                        this.nextWave();
-                        this.modal.close();
-                    };
+                const enemiesOnField = this.enemies.enemiesList.length;
+                const bossOnField = this.enemies.enemiesList.some(e => e.enemyType === 'boss');
+
+                if (enemiesOnField > 0) {
+                    this.isPaused = true;
+
+                    if (bossOnField) {
+                        // Boss on field = Game Over warning
+                        const content = `
+                            <p><strong>⚠ ACHTUNG:</strong> Ein Boss ist noch auf dem Feld!</p>
+                            <p>Wenn du fortfährst, wird das Spiel beendet.</p>
+                            <div class="modal-actions">
+                                <button id="confirm-force-wave" class="btn btn-boss-warning">Spiel beenden</button>
+                                <button id="cancel-force-wave" class="btn btn-secondary">Abbrechen</button>
+                            </div>
+                        `;
+                        this.modal.open('Boss auf dem Feld!', content);
+
+                        document.getElementById('confirm-force-wave').onclick = () => {
+                            this.modal.close();
+                            this.isPaused = false;
+                            this.setGameOver();
+                        };
+                    } else {
+                        // Normal enemies = deduct lives
+                        const content = `
+                            <p>Bist du sicher? Die verbleibenden ${enemiesOnField} Gegner werden entfernt und von deinem Leben abgezogen.</p>
+                            <div class="modal-actions">
+                                <button id="confirm-force-wave" class="btn">Bestätigen (-${enemiesOnField} Leben)</button>
+                                <button id="cancel-force-wave" class="btn btn-secondary">Abbrechen</button>
+                            </div>
+                        `;
+                        this.modal.open('Nächste Welle erzwingen', content);
+
+                        document.getElementById('confirm-force-wave').onclick = () => {
+                            this.stat('live', this.stat('live') - enemiesOnField, true);
+                            this.enemies.clearAll();
+                            this.isPaused = false;
+                            this.nextWave();
+                            this.modal.close();
+                        };
+                    }
+
                     document.getElementById('cancel-force-wave').onclick = () => {
                         this.isPaused = false;
                         this.modal.close();
@@ -191,6 +214,15 @@ class Game {
 
         // Otherwise, enable the button
         btn.removeAttribute('disabled');
+
+        // Boss wave warning
+        if (this.isBossWave(this.waveCounter + 1)) {
+            btn.textContent = '⚠ BOSS WELLE';
+            btn.classList.add('btn-boss-warning');
+        } else {
+            btn.textContent = 'Nächste Welle';
+            btn.classList.remove('btn-boss-warning');
+        }
     }
 
     update(deltaTime) {
@@ -311,8 +343,8 @@ class Game {
         return this;
     }
 
-    isBossWave() {
-        return this.waveCounter > 0 && this.waveCounter % settings.leveling.wavesPerLevel === 0;
+    isBossWave(wave = this.waveCounter) {
+        return wave > 0 && wave % settings.leveling.wavesPerLevel === 0;
     }
 
     generateBossWave(gameLevel) {

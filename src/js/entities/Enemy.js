@@ -269,6 +269,13 @@ class Enemy extends Entity {
         this.deleted = true;
         this.game.stat('coins', this.game.stat('coins') + this.reward, true);
 
+        // Boss kill = bonus lives (capped at max)
+        if (this.enemyType === 'boss') {
+            const currentLives = this.game.stat('live');
+            const newLives = Math.min(currentLives + 2, settings.playersLive);
+            this.game.stat('live', newLives, true);
+        }
+
         // Log enemy killed
         this.game.debug.log('enemy_killed', {
             enemyType: this.enemyType,
@@ -288,6 +295,13 @@ class Enemy extends Entity {
 
         // Log enemy reached end
         this.game.debug.log('enemy_escaped', { enemyType: this.enemyType, level: this.level, remainingHealth: Math.round(this.health), maxHealth: Math.round(this.maxHealth) });
+
+        // Boss escape = instant game over
+        if (this.enemyType === 'boss') {
+            this.game.setGameOver();
+            this.enemiesController.remove(this);
+            return;
+        }
 
         let live = this.game.stat('live') - 1;
         if (live <= 0) {

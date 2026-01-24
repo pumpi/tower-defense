@@ -223,7 +223,7 @@ export default {
         },
         'boss': {
             label: 'Boss',
-            description: 'Mächtiger Boss mit enormen Lebenspunkten und hoher Crit-Resistenz. Erscheint alle 10 Wellen.',
+            description: 'Mächtiger Boss mit enormen Lebenspunkten und hoher Crit-Resistenz. Erscheint alle 10 Wellen. ⚠ Wenn der Boss durchkommt, ist das Spiel vorbei!',
             radius: 20,
             color: 'black',
             baseHealth: 500,

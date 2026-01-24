@@ -39,4 +39,24 @@ button {
             background: #0a400b;
         }
     }
+
+    &-boss-warning {
+        background: linear-gradient(135deg, #8B0000, #FF4500);
+        animation: boss-pulse 1s ease-in-out infinite;
+        font-weight: bold;
+        text-shadow: 0 0 5px rgba(0,0,0,0.5);
+
+        &:hover {
+            background: linear-gradient(135deg, #6B0000, #CC3700);
+        }
+    }
+}
+
+@keyframes boss-pulse {
+    0%, 100% {
+        box-shadow: 0 0 5px rgba(255, 69, 0, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(255, 69, 0, 0.9), 0 0 30px rgba(139, 0, 0, 0.5);
+    }
 }
