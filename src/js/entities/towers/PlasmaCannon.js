@@ -16,12 +16,19 @@ class PlasmaCannon extends Tower {
         this.activeExplosions = []; // Track active explosion effects for drawing
     }
 
-    // Override to add minimum range check
     getEnemiesInRange() {
         const { game, enemies } = this.towersController;
         return enemies.enemiesList.filter(enemy => {
-            const distance = game.distance(this.x, this.y, enemy.x, enemy.y);
-            return distance >= this.minRange && distance <= (this.fireRange + enemy.r);
+            // First check: enemy currently in range
+            const currentDistance = game.distance(this.x, this.y, enemy.x, enemy.y);
+            if (currentDistance < this.minRange || currentDistance > (this.fireRange + enemy.r)) {
+                return false;
+            }
+
+            // Second check: predicted position also in range
+            const predictedPos = this.calculatePredictedTarget(enemy);
+            const predictedDistance = game.distance(this.x, this.y, predictedPos.x, predictedPos.y);
+            return predictedDistance >= this.minRange && predictedDistance <= this.fireRange;
         });
     }
 
