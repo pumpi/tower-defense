@@ -3,7 +3,6 @@ import laserTowerImage from '../img/tower/laser.png';
 import laserAudio from '../audio/laser.mp3';
 import wispImage from '../img/enemy/wisp.png';
 import bugImage from '../img/enemy/bug.png';
-import slimeImage from '../img/enemy/slime.png';
 
 export default {
     playersLive: 10,
