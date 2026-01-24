@@ -166,7 +166,7 @@ export default {
             baseReward: 5,
             baseCritResistance: 5,
             levelFactors: {
-                health: 1.6,
+                health: 1.8,
                 speed: 1.1,
                 critResistanceFactor: 1.1,
             }
@@ -186,7 +186,7 @@ export default {
             baseReward: 3,
             baseCritResistance: 2,
             levelFactors: {
-                health: 1.5,
+                health: 1.7,
                 speed: 1.2,
                 critResistanceFactor: 1.1,
             }
@@ -201,7 +201,7 @@ export default {
             baseReward: 10,
             baseCritResistance: 0, // Slimes are easy to crit
             levelFactors: {
-                health: 1.8,
+                health: 2.0,
                 speed: 1.0,
                 critResistanceFactor: 1.05,
             }
@@ -216,7 +216,7 @@ export default {
             baseReward: 2,
             baseCritResistance: 10, // Scouts are dodgy
             levelFactors: {
-                health: 1.3,
+                health: 1.5,
                 speed: 1.05,
                 critResistanceFactor: 1.2,
             }
@@ -240,22 +240,22 @@ export default {
 
     // A pool of small, reusable patterns for the dynamic wave generator
     waveFragments: {
-        line_of_wisps: { threat: 25, details: { enemyType: 'wisp', count: 5, spacing: 2, countFactor: 1.15 } },
-        lone_slime: { threat: 20, details: { enemyType: 'slime', count: 1, spacing: 2, countFactor: 1.1 } },
-        rush_of_bugs: { threat: 30, details: { enemyType: 'bug', count: 4, spacing: 2.5, countFactor: 1.2 } },
-        pair_of_slimes: { threat: 35, details: { enemyType: 'slime', count: 2, spacing: 3, countFactor: 1.2 } },
-        scout_rush: { threat: 35, details: { enemyType: 'scout', count: 6, spacing: 2, countFactor: 1.5 } },
+        line_of_wisps: { threat: 25, details: { enemyType: 'wisp', count: 5, spacing: 2, countFactor: 1.05 } },
+        lone_slime: { threat: 20, details: { enemyType: 'slime', count: 1, spacing: 2, countFactor: 1.05 } },
+        rush_of_bugs: { threat: 30, details: { enemyType: 'bug', count: 4, spacing: 2.5, countFactor: 1.1 } },
+        pair_of_slimes: { threat: 35, details: { enemyType: 'slime', count: 2, spacing: 3, countFactor: 1.1 } },
+        scout_rush: { threat: 35, details: { enemyType: 'scout', count: 6, spacing: 2, countFactor: 1.15 } },
         mixed_pair: { threat: 60, details: [
-            { enemyType: 'wisp', count: 5, spacing: 2, countFactor: 1.4 },
-            { enemyType: 'bug', count: 5, spacing: 3, countFactor: 1.4 }
+            { enemyType: 'wisp', count: 5, spacing: 2, countFactor: 1.1 },
+            { enemyType: 'bug', count: 5, spacing: 3, countFactor: 1.1 }
         ]}
     },
 
     // A pool of fillups
     fillUpFragments: {
-        fill_up_wisps: { threat: 4, details: { enemyType: 'wisp', count: 2, spacing: 2, countFactor: 1.3 } },
-        fill_up_bugs: { threat: 5, details: { enemyType: 'bug', count: 2, spacing: 2.5, countFactor: 1.3 } },
-        fill_up_scouts: { threat: 6, details: { enemyType: 'scout', count: 3, spacing: 3, countFactor: 1.8 } }
+        fill_up_wisps: { threat: 4, details: { enemyType: 'wisp', count: 2, spacing: 2, countFactor: 1.1 } },
+        fill_up_bugs: { threat: 5, details: { enemyType: 'bug', count: 2, spacing: 2.5, countFactor: 1.1 } },
+        fill_up_scouts: { threat: 6, details: { enemyType: 'scout', count: 3, spacing: 3, countFactor: 1.2 } }
     },
 
     // Defines the boss wave

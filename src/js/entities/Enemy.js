@@ -30,7 +30,8 @@ class Enemy extends Entity {
 
         this.health = definition.baseHealth * Math.pow(healthFactor, level0);
         this.maxHealth = this.health;
-        this.speed = definition.baseSpeed * Math.pow(speedFactor, level0);
+        const maxSpeed = definition.baseSpeed * (5 / 3); // Cap at +67% of base speed
+        this.speed = Math.min(maxSpeed, definition.baseSpeed * Math.pow(speedFactor, level0));
         this.reward = Math.round(definition.baseReward * Math.pow(rewardFactor, level0));
         this.critResistance = definition.baseCritResistance * Math.pow(critResistanceFactor, level0);
 
