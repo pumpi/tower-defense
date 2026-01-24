@@ -17,27 +17,6 @@ class FlameThrower extends Tower {
         this.flameAnimationProgress = 0; // 0 to 1, animates the flame spreading
     }
 
-    // Override upgrade to handle flamethrower-specific properties
-    upgrade() {
-        const game = this.towersController.game;
-        const coins = game.stat('coins');
-        const upgrade = settings.towers[this.towerType].upgrades[this.level];
-
-        if (upgrade && coins >= upgrade.cost) {
-            game.stat('coins', coins - upgrade.cost, true);
-            this.damage = upgrade.damage;
-            this.fireRange = upgrade.fireRange;
-            this.coneAngle = upgrade.coneAngle;
-            this.dotDamage = upgrade.dotDamage;
-            this.dotDuration = upgrade.dotDuration;
-
-            this.level++;
-            this.color = upgrade.color;
-            game.modal.close();
-        }
-    }
-
-
     // Check if an enemy is within the cone area
     isEnemyInCone(enemy) {
         const { game } = this.towersController;

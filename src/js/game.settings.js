@@ -37,9 +37,9 @@ export default {
             ]),
             audio: laserAudio,
             upgrades: [
-                {cost: 70, fireRange: 120, damage: {from: 6, to: 8}, color: '#2CE85B', critRate: 2, critDamage: 0.1},
-                {cost: 180, fireRange: 130, damage: {from: 10, to: 14}, color: '#2CE8B9', critRate: 3, critDamage: 0.2},
-                {cost: 250, fireRange: 140, damage: {from: 18, to: 25}, color: '#2A62DB', critRate: 5, critDamage: 0.2}
+                {cost: 70, fireRange: 10, damage: {from: 2, to: 2}, color: '#2CE85B', critRate: 2, critDamage: 0.1},
+                {cost: 180, fireRange: 10, damage: {from: 4, to: 6}, color: '#2CE8B9', critRate: 3, critDamage: 0.2},
+                {cost: 250, fireRange: 10, damage: {from: 8, to: 11}, color: '#2A62DB', critRate: 5, critDamage: 0.2}
             ]
         },
         gravity: {
@@ -61,9 +61,9 @@ export default {
             ]),
             audio: laserAudio, // Placeholder: reuse laser audio for now */
             upgrades: [
-                {cost: 80, fireRange: 160, slowEffect: 0.6, color: '#7B1FA2'},
-                {cost: 150, fireRange: 180, slowEffect: 0.7, color: '#6A1B9A'},
-                {cost: 220, fireRange: 200, slowEffect: 0.8, color: '#4A148C'}
+                {cost: 80, fireRange: 20, slowEffect: 0.1, color: '#7B1FA2'},
+                {cost: 150, fireRange: 20, slowEffect: 0.1, color: '#6A1B9A'},
+                {cost: 220, fireRange: 20, slowEffect: 0.1, color: '#4A148C'}
             ]
         },
         flamethrower: {
@@ -84,9 +84,9 @@ export default {
             baseCritDamage: 1,
             // No image yet - will use fallback circle
             upgrades: [
-                {cost: 100, fireRange: 110, coneAngle: 70, damage: {from: 3, to: 5}, dotDamage: {from: 2, to: 3}, dotDuration: 5.5, color: '#FF5500', critRate: 0, critDamage: 0},
-                {cost: 200, fireRange: 120, coneAngle: 80, damage: {from: 5, to: 8}, dotDamage: {from: 3, to: 5}, dotDuration: 6, color: '#FF4400', critRate: 0, critDamage: 0},
-                {cost: 300, fireRange: 130, coneAngle: 90, damage: {from: 7, to: 12}, dotDamage: {from: 5, to: 7}, dotDuration: 7, color: '#FF0000', critRate: 0, critDamage: 0}
+                {cost: 100, fireRange: 10, coneAngle: 10, damage: {from: 1, to: 1}, dotDamage: {from: 1, to: 1}, dotDuration: 0.5, color: '#FF5500'},
+                {cost: 200, fireRange: 10, coneAngle: 10, damage: {from: 2, to: 3}, dotDamage: {from: 1, to: 2}, dotDuration: 0.5, color: '#FF4400'},
+                {cost: 300, fireRange: 10, coneAngle: 10, damage: {from: 2, to: 4}, dotDamage: {from: 2, to: 2}, dotDuration: 1, color: '#FF0000'}
             ]
         },
         tesla: {
@@ -105,9 +105,9 @@ export default {
             chainDamageMultipliers: [1.0, 0.7, 0.5, 0.3], // Damage reduction per chain (100%, 70%, 50%, 30%)
             stunDuration: 0.4, // Enemies are stunned for 0.4 seconds
             upgrades: [
-                {cost: 100, fireRange: 120, damage: {from: 15, to: 19}, chainRange: 90, color: '#00CCCC', critRate: 3, critDamage: 0.2},
-                {cost: 140, fireRange: 150, damage: {from: 18, to: 23}, chainRange: 90, color: '#0099CC', critRate: 4, critDamage: 0.3},
-                {cost: 200, fireRange: 175, damage: {from: 22, to: 30}, chainRange: 100, color: '#0066CC', critRate: 5, critDamage: 0.4}
+                {cost: 100, fireRange: 0, damage: {from: 3, to: 2}, chainRange: 10, color: '#00CCCC', critRate: 3, critDamage: 0.2},
+                {cost: 140, fireRange: 30, damage: {from: 3, to: 4}, chainRange: 0, color: '#0099CC', critRate: 4, critDamage: 0.3},
+                {cost: 200, fireRange: 25, damage: {from: 4, to: 7}, chainRange: 10, color: '#0066CC', critRate: 5, critDamage: 0.4}
             ]
         },
         plasma: {
@@ -127,9 +127,9 @@ export default {
             baseCritDamage: 1.5,
             knockbackForce: 5, // Knockback strength from explosion
             upgrades: [
-                {cost: 140, fireRange: 240, explosionRadius: 90, damage: {from: 18, to: 25}, color: '#2aa127', critRate: 2, critDamage: 0.2},
-                {cost: 220, fireRange: 280, explosionRadius: 100, damage: {from: 22, to: 28}, color: '#21871e', critRate: 3, critDamage: 0.2},
-                {cost: 320, fireRange: 310, explosionRadius: 110, damage: {from: 26, to: 38}, color: '#064e03', critRate: 5, critDamage: 0.3}
+                {cost: 140, fireRange: 40, explosionRadius: 10, damage: {from: 3, to: 5}, color: '#2aa127', critRate: 2, critDamage: 0.2},
+                {cost: 220, fireRange: 40, explosionRadius: 10, damage: {from: 4, to: 3}, color: '#21871e', critRate: 3, critDamage: 0.2},
+                {cost: 320, fireRange: 30, explosionRadius: 10, damage: {from: 4, to: 10}, color: '#064e03', critRate: 5, critDamage: 0.3}
             ]
         }
     },

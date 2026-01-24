@@ -47,15 +47,26 @@ class Tower extends Entity {
 
         if (upgrade && coins >= upgrade.cost) {
             game.stat('coins', coins - upgrade.cost, true);
-            this.damage = upgrade.damage;
-            this.fireRange = upgrade.fireRange;
 
-            // Add upgrade stats
-            this.critRate += upgrade.critRate;
-            this.critDamage += upgrade.critDamage;
+            // Apply all upgrade values (additive, except color which replaces)
+            for (const [key, value] of Object.entries(upgrade)) {
+                if (key === 'cost') continue;
+
+                if (key === 'color') {
+                    this[key] = value;
+                } else if (typeof value === 'object' && value !== null) {
+                    // Nested object (e.g., damage: {from, to})
+                    if (!this[key]) this[key] = {};
+                    for (const [subKey, subValue] of Object.entries(value)) {
+                        this[key][subKey] = (this[key][subKey] || 0) + subValue;
+                    }
+                } else {
+                    // Simple value - add
+                    this[key] = (this[key] || 0) + value;
+                }
+            }
 
             this.level++;
-            this.color = upgrade.color;
 
             // Log upgrade
             game.debug.log('tower_upgraded', { towerId: this.id, towerType: this.towerType, level: this.level, cost: upgrade.cost });
@@ -224,17 +235,52 @@ class Tower extends Entity {
         `;
     }
 
+    formatUpgradeValue(key, value) {
+        const labels = {
+            fireRange: 'Reichweite',
+            damage: 'Schaden',
+            dotDamage: 'DoT Schaden',
+            dotDuration: 'DoT Dauer',
+            critRate: 'Crit Chance',
+            critDamage: 'Crit Schaden',
+            coneAngle: 'Kegel',
+            chainRange: 'Kettenreichweite',
+            explosionRadius: 'Explosionsradius',
+            slowEffect: 'Verlangsamung'
+        };
+
+        const label = labels[key] || key;
+
+        if (typeof value === 'object' && value !== null) {
+            return `<tr><td>${label}:</td><td>+${value.from} - ${value.to}</td></tr>`;
+        } else if (key === 'critDamage') {
+            return `<tr><td>${label}:</td><td>+${value * 100}%</td></tr>`;
+        } else if (key === 'critRate') {
+            return `<tr><td>${label}:</td><td>+${value}%</td></tr>`;
+        } else if (key === 'slowEffect') {
+            return `<tr><td>${label}:</td><td>+${Math.round(value * 100)}%</td></tr>`;
+        } else if (key === 'dotDuration') {
+            return `<tr><td>${label}:</td><td>+${value}s</td></tr>`;
+        } else if (value === 0) {
+            return ''; // Skip zero values
+        } else {
+            return `<tr><td>${label}:</td><td>+${value}</td></tr>`;
+        }
+    }
+
     getUpgradeHTML() {
         const upgrade = settings.towers[this.towerType].upgrades[this.level];
         if (upgrade) {
+            const rows = Object.entries(upgrade)
+                .filter(([key]) => key !== 'cost' && key !== 'color')
+                .map(([key, value]) => this.formatUpgradeValue(key, value))
+                .join('');
+
             return `
                 <h4>Upgrade auf Level ${this.level + 2}</h4>
                 <table class="tower-stats">
                     <tr><td>Kosten:</td><td>${upgrade.cost} Coins</td></tr>
-                    <tr><td>Schaden:</td><td>${upgrade.damage.from} - ${upgrade.damage.to}</td></tr>
-                    <tr><td>Reichweite:</td><td>${upgrade.fireRange}</td></tr>
-                    <tr><td>Crit Chance:</td><td>+${upgrade.critRate}%</td></tr>
-                    <tr><td>Crit Schaden:</td><td>+${upgrade.critDamage * 100}%</td></tr>
+                    ${rows}
                 </table>
                 <button id="tower-buy-upgrade-btn" class="btn btn-buy" data-required-coins="${upgrade.cost}">Upgrade Kaufen</button>
             `;

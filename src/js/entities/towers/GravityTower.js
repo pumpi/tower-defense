@@ -73,26 +73,6 @@ class GravityTower extends Tower {
         // No shooting - slow effect is applied in update()
     }
 
-    upgrade() {
-        const game = this.towersController.game;
-        const coins = game.stat('coins');
-        const upgrade = settings.towers[this.towerType].upgrades[this.level];
-
-        if (upgrade && coins >= upgrade.cost) {
-            game.stat('coins', coins - upgrade.cost, true);
-            this.slowEffect = upgrade.slowEffect;
-            this.fireRange = upgrade.fireRange;
-
-            this.level++;
-            this.color = upgrade.color;
-
-            // Log upgrade
-            game.debug.log('tower_upgraded', { towerId: this.id, towerType: this.towerType, level: this.level, cost: upgrade.cost });
-
-            game.modal.close();
-        }
-    }
-
     getStatsHTML() {
         return `
             <h4>Current Stats (Level ${this.level + 1})</h4>
@@ -119,23 +99,6 @@ class GravityTower extends Tower {
                 <tr><td>Aktuell betroffene:</td><td>${this.stats.currentlyAffecting}</td></tr>
             </table>
         `;
-    }
-
-    getUpgradeHTML() {
-        const upgrade = settings.towers[this.towerType].upgrades[this.level];
-        if (upgrade) {
-            return `
-                <h4>Upgrade auf Level ${this.level + 2}</h4>
-                <table class="tower-stats">
-                    <tr><td>Kosten:</td><td>${upgrade.cost} Coins</td></tr>
-                    <tr><td>Slow Effect:</td><td>-${Math.round(upgrade.slowEffect * 100)}%</td></tr>
-                    <tr><td>Reichweite:</td><td>${upgrade.fireRange}</td></tr>
-                </table>
-                <button id="tower-buy-upgrade-btn" class="btn btn-buy">Upgrade Kaufen</button>
-            `;
-        } else {
-            return '<h4>Max Level</h4>';
-        }
     }
 
     drawShootingEffect() {

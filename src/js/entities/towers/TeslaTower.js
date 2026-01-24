@@ -15,28 +15,6 @@ class TeslaTower extends Tower {
         this.activeLightning = []; // Array of lightning chains to draw
     }
 
-    // Override upgrade to handle tesla-specific properties
-    upgrade() {
-        const game = this.towersController.game;
-        const coins = game.stat('coins');
-        const upgrade = settings.towers[this.towerType].upgrades[this.level];
-
-        if (upgrade && coins >= upgrade.cost) {
-            game.stat('coins', coins - upgrade.cost, true);
-            this.damage = upgrade.damage;
-            this.fireRange = upgrade.fireRange;
-            this.chainRange = upgrade.chainRange;
-
-            // Add upgrade stats
-            this.critRate += upgrade.critRate;
-            this.critDamage += upgrade.critDamage;
-
-            this.level++;
-            this.color = upgrade.color;
-            game.modal.close();
-        }
-    }
-
     shoot(enemy) {
         if (!enemy) return;
 
@@ -154,26 +132,6 @@ class TeslaTower extends Tower {
                 <tr><td>Crit Schaden:</td><td>${this.critDamage * 100}%</td></tr>
             </table>
         `;
-    }
-
-    getUpgradeHTML() {
-        const upgrade = settings.towers[this.towerType].upgrades[this.level];
-        if (upgrade) {
-            return `
-                <h4>Upgrade auf Level ${this.level + 2}</h4>
-                <table class="tower-stats">
-                    <tr><td>Kosten:</td><td>${upgrade.cost} Coins</td></tr>
-                    <tr><td>Schaden:</td><td>${upgrade.damage.from} - ${upgrade.damage.to}</td></tr>
-                    <tr><td>Reichweite:</td><td>${upgrade.fireRange}</td></tr>
-                    <tr><td>Kettenreichweite:</td><td>${upgrade.chainRange}</td></tr>
-                    <tr><td>Crit Chance:</td><td>+${upgrade.critRate}%</td></tr>
-                    <tr><td>Crit Schaden:</td><td>+${upgrade.critDamage * 100}%</td></tr>
-                </table>
-                <button id="tower-buy-upgrade-btn" class="btn btn-buy" data-required-coins="${upgrade.cost}">Upgrade Kaufen</button>
-            `;
-        } else {
-            return '<h4>Max Level</h4>';
-        }
     }
 
     drawShootingEffect() {
