@@ -11,58 +11,93 @@ class PlasmaCannon extends Tower {
         this.explosionRadius = towerSettings.explosionRadius;
         this.projectileSpeed = towerSettings.projectileSpeed;
         this.arcHeight = towerSettings.arcHeight;
+        this.knockbackForce = towerSettings.knockbackForce;
 
         this.activeExplosions = []; // Track active explosion effects for drawing
     }
 
-    // Override upgrade to handle plasma-specific properties
-    upgrade() {
-        const game = this.towersController.game;
-        const coins = game.stat('coins');
-        const upgrade = settings.towers[this.towerType].upgrades[this.level];
-
-        if (upgrade && coins >= upgrade.cost) {
-            game.stat('coins', coins - upgrade.cost, true);
-            this.damage = upgrade.damage;
-            this.fireRange = upgrade.fireRange;
-            this.explosionRadius = upgrade.explosionRadius;
-
-            // Add upgrade stats
-            this.critRate += upgrade.critRate;
-            this.critDamage += upgrade.critDamage;
-
-            this.level++;
-            this.color = upgrade.color;
-            game.modal.close();
-        }
-    }
-
-    // Override to add minimum range check
     getEnemiesInRange() {
         const { game, enemies } = this.towersController;
         return enemies.enemiesList.filter(enemy => {
-            const distance = game.distance(this.x, this.y, enemy.x, enemy.y);
-            return distance >= this.minRange && distance <= (this.fireRange + enemy.r);
+            // First check: enemy currently in range
+            const currentDistance = game.distance(this.x, this.y, enemy.x, enemy.y);
+            if (currentDistance < this.minRange || currentDistance > (this.fireRange + enemy.r)) {
+                return false;
+            }
+
+            // Second check: predicted position also in range
+            const predictedPos = this.calculatePredictedTarget(enemy);
+            const predictedDistance = game.distance(this.x, this.y, predictedPos.x, predictedPos.y);
+            return predictedDistance >= this.minRange && predictedDistance <= this.fireRange;
         });
     }
 
-    // Calculate predicted target position with inaccuracy
     calculatePredictedTarget(enemy) {
         const { game } = this.towersController;
+        const map = this.towersController.map;
 
-        // Calculate initial distance and flight time
-        const distance = game.distance(this.x, this.y, enemy.x, enemy.y);
-        const estimatedFlightTime = distance / this.projectileSpeed;
+        // 1. Calculate enemy's current effective speed (with slows)
+        let slowMultiplier = 1.0;
+        if (enemy.slowedBy && enemy.slowedBy.size > 0) {
+            slowMultiplier = Math.min(...enemy.slowedBy.values());
+        }
+        const effectiveSpeed = enemy.speed * slowMultiplier;
 
-        // Predict where the enemy will be
-        let predictedX = enemy.x + (enemy.velocity.x * estimatedFlightTime);
-        let predictedY = enemy.y + (enemy.velocity.y * estimatedFlightTime);
+        // 2. Estimate flight time and prediction distance
+        const distanceToEnemy = game.distance(this.x, this.y, enemy.x, enemy.y);
+        const estimatedFlightTime = distanceToEnemy / this.projectileSpeed;
+        let predictionDistance = effectiveSpeed * estimatedFlightTime;
 
-        // Add inaccuracy based on enemy speed (faster = more inaccurate)
+        // 3. "Walk" the enemy along its path to find the future point
+        let predictedX = enemy.x;
+        let predictedY = enemy.y;
+        let currentWaypointIndex = enemy.waypointIndex;
+
+        // Distance to the current target waypoint
+        let distanceToNextWaypoint = game.distance(predictedX, predictedY, enemy.waypoint.x, enemy.waypoint.y);
+
+        while (predictionDistance > distanceToNextWaypoint) {
+            // Enemy will pass its current waypoint
+            predictionDistance -= distanceToNextWaypoint;
+
+            // Move to the next waypoint
+            predictedX = enemy.waypoint.x;
+            predictedY = enemy.waypoint.y;
+
+            // Get the next waypoint in the path
+            currentWaypointIndex++;
+            const nextWaypoint = map.waypoints[currentWaypointIndex];
+            if (!nextWaypoint) {
+                // Enemy is at the end of the path, stop predicting further
+                break;
+            }
+
+            // Update waypoint with the random shift
+            const nextWaypointShifted = {
+                x: nextWaypoint.x + enemy.shift,
+                y: nextWaypoint.y + enemy.shift
+            };
+
+            distanceToNextWaypoint = game.distance(predictedX, predictedY, nextWaypointShifted.x, nextWaypointShifted.y);
+        }
+
+        // If there's remaining distance, calculate position on the current segment
+        if (predictionDistance > 0 && distanceToNextWaypoint > 0) {
+            const nextWaypoint = map.waypoints[currentWaypointIndex];
+            if (nextWaypoint) {
+                const nextWaypointShifted = {
+                    x: nextWaypoint.x + enemy.shift,
+                    y: nextWaypoint.y + enemy.shift
+                };
+                const ratio = predictionDistance / distanceToNextWaypoint;
+                predictedX += (nextWaypointShifted.x - predictedX) * ratio;
+                predictedY += (nextWaypointShifted.y - predictedY) * ratio;
+            }
+        }
+
+        // 4. Add original inaccuracy logic
         const enemySpeed = Math.sqrt(enemy.velocity.x ** 2 + enemy.velocity.y ** 2);
-        const inaccuracyFactor = enemySpeed * 0.15; // 15% inaccuracy per speed unit
-
-        // Random offset in both directions
+        const inaccuracyFactor = enemySpeed * 0.15;
         const offsetX = (Math.random() - 0.5) * 2 * inaccuracyFactor * estimatedFlightTime;
         const offsetY = (Math.random() - 0.5) * 2 * inaccuracyFactor * estimatedFlightTime;
 
@@ -103,12 +138,60 @@ class PlasmaCannon extends Tower {
             return distance <= radius;
         });
 
-        // Apply damage to all enemies in radius
+        // Apply damage and knockback to all enemies in radius
         hitEnemies.forEach(enemy => {
             const { damage, damageType } = this.calculateDamage(enemy);
 
             this.stats.dmg += damage;
-            enemy.damage(damage, damageType);
+            enemy.damage(damage, damageType, this);
+
+            // Apply mass-based knockback (heavier enemies get knocked back less)
+            if (!enemy.deleted && enemy.velocity && (enemy.velocity.x !== 0 || enemy.velocity.y !== 0)) {
+                // Base reference HP for knockback calculation (average enemy)
+                const baseHP = 100;
+
+                // Calculate knockback distance (inversely proportional to enemy mass/HP)
+                const baseKnockbackDistance = this.knockbackForce * (baseHP / enemy.maxHealth);
+
+                // Calculate direction from explosion center to enemy
+                const dx = enemy.x - x;
+                const dy = enemy.y - y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance > 0) {
+                    // Normalize explosion direction
+                    const explosionDirX = dx / distance;
+                    const explosionDirY = dy / distance;
+
+                    // Get enemy's current movement direction (normalized)
+                    const velocityLength = Math.sqrt(enemy.velocity.x ** 2 + enemy.velocity.y ** 2);
+                    const velocityDirX = enemy.velocity.x / velocityLength;
+                    const velocityDirY = enemy.velocity.y / velocityLength;
+
+                    // Calculate dot product to determine alignment
+                    // > 0: explosion pushes forward along path
+                    // < 0: explosion pushes backward along path
+                    const dotProduct = explosionDirX * velocityDirX + explosionDirY * velocityDirY;
+
+                    // Knockback strength depends on alignment (perpendicular = weak, aligned = strong)
+                    const alignmentStrength = Math.abs(dotProduct);
+                    const knockbackDistance = baseKnockbackDistance * alignmentStrength;
+
+                    // Only apply if strong enough alignment
+                    if (knockbackDistance > 5) {
+                        // Knockback direction is along the path (forward or backward)
+                        const knockbackSign = Math.sign(dotProduct);
+
+                        // Start knockback animation
+                        enemy.knockbackActive = true;
+                        enemy.knockbackProgress = 0;
+                        enemy.knockbackStartX = enemy.x;
+                        enemy.knockbackStartY = enemy.y;
+                        enemy.knockbackTargetX = enemy.x + velocityDirX * knockbackSign * knockbackDistance;
+                        enemy.knockbackTargetY = enemy.y + velocityDirY * knockbackSign * knockbackDistance;
+                    }
+                }
+            }
 
             if (enemy.deleted) {
                 this.stats.kills++;
@@ -150,26 +233,6 @@ class PlasmaCannon extends Tower {
         `;
     }
 
-    getUpgradeHTML() {
-        const upgrade = settings.towers[this.towerType].upgrades[this.level];
-        if (upgrade) {
-            return `
-                <h4>Upgrade auf Level ${this.level + 2}</h4>
-                <table class="tower-stats">
-                    <tr><td>Kosten:</td><td>${upgrade.cost} Coins</td></tr>
-                    <tr><td>Schaden:</td><td>${upgrade.damage.from} - ${upgrade.damage.to}</td></tr>
-                    <tr><td>Max Reichweite:</td><td>${upgrade.fireRange}</td></tr>
-                    <tr><td>Explosionsradius:</td><td>${upgrade.explosionRadius}</td></tr>
-                    <tr><td>Crit Chance:</td><td>+${upgrade.critRate}%</td></tr>
-                    <tr><td>Crit Schaden:</td><td>+${upgrade.critDamage * 100}%</td></tr>
-                </table>
-                <button id="tower-buy-upgrade-btn" class="btn btn-buy" data-required-coins="${upgrade.cost}">Upgrade Kaufen</button>
-            `;
-        } else {
-            return '<h4>Max Level</h4>';
-        }
-    }
-
     drawShootingEffect() {
         const { game } = this.towersController;
 
@@ -187,9 +250,9 @@ class PlasmaCannon extends Tower {
                 explosion.x, explosion.y, currentRadius * 0.5,
                 explosion.x, explosion.y, currentRadius
             );
-            gradient.addColorStop(0, `rgba(200, 220, 255, 0)`);
-            gradient.addColorStop(0.5, `rgba(100, 150, 255, ${alpha * 0.6})`);
-            gradient.addColorStop(1, `rgba(0, 100, 200, 0)`);
+            gradient.addColorStop(0, `rgba(200, 255, 200, 0)`); // Very light green, almost transparent
+            gradient.addColorStop(0.5, `rgba(100, 255, 100, ${alpha * 0.6})`); // Bright green
+            gradient.addColorStop(1, `rgba(0, 200, 0, 0)`); // Darker green, fading
 
             ctx.fillStyle = gradient;
             ctx.beginPath();
@@ -204,7 +267,7 @@ class PlasmaCannon extends Tower {
                     explosion.x, explosion.y, currentRadius * 0.4
                 );
                 flashGradient.addColorStop(0, `rgba(255, 255, 255, ${flashAlpha})`);
-                flashGradient.addColorStop(1, `rgba(150, 200, 255, 0)`);
+                flashGradient.addColorStop(1, `rgba(150, 255, 150, 0)`); // Lighter green flash
 
                 ctx.fillStyle = flashGradient;
                 ctx.beginPath();
@@ -228,7 +291,7 @@ class PlasmaCannon extends Tower {
         // Draw tower sprite or fallback circle
         if (towerSettings.images?.complete) {
             const helpers = require('../../helpers.js').default;
-            helpers.drawSprite(towerSettings.images, this.level, this.x, this.y - 20, 160, 160);
+            helpers.drawSprite(towerSettings.images, this.level, this.x, this.y - 20);
         } else {
             // Fallback: draw circle
             game.drawer.circle(this.x, this.y, this.r, this.color, true);

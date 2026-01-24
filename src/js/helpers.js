@@ -19,28 +19,32 @@ export default {
         return img;
     },
 
-    drawSprite: (image, spriteInd, x, y, w, h) => {
+    drawSprite: (image, spriteInd, x, y, factor = 2) => {
         // image is the image. Must have an array of sprites
         // image.sprites = [{x:0,y:0,w:10,h:10},{x:20,y:0,w:30,h:40},....]
         // where the position and size of each sprite is kept
         // spriteInd is the index of the sprite
         // x,y position on sprite center
-        // cw, ch the final container width and height
-        let spr = image.sprites[spriteInd];
+        // factor is the multiplier for sprite dimensions in the spritesheet (default: 2)
+        let spr = image.sprites[spriteInd] ?? image.sprites[0];
+        const sourceW = spr.w * factor;
+        const sourceH = spr.h * factor;
         //game.ctx.setTransform(1,0,0,1,x,y); // set scale and position
-        game.ctx.drawImage(image,spr.x,spr.y,w,h,x - spr.w / 2,y - spr.h / 2,spr.w,spr.h); // render the subimage
+        game.ctx.drawImage(image,spr.x,spr.y,sourceW,sourceH,x - spr.w / 2,y - spr.h / 2,spr.w,spr.h); // render the subimage
     },
 
-    drawAnimatedSprite: (image, spriteInd, frameInd, x, y, w, h) => {
+    drawAnimatedSprite: (image, spriteInd, frameInd, x, y, factor = 2) => {
         // image is the image. Must have an array of sprites
         // image.sprites = [{x:0,y:0,w:10,h:10},{x:20,y:0,w:30,h:40},....]
         // where the position and size of each sprite is kept
         // spriteInd is the index of the sprite
         // x,y position on sprite center
-        // cw, ch the final container width and height
-        let spr = image.sprites[spriteInd];
+        // factor is the multiplier for sprite dimensions in the spritesheet (default: 2)
+        let spr = image.sprites[spriteInd] ?? image.sprites[0];
+        const sourceW = spr.w * factor;
+        const sourceH = spr.h * factor;
         //game.ctx.setTransform(1,0,0,1,x,y); // set scale and position
-        game.ctx.drawImage(image,spr.frames[parseInt(frameInd)],spr.y,w,h,x - spr.w / 2,y - spr.h / 2,spr.w,spr.h); // render the subimage
+        game.ctx.drawImage(image,spr.frames[parseInt(frameInd)],spr.y,sourceW,sourceH,x - spr.w / 2,y - spr.h / 2,spr.w,spr.h); // render the subimage
     },
 
     playAudio: (audioFile) => {

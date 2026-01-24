@@ -2,12 +2,15 @@ import settings from '../game.settings.js';
 import helpers from '../helpers.js';
 import Entity from './Entity.js';
 
+let towerIdCounter = 0;
+
 class Tower extends Entity {
     constructor(x, y, towerType, towersController) {
         const towerSettings = settings.towers[towerType];
         // Call parent constructor
         super(towersController.game, x, y, towerSettings.size, towerSettings.color);
 
+        this.id = ++towerIdCounter;
         this.towersController = towersController;
         this.type = 'tower';
         this.towerType = towerType;
@@ -31,6 +34,10 @@ class Tower extends Entity {
 
         // Add self to the entity manager
         this.towersController.mapEntities.add(this);
+
+        // Log tower placed
+        const cost = towerSettings.costs;
+        this.game.debug.log('tower_placed', { towerId: this.id, towerType: this.towerType, cost, x: this.x, y: this.y });
     }
 
     upgrade() {
@@ -40,26 +47,40 @@ class Tower extends Entity {
 
         if (upgrade && coins >= upgrade.cost) {
             game.stat('coins', coins - upgrade.cost, true);
-            this.damage = upgrade.damage;
-            this.fireRange = upgrade.fireRange;
 
-            // Add upgrade stats
-            this.critRate += upgrade.critRate;
-            this.critDamage += upgrade.critDamage;
+            // Apply all upgrade values (additive, except color which replaces)
+            for (const [key, value] of Object.entries(upgrade)) {
+                if (key === 'cost') continue;
+
+                if (key === 'color') {
+                    this[key] = value;
+                } else if (typeof value === 'object' && value !== null) {
+                    // Nested object (e.g., damage: {from, to})
+                    if (!this[key]) this[key] = {};
+                    for (const [subKey, subValue] of Object.entries(value)) {
+                        this[key][subKey] = (this[key][subKey] || 0) + subValue;
+                    }
+                } else {
+                    // Simple value - add
+                    this[key] = (this[key] || 0) + value;
+                }
+            }
 
             this.level++;
-            this.color = upgrade.color;
+
+            // Log upgrade
+            game.debug.log('tower_upgraded', { towerId: this.id, towerType: this.towerType, level: this.level, cost: upgrade.cost });
+
             game.modal.close();
         }
     }
 
     update(deltaTime) {
         const { game, mouse } = this.towersController;
-        this.cooldownCounter += deltaTime;
 
         if (this.targetEnemy) {
             const enemyDistance = game.distance(this.x, this.y, this.targetEnemy.x, this.targetEnemy.y);
-            if (enemyDistance >= (this.fireRange + this.targetEnemy.r) || this.targetEnemy.health <= 0) {
+            if (enemyDistance >= (this.fireRange + this.targetEnemy.r) || this.targetEnemy.health <= 0 || this.targetEnemy.deleted) {
                 this.targetEnemy = null;
             }
         }
@@ -69,10 +90,15 @@ class Tower extends Entity {
         }
 
         if (this.targetEnemy) {
+            this.cooldownCounter += deltaTime;
+
+            // 4. If cooldown is ready, shoot the currently locked-on target.
             if (this.cooldownCounter >= this.cooldownTime) {
                 this.shoot(this.targetEnemy);
-                this.cooldownCounter = 0; // Reset cooldown
+                this.cooldownCounter = 0; // Reset after shooting.
             }
+        } else {
+            this.cooldownCounter = 0;
         }
 
         this.zIndex = mouse.isMouseOver(this.x, this.y, this.r) ? 20 : 10;
@@ -209,17 +235,52 @@ class Tower extends Entity {
         `;
     }
 
+    formatUpgradeValue(key, value) {
+        const labels = {
+            fireRange: 'Reichweite',
+            damage: 'Schaden',
+            dotDamage: 'DoT Schaden',
+            dotDuration: 'DoT Dauer',
+            critRate: 'Crit Chance',
+            critDamage: 'Crit Schaden',
+            coneAngle: 'Kegel',
+            chainRange: 'Kettenreichweite',
+            explosionRadius: 'Explosionsradius',
+            slowEffect: 'Verlangsamung'
+        };
+
+        const label = labels[key] || key;
+
+        if (typeof value === 'object' && value !== null) {
+            return `<tr><td>${label}:</td><td>+${value.from} - ${value.to}</td></tr>`;
+        } else if (key === 'critDamage') {
+            return `<tr><td>${label}:</td><td>+${value * 100}%</td></tr>`;
+        } else if (key === 'critRate') {
+            return `<tr><td>${label}:</td><td>+${value}%</td></tr>`;
+        } else if (key === 'slowEffect') {
+            return `<tr><td>${label}:</td><td>+${Math.round(value * 100)}%</td></tr>`;
+        } else if (key === 'dotDuration') {
+            return `<tr><td>${label}:</td><td>+${value}s</td></tr>`;
+        } else if (value === 0) {
+            return ''; // Skip zero values
+        } else {
+            return `<tr><td>${label}:</td><td>+${value}</td></tr>`;
+        }
+    }
+
     getUpgradeHTML() {
         const upgrade = settings.towers[this.towerType].upgrades[this.level];
         if (upgrade) {
+            const rows = Object.entries(upgrade)
+                .filter(([key]) => key !== 'cost' && key !== 'color')
+                .map(([key, value]) => this.formatUpgradeValue(key, value))
+                .join('');
+
             return `
                 <h4>Upgrade auf Level ${this.level + 2}</h4>
                 <table class="tower-stats">
                     <tr><td>Kosten:</td><td>${upgrade.cost} Coins</td></tr>
-                    <tr><td>Schaden:</td><td>${upgrade.damage.from} - ${upgrade.damage.to}</td></tr>
-                    <tr><td>Reichweite:</td><td>${upgrade.fireRange}</td></tr>
-                    <tr><td>Crit Chance:</td><td>+${upgrade.critRate}%</td></tr>
-                    <tr><td>Crit Schaden:</td><td>+${upgrade.critDamage * 100}%</td></tr>
+                    ${rows}
                 </table>
                 <button id="tower-buy-upgrade-btn" class="btn btn-buy" data-required-coins="${upgrade.cost}">Upgrade Kaufen</button>
             `;
@@ -285,8 +346,21 @@ class Tower extends Entity {
         let damageType = 'normal';
 
         // Crit calculation
-        const critChance = (this.critRate - enemy.critResistance) / 100;
-        const finalCritChance = Math.max(0.05, Math.min(critChance, 0.75)); // Clamp chance between 5% and 75%
+        const towerSettings = settings.towers[this.towerType];
+
+        // Calculate effective crit resistance
+        let effectiveCritResistance = enemy.critResistance;
+
+        // Laser Tower ignores crit resistance
+        if (towerSettings.ignoresCritResistance) {
+            effectiveCritResistance = 0;
+        }
+
+        // Apply gravity debuff (slowed enemies are easier to crit)
+        const gravityDebuff = enemy.critRateDebuff || 0;
+
+        const critChance = (this.critRate + gravityDebuff - effectiveCritResistance) / 100;
+        const finalCritChance = Math.max(0.01, Math.min(critChance, 0.75)); // Clamp chance between 1% and 75%
 
         if (Math.random() < finalCritChance) {
             damage *= this.critDamage;
@@ -315,7 +389,7 @@ class Tower extends Entity {
 
         // Draw tower sprite or fallback circle
         if (towerSettings.images?.complete) {
-            helpers.drawSprite(towerSettings.images, this.level, this.x, this.y - 20, 160, 160);
+            helpers.drawSprite(towerSettings.images, this.level, this.x, this.y - 20);
         } else {
             // Fallback: draw circle
             game.drawer.circle(this.x, this.y, this.r, this.color, true);

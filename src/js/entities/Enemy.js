@@ -12,9 +12,10 @@ class Enemy extends Entity {
             return;
         }
 
-        // Must calculate color before calling super()
+        // Must calculate color and radius before calling super()
         const color = definition.color || 'red';
-        super(enemiesController.game, 0, 0, 10, color);
+        const radius = definition.radius || 10;
+        super(enemiesController.game, 0, 0, radius, color);
 
         this.enemiesController = enemiesController;
         this.type = 'enemy';
@@ -29,11 +30,11 @@ class Enemy extends Entity {
 
         this.health = definition.baseHealth * Math.pow(healthFactor, level0);
         this.maxHealth = this.health;
-        this.speed = definition.baseSpeed * Math.pow(speedFactor, level0);
+        const maxSpeed = definition.baseSpeed * (5 / 3); // Cap at +67% of base speed
+        this.speed = Math.min(maxSpeed, definition.baseSpeed * Math.pow(speedFactor, level0));
         this.reward = Math.round(definition.baseReward * Math.pow(rewardFactor, level0));
         this.critResistance = definition.baseCritResistance * Math.pow(critResistanceFactor, level0);
 
-        this.graphicType = definition.graphic; // 'wisp', 'bug', or undefined
         this.level = level;
         this.wave = wave;
 
@@ -48,11 +49,29 @@ class Enemy extends Entity {
         this.deleted = false;
         this.zIndex = 5;
 
+        // Debuff/Status tracking
+        this.critRateDebuff = 0; // Crit rate bonus from gravity towers
+        this.stunned = false;
+        this.stunEndTime = 0;
+
+        // Knockback animation
+        this.knockbackActive = false;
+        this.knockbackProgress = 0;
+        this.knockbackDuration = 0.3; // seconds
+        this.knockbackStartX = 0;
+        this.knockbackStartY = 0;
+        this.knockbackTargetX = 0;
+        this.knockbackTargetY = 0;
+        this.knockbackArcHeight = 30;
+
         // Add self and health bar to the entity manager
         this.enemiesController.mapEntities.add(this);
         this.enemiesController.mapEntities.add(new HealthBar(this, this.enemiesController.game));
 
         this.nextWaypoint();
+
+        // Log enemy spawn
+        this.game.debug.log('enemy_spawn', { enemyType: this.enemyType, level: this.level, health: Math.round(this.maxHealth), speed: Math.round(this.speed), reward: this.reward });
     }
 
     nextWaypoint() {
@@ -103,6 +122,47 @@ class Enemy extends Entity {
     update(deltaTime) {
         if (this.deleted) return;
 
+        // Handle knockback animation
+        if (this.knockbackActive) {
+            this.knockbackProgress += deltaTime / this.knockbackDuration;
+
+            if (this.knockbackProgress >= 1) {
+                // Animation complete - snap to target and start returning
+                this.x = this.knockbackTargetX;
+                this.y = this.knockbackTargetY;
+                this.knockbackActive = false;
+                this.knockbackProgress = 0;
+
+                // After knockback, enemy will naturally path back to their waypoint
+                // We don't need to explicitly handle "return" - the normal waypoint logic will handle it
+            } else {
+                // Interpolate position with arc (ballistic curve)
+                const t = this.knockbackProgress;
+                const easeOut = 1 - Math.pow(1 - t, 3); // Ease out cubic for smooth landing
+
+                this.x = this.knockbackStartX + (this.knockbackTargetX - this.knockbackStartX) * easeOut;
+                this.y = this.knockbackStartY + (this.knockbackTargetY - this.knockbackStartY) * easeOut;
+
+                // Add arc height (parabolic)
+                const arcOffset = Math.sin(t * Math.PI) * this.knockbackArcHeight;
+                this.y -= arcOffset;
+            }
+
+            // Skip normal movement during knockback
+            return;
+        }
+
+        // Check if stunned
+        if (this.stunned) {
+            this.stunEndTime -= deltaTime;
+            if (this.stunEndTime <= 0) {
+                this.stunned = false;
+                this.stunEndTime = 0;
+            }
+            // Skip movement while stunned
+            return;
+        }
+
         // Calculate slow multiplier from all gravity towers affecting this enemy
         let slowMultiplier = 1.0;
         if (this.slowedBy && this.slowedBy.size > 0) {
@@ -125,11 +185,12 @@ class Enemy extends Entity {
                         Math.random() * (effect.damage.to - effect.damage.from + 1)
                     ) + effect.damage.from;
 
-                    this.damage(dotDamage, 'dot');
+                    this.damage(dotDamage, 'dot', effect.source);
 
                     // Update source tower stats
                     if (effect.source) {
                         effect.source.stats.dmg += dotDamage;
+
                         if (this.deleted) {
                             effect.source.stats.kills++;
                         }
@@ -155,25 +216,37 @@ class Enemy extends Entity {
             this.y += this.velocity.y * deltaTime * slowMultiplier;
         }
 
-        if (this.graphicType) {
-            const enemySprite = this.enemiesController.images[this.graphicType].sprites[this.direction];
-            if (enemySprite.frames) {
+        // Update animation frame if enemy has sprite images
+        const enemyImages = settings.enemyTypes[this.enemyType].images;
+        if (enemyImages) {
+            const enemySprite = enemyImages.sprites[this.direction];
+            if (enemySprite?.frames) {
                 this.frame = (this.frame + 6 * deltaTime * slowMultiplier) % enemySprite.frames.length;
             }
         }
     }
 
     draw() {
-        if (this.graphicType) {
-            helpers.drawAnimatedSprite(this.enemiesController.images[this.graphicType], this.direction, this.frame, Math.round(this.x), Math.round(this.y), 40, 40);
+        const definition = settings.enemyTypes[this.enemyType];
+        const enemyImages = definition.images;
+
+        if (enemyImages) {
+            helpers.drawAnimatedSprite(enemyImages, this.direction, this.frame, Math.round(this.x), Math.round(this.y));
         } else {
-            // Draw a placeholder circle if no graphic is defined
+            // Fallback to circle if no images defined
             this.enemiesController.game.drawer.circle(this.x, this.y, this.r, this.color, true);
         }
     }
 
-    damage(amount, damageType = 'normal') {
+    damage(amount, damageType = 'normal', source = null) {
         if (this.deleted) return;
+
+        // Track last damage source for kill attribution
+        if (source) {
+            this.lastDamageSource = source;
+            this.lastDamageType = damageType;
+            this.lastDamageAmount = amount;
+        }
 
         // Only show damage numbers if it's crit/dot OR showNormalDamage is enabled
         if (damageType !== 'normal' || this.enemiesController.game.stat('showNormalDamage')) {
@@ -196,18 +269,53 @@ class Enemy extends Entity {
         this.health = 0;
         this.deleted = true;
         this.game.stat('coins', this.game.stat('coins') + this.reward, true);
+
+        // Boss kill = bonus lives (capped at max)
+        if (this.enemyType === 'boss') {
+            const currentLives = this.game.stat('live');
+            const newLives = Math.min(currentLives + 2, settings.playersLive);
+            this.game.stat('live', newLives, true);
+        }
+
+        // Log enemy killed
+        this.game.debug.log('enemy_killed', {
+            enemyType: this.enemyType,
+            level: this.level,
+            killedBy: this.lastDamageSource?.towerType,
+            towerId: this.lastDamageSource?.id,
+            damageType: this.lastDamageType,
+            reward: this.reward
+        });
+
         this.enemiesController.remove(this);
     }
 
     done() {
         if (this.deleted) return;
         this.deleted = true;
+
+        // Log enemy reached end
+        this.game.debug.log('enemy_escaped', { enemyType: this.enemyType, level: this.level, remainingHealth: Math.round(this.health), maxHealth: Math.round(this.maxHealth) });
+
+        // Boss escape = instant game over
+        if (this.enemyType === 'boss') {
+            this.game.setGameOver();
+            this.enemiesController.remove(this);
+            return;
+        }
+
         let live = this.game.stat('live') - 1;
         if (live <= 0) {
             this.game.setGameOver();
         } else {
             this.game.stat('live', live, true);
         }
+        this.enemiesController.remove(this);
+    }
+
+    clear() {
+        if (this.deleted) return;
+        this.deleted = true;
         this.enemiesController.remove(this);
     }
 }

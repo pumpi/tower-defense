@@ -8,8 +8,10 @@ import settings from './game.settings.js';
 import helpers from "./helpers.js";
 import optionsIcon from '../img/options.svg';
 import Modal from './components/Modal.js';
+import TowerShopModal from './components/TowerShopModal.js';
+import EnemyInfoModal from './components/EnemyInfoModal.js';
+import SettingsModal from './components/SettingsModal.js';
 import Draw from './draw.js';
-import coinIcon from '../img/coin.svg';
 
 class Game {
     constructor() {
@@ -43,6 +45,9 @@ class Game {
         this.towers = new TowersController(this, this.map, this.mouse, this.mapEntities, this.enemies);
         this.debug = new Debug(this);
         this.modal = new Modal(this);
+        this.towerShopModal = new TowerShopModal(this);
+        this.enemyInfoModal = new EnemyInfoModal(this);
+        this.settingsModal = new SettingsModal(this);
 
         // Initialize game settings from defaults
         this.stat('soundEnabled', settings.game.soundEnabled);
@@ -57,28 +62,79 @@ class Game {
                 this.resetGame();
                 return;
             }
+
             if (event.target.matches('#buy-tower')) {
                 event.preventDefault();
-                this.openTowerShopModal();
+                this.towerShopModal.open();
             }
-            if (event.target.matches('#next-wave')) {
+
+            if (event.target.matches('#enemy-info')) {
                 event.preventDefault();
-                this.nextWave();
+                this.enemyInfoModal.open();
+            }
+
+            if (event.target.matches('.settings img')) {
+                event.preventDefault();
+                this.settingsModal.open();
+            }
+
+            if (event.target.matches('#next-wave:not([disabled])')) {
+                event.preventDefault();
+
+                const enemiesOnField = this.enemies.enemiesList.length;
+                const bossOnField = this.enemies.enemiesList.some(e => e.enemyType === 'boss');
+
+                if (enemiesOnField > 0) {
+                    this.isPaused = true;
+
+                    if (bossOnField) {
+                        // Boss on field = Game Over warning
+                        const content = `
+                            <p><strong>⚠ ACHTUNG:</strong> Ein Boss ist noch auf dem Feld!</p>
+                            <p>Wenn du fortfährst, wird das Spiel beendet.</p>
+                            <div class="modal-actions">
+                                <button id="confirm-force-wave" class="btn btn-boss-warning">Spiel beenden</button>
+                                <button id="cancel-force-wave" class="btn btn-secondary">Abbrechen</button>
+                            </div>
+                        `;
+                        this.modal.open('Boss auf dem Feld!', content);
+
+                        document.getElementById('confirm-force-wave').onclick = () => {
+                            this.modal.close();
+                            this.isPaused = false;
+                            this.setGameOver();
+                        };
+                    } else {
+                        // Normal enemies = deduct lives
+                        const content = `
+                            <p>Bist du sicher? Die verbleibenden ${enemiesOnField} Gegner werden entfernt und von deinem Leben abgezogen.</p>
+                            <div class="modal-actions">
+                                <button id="confirm-force-wave" class="btn">Bestätigen (-${enemiesOnField} Leben)</button>
+                                <button id="cancel-force-wave" class="btn btn-secondary">Abbrechen</button>
+                            </div>
+                        `;
+                        this.modal.open('Nächste Welle erzwingen', content);
+
+                        document.getElementById('confirm-force-wave').onclick = () => {
+                            this.stat('live', this.stat('live') - enemiesOnField, true);
+                            this.enemies.clearAll();
+                            this.isPaused = false;
+                            this.nextWave();
+                            this.modal.close();
+                        };
+                    }
+
+                    document.getElementById('cancel-force-wave').onclick = () => {
+                        this.isPaused = false;
+                        this.modal.close();
+                    };
+
+                } else {
+                    // No enemies, start next wave directly
+                    this.nextWave();
+                }
             }
         }, false);
-        
-        // Listener for Options Icon click on Canvas
-        this.canvas.addEventListener('click', (event) => {
-            const rect = this.canvas.getBoundingClientRect();
-            const mouseX = event.clientX - rect.left;
-            const mouseY = event.clientY - rect.top;
-
-            // Check if click is within Options Icon bounds
-            if (mouseX >= this.optionsIconPos.x && mouseX <= (this.optionsIconPos.x + this.optionsIconPos.width) &&
-                mouseY >= this.optionsIconPos.y && mouseY <= (this.optionsIconPos.y + this.optionsIconPos.height)) {
-                this.openSettingsModal();
-            }
-        });
 
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape' && this.stat('mode') === 'dropTower') {
@@ -98,7 +154,6 @@ class Game {
         });
 
         // Initial static setup
-        this.output('#towerCosts', settings.towers.laser.costs);
         this.output('#app-version', `v${import.meta.env.VITE_APP_VERSION}`);
 
         // Start the game
@@ -107,7 +162,6 @@ class Game {
         window.requestAnimationFrame(this.draw.bind(this));
     }
 
-    // --- Settings Management ---
     loadSettings() {
         const storedSettings = JSON.parse(localStorage.getItem('gameSettings')) || {};
         this.stat('soundEnabled', storedSettings.soundEnabled ?? settings.game.soundEnabled);
@@ -122,154 +176,10 @@ class Game {
         localStorage.setItem('gameSettings', JSON.stringify(currentSettings));
     }
 
-    openSettingsModal() {
-        const content = `
-            <div>
-                <label>
-                    <input type="checkbox" id="setting-sound-enabled" ${this.stat('soundEnabled') ? 'checked' : ''}>
-                    Sound aktivieren
-                </label>
-            </div>
-            <div>
-                <label>
-                    <input type="checkbox" id="setting-show-normal-damage" ${this.stat('showNormalDamage') ? 'checked' : ''}>
-                    Normale Schadenszahlen anzeigen (Crits immer anzeigen)
-                </label>
-            </div>
-        `;
-
-        this.modal.open('Settings', content);
-
-        document.getElementById('setting-sound-enabled').addEventListener('change', (event) => {
-            this.stat('soundEnabled', event.target.checked);
-            this.saveSettings();
-        });
-        document.getElementById('setting-show-normal-damage').addEventListener('change', (event) => {
-            this.stat('showNormalDamage', event.target.checked);
-            this.saveSettings();
-        });
-    }
-
-    openTowerShopModal() {
-        const coins = this.stat('coins');
-        const towerTypes = Object.keys(settings.towers);
-
-        let content = '<div class="tower-shop">';
-
-        towerTypes.forEach(towerType => {
-            const tower = settings.towers[towerType];
-            const canAfford = coins >= tower.costs;
-            const disabledClass = !canAfford ? 'disabled' : '';
-
-            // Generate preview canvas for tower
-            const previewId = `tower-preview-${towerType}`;
-
-            // Get tower type specific info
-            let statsHTML = `
-                <div>Reichweite: ${tower.fireRange}</div>
-            `;
-
-            if (tower.minRange) {
-                statsHTML = `<div>Reichweite: ${tower.minRange}-${tower.fireRange}</div>`;
-            }
-
-            if (tower.slowEffect) {
-                statsHTML += `<div>Slow: -${Math.round((1 - tower.slowEffect) * 100)}%</div>`;
-            }
-
-            if (tower.damage) {
-                statsHTML += `
-                    <div>Schaden: ${tower.damage.from}-${tower.damage.to}</div>
-                    <div>Feuerrate: ${tower.coolDownTime}s</div>
-                `;
-            }
-
-            if(tower.dotType) {
-                statsHTML += `
-                    <h5>Schaden über Zeit</h5>
-                    <div>Schaden: ${tower.dotDamage.from}-${tower.dotDamage.to} (${tower.dotType})</div>
-                    <div>Dauer: ${tower.dotDuration}s</div>
-                `
-            }
-
-            if(tower.maxChains) {
-                statsHTML += `
-                    <h5>Ketten Effekt</h5>
-                    <div>Kettenreichweite: ${tower.chainRange}</div>
-                    <div>Max Ketten: ${tower.maxChains}</div>
-                `
-            }
-
-            content += `
-                <div class="tower-shop-item ${disabledClass}">
-                    <canvas id="${previewId}" width="80" height="80"></canvas>
-                    
-                    <div class="tower-shop-info">
-                        <h4>${tower.label}</h4>
-                        ${statsHTML}
-                    </div>
-                    
-                    <div class="tower-shop-buy-container">
-                        <div class="tower-shop-item-price">
-                            <img src="${coinIcon}" alt="Coins" title="Coins">
-                            ${tower.costs}
-                        </div>
-                        
-                        <button class="btn btn-buy" data-tower-type="${towerType}" data-required-coins="${tower.costs}" data-disable-parent=".tower-shop-item">
-                            Kaufen
-                        </button>
-                    </div>
-                </div>
-            `;
-        });
-
-        content += '</div>';
-
-        this.modal.open('Turm kaufen', content, this);
-
-        // Draw a preview for each tower
-        towerTypes.forEach(towerType => {
-            const previewCanvas = document.getElementById(`tower-preview-${towerType}`);
-            if (previewCanvas) {
-                const previewCtx = previewCanvas.getContext('2d');
-                const tower = settings.towers[towerType];
-
-                // Clear canvas
-                previewCtx.clearRect(0, 0, 80, 80);
-
-                // Draw tower preview
-                if (tower.images?.complete) {
-                    const sprite = tower.images.sprites[0];
-                    // Scale sprite to fit in 80x80 canvas
-                    previewCtx.drawImage(
-                        tower.images,
-                        sprite.x, sprite.y, sprite.w * 2 , sprite.h * 2,
-                        0, 0, 80, 80
-                    );
-                } else {
-                    // Fallback: draw circle for gravity tower
-                    previewCtx.beginPath();
-                    previewCtx.arc(40, 40, 20, 0, 2 * Math.PI);
-                    previewCtx.fillStyle = tower.color;
-                    previewCtx.fill();
-                }
-            }
-        });
-
-        // Add event listeners for buy buttons
-        document.querySelectorAll('.modal .btn-buy[data-tower-type]').forEach(button => {
-            button.addEventListener('click', (event) => {
-                const towerType = event.target.getAttribute('data-tower-type');
-                this.buyTower(towerType);
-                this.modal.close();
-            });
-        });
-    }
-    // --- End Settings Management ---
-
     resetGame() {
         this.gameOver = false;
         this.waveCounter = 0;
+        this.time = 0; // Reset game time
         this.mapEntities.list = {}; // Reset entities
         this.enemies.enemiesList = []; // Clear the specific enemies list
         this.spawnQueue = []; // Clear spawn queue
@@ -277,14 +187,41 @@ class Game {
         this.stat('coins', settings.coins, true);
         this.stat('wave', 0, true);
         this.stat('mode', ''); // Reset game mode
+
+        // Reset debug logger
+        this.debug.resetLog();
     }
 
-    buyTower(bulletType) {
-        if (this.stat('mode') !== 'dropTower') {
-            if (this.stat('coins') >= settings.towers[bulletType].costs) {
-                this.stat('mode', 'dropTower');
-                this.stat('selectedTowerType', bulletType);
-            }
+    updateNextWaveButtonState() {
+        const btn = document.getElementById('next-wave');
+        if (!btn) return;
+
+        const enemiesOnField = this.enemies.enemiesList.length;
+        const isSpawning = this.spawnQueue.length > 0;
+        const lives = this.stat('live');
+
+        // Disable if a wave is currently being spawned
+        if (isSpawning) {
+            btn.setAttribute('disabled', 'true');
+            return;
+        }
+
+        // Disable if enemies are on field and player cannot afford the life cost
+        if (enemiesOnField > 0 && lives <= enemiesOnField) {
+            btn.setAttribute('disabled', 'true');
+            return;
+        }
+
+        // Otherwise, enable the button
+        btn.removeAttribute('disabled');
+
+        // Boss wave warning
+        if (this.isBossWave(this.waveCounter + 1)) {
+            btn.textContent = '⚠ BOSS WELLE';
+            btn.classList.add('btn-boss-warning');
+        } else {
+            btn.textContent = 'Nächste Welle';
+            btn.classList.remove('btn-boss-warning');
         }
     }
 
@@ -294,12 +231,13 @@ class Game {
             this.mouse.update();
             return;
         }
-
+        
         // Process spawn queue
         this.processSpawnQueue(deltaTime);
 
         this.trigger('update', deltaTime);
         this.mouse.update();
+        this.updateNextWaveButtonState();
     }
 
     draw(timestamp) {
@@ -327,11 +265,6 @@ class Game {
 
         this.trigger('afterDraw');
 
-        // Draw Options Icon
-        if (this.optionsIconImage.complete) {
-            this.ctx.drawImage(this.optionsIconImage, this.optionsIconPos.x, this.optionsIconPos.y, this.optionsIconPos.width, this.optionsIconPos.height);
-        }
-
         // If the game is over, draw the overlay on top of the last game state
         if (this.gameOver) {
             this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
@@ -347,6 +280,7 @@ class Game {
 
     setGameOver() {
         this.gameOver = true;
+        this.debug.log('game_over', {});
     }
 
     stat(name, value, output) {
@@ -390,10 +324,6 @@ class Game {
     nextWave() {
         if (Object.keys(this.mapEntities.list).length === 0) return this;
 
-        if (!import.meta.env.DEV && this.enemies.enemiesList.length > 0) {
-            return this; // Prevent wave spam in production
-        }
-
         this.waveCounter++;
         this.stat('wave', this.waveCounter, true);
 
@@ -405,11 +335,16 @@ class Game {
         this.lastWaveTemplate = waveTemplate;
         this.spawnEnemiesFromTemplate(waveTemplate);
 
+        // Log wave start
+        this.debug.log('wave_start', {
+            enemies: waveTemplate.map(e => ({ type: e.enemyType, count: e.count, level: e.level }))
+        });
+
         return this;
     }
 
-    isBossWave() {
-        return this.waveCounter > 0 && this.waveCounter % settings.leveling.wavesPerLevel === 0;
+    isBossWave(wave = this.waveCounter) {
+        return wave > 0 && wave % settings.leveling.wavesPerLevel === 0;
     }
 
     generateBossWave(gameLevel) {

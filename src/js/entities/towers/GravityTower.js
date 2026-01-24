@@ -5,7 +5,17 @@ class GravityTower extends Tower {
     constructor(x, y, towersController) {
         super(x, y, 'gravity', towersController);
         this.slowEffect = settings.towers.gravity.slowEffect;
+        this.critRateBonus = settings.towers.gravity.critRateBonus;
         this.affectedEnemies = new Set(); // Track which enemies are currently slowed
+
+        // Override stats for support tower tracking
+        this.stats = {
+            totalEnemiesSlowed: 0,      // Unique enemies that were slowed
+            totalSlowTime: 0,           // Accumulated slow-seconds (enemies * time)
+            totalCritDebuffTime: 0,     // Accumulated crit debuff-seconds
+            currentlyAffecting: 0       // Current enemies being affected
+        };
+        this.trackedEnemies = new Set(); // Track unique enemies we've ever slowed
     }
 
     update(deltaTime) {
@@ -14,21 +24,40 @@ class GravityTower extends Tower {
         // Update slow effect on all enemies in range
         const enemiesInRange = this.getEnemiesInRange();
 
-        // Apply slow to enemies in range
+        // Apply slow and crit debuff to enemies in range
         enemiesInRange.forEach(enemy => {
             if (!enemy.slowedBy) {
                 enemy.slowedBy = new Map();
             }
             enemy.slowedBy.set(this.id, this.slowEffect);
+
+            // Apply crit rate debuff (makes enemy easier to crit)
+            enemy.critRateDebuff = this.critRateBonus;
+
             this.affectedEnemies.add(enemy);
+
+            // Track unique enemies for stats
+            if (!this.trackedEnemies.has(enemy)) {
+                this.trackedEnemies.add(enemy);
+                this.stats.totalEnemiesSlowed++;
+            }
         });
 
-        // Remove slow from enemies that left the range
+        // Track slow time (enemy-seconds of slow effect)
+        if (deltaTime && this.affectedEnemies.size > 0) {
+            this.stats.totalSlowTime += deltaTime * this.affectedEnemies.size;
+            this.stats.totalCritDebuffTime += deltaTime * this.affectedEnemies.size;
+        }
+        this.stats.currentlyAffecting = this.affectedEnemies.size;
+
+        // Remove slow and crit debuff from enemies that left the range
         this.affectedEnemies.forEach(enemy => {
             if (!enemiesInRange.includes(enemy)) {
                 if (enemy.slowedBy) {
                     enemy.slowedBy.delete(this.id);
                 }
+                // Reset crit debuff
+                enemy.critRateDebuff = 0;
                 this.affectedEnemies.delete(enemy);
             }
         });
@@ -42,22 +71,6 @@ class GravityTower extends Tower {
 
     shoot(enemy) {
         // No shooting - slow effect is applied in update()
-    }
-
-    upgrade() {
-        const game = this.towersController.game;
-        const coins = game.stat('coins');
-        const upgrade = settings.towers[this.towerType].upgrades[this.level];
-
-        if (upgrade && coins >= upgrade.cost) {
-            game.stat('coins', coins - upgrade.cost, true);
-            this.slowEffect = upgrade.slowEffect;
-            this.fireRange = upgrade.fireRange;
-
-            this.level++;
-            this.color = upgrade.color;
-            game.modal.close();
-        }
     }
 
     getStatsHTML() {
@@ -78,24 +91,14 @@ class GravityTower extends Tower {
     }
 
     getLifetimeStatsHTML() {
-        return ``
-    }
-
-    getUpgradeHTML() {
-        const upgrade = settings.towers[this.towerType].upgrades[this.level];
-        if (upgrade) {
-            return `
-                <h4>Upgrade auf Level ${this.level + 2}</h4>
-                <table class="tower-stats">
-                    <tr><td>Kosten:</td><td>${upgrade.cost} Coins</td></tr>
-                    <tr><td>Slow Effect:</td><td>-${Math.round(upgrade.slowEffect * 100)}%</td></tr>
-                    <tr><td>Reichweite:</td><td>${upgrade.fireRange}</td></tr>
-                </table>
-                <button id="tower-buy-upgrade-btn" class="btn btn-buy">Upgrade Kaufen</button>
-            `;
-        } else {
-            return '<h4>Max Level</h4>';
-        }
+        return `
+            <h4>Lifetime Stats</h4>
+            <table class="tower-stats">
+                <tr><td>Enemies verlangsamt:</td><td>${this.stats.totalEnemiesSlowed}</td></tr>
+                <tr><td>Slow-Zeit (gesamt):</td><td>${this.stats.totalSlowTime.toFixed(1)}s</td></tr>
+                <tr><td>Aktuell betroffene:</td><td>${this.stats.currentlyAffecting}</td></tr>
+            </table>
+        `;
     }
 
     drawShootingEffect() {
